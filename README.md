@@ -6,7 +6,7 @@ and Onewheel Pint with FW 5059+.
 
 # Necessary hardware
 
-This project is being developed and is planned to release on an ESP32-based board, [TinyPico](https://www.tinypico.com/), no other hardware is necessary.
+This project is being developed and is planned to release on an ESP8266 board, likely the cheapest Wemos D1 Mini, available for $2. No other hardware is necessary.
 
 # For developers/collaborators:
 

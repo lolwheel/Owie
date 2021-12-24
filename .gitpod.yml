@@ -1,0 +1,13 @@
+tasks:
+  - before: platformio upgrade
+  - command: platformio run -e d1_mini_lite_clone
+
+image:
+  file: .gitpod.Dockerfile
+
+vscode:
+  extensions:
+    - Atishay-Jain.All-Autocomplete
+    - CoenraadS.bracket-pair-colorizer
+    - esbenp.prettier-vscode
+    - shardulm94.trailing-spaces
