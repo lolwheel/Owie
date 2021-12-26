@@ -53,3 +53,11 @@ FF 55 AA 02 0E EB 0E EF 0E EC 0E ED 0E EF 0E ED 0E EF 0E EF 0E ED 0E F0 0E ED 0E
 ```
 
 First three bytes - preamble, fourth byte - message type. Next 30 bytes are 15 `uint16` representing cell voltages in volts \* 1000, e.g. `0EEB` = 3819 in decimal = 3.819 volts.
+
+The `03` message seems to encode the battery percentage.
+
+```
+FF 55 AA 03 48 02 49
+```
+
+First three bytes - preamble, fourth byte - message type. Next byte is the current battery percentage being reported by the board. e.g. 0x48 is 72 in decimal = 72% battery. Last two bytes are checksum.
