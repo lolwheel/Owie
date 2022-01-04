@@ -1,6 +1,7 @@
 #include <Arduino.h>
 
-#include "bms_mirror.h"
+#include "ESP8266WiFi.h"
+#include "bms_main.h"
 #include "dprint.h"
 #include "ota.h"
 #include "recovery.h"
@@ -9,9 +10,8 @@
 int isRecovery = false;
 
 extern "C" void setup() {
-#ifdef DEBUG_ESP_PORT
-  DEBUG_ESP_PORT.begin(2000000);
-#endif
+  WiFi.persistent(false);
+  WiFi.setOutputPower(0);
   isRecovery = isInRecoveryMode();
   if (isRecovery) {
     ota_setup();
@@ -21,6 +21,7 @@ extern "C" void setup() {
 }
 
 extern "C" void loop() {
+  Serial.getRxBufferSize();
   if (isRecovery) {
     ota_loop();
   } else {

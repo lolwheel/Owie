@@ -16,7 +16,7 @@ AsyncWebServer webServer(80);
 void ota_setup() {
   WiFi.mode(WIFI_AP);
   WiFi.softAP("BMS OTA");
-  dnsServer.start(53, "*", WiFi.softAPIP());  // DNS spoofing (Only HTTP)
+  dnsServer.start(53, "*", WiFi.softAPIP());  // DNS spoofing.
   webServer.onNotFound([&](AsyncWebServerRequest *request) {
     request->redirect("http://" + WiFi.softAPIP().toString() + "/update");
   });

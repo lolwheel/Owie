@@ -2,6 +2,7 @@
 
 #include "EEPROM_Rotate.h"
 #include "dprint.h"
+#include "spi_flash_geometry.h"
 #include "task_queue.h"
 
 namespace {
