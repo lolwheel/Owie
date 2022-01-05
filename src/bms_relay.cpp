@@ -20,19 +20,38 @@ void Packet::validate() {
   }
 }
 
+void IRAM_ATTR Packet::doneUpdatingData() {
+  uint16_t crc = 0;
+  for (int i = 0; i < len_ - 2; i++) {
+    crc += start_[i];
+  }
+  start_[len_ - 2] = (crc >> 8);
+  start_[len_ - 1] = (crc & 0xFF);
+}
+
 void IRAM_ATTR BmsRelay::loop() {
   while (source_->available()) {
     sourceBuffer_.push_back(source_->read());
     processNextByte();
+    if (byteReceivedCallback_) {
+      byteReceivedCallback_();
+    }
   }
 }
 
-bool IRAM_ATTR BmsRelay::shouldForward(const Packet& p) {
-  if (!p.isValid()) {
-    return true;
-  }
-  if (p.getType() == 0xB) {
-    return false;
+bool IRAM_ATTR BmsRelay::shouldForward(Packet& p) {
+  if (p.getType() == 6) {
+    // 0x6 message has the BMS serial number encoded inside of it.
+    // It is the last seven digits from the sticker on the back of the BMS.
+    if (p.dataLength() == 4) {
+      if (captured_serial_ == 0) {
+        captured_serial_ = __builtin_bswap32(*(uint32_t*)p.data());
+      }
+      if (serial_override_ != 0) {
+        *((uint32_t*)p.data()) = __builtin_bswap32(serial_override_);
+        p.doneUpdatingData();
+      }
+    }
   }
   return true;
 }
@@ -41,13 +60,15 @@ bool IRAM_ATTR BmsRelay::shouldForward(const Packet& p) {
 void IRAM_ATTR BmsRelay::processNextByte() {
   // If up to first three bytes of the sourceBuffer don't match expected
   // preamble, flush the data unchanged.
-  if (!std::memcmp(PREAMBLE.data(), sourceBuffer_.data(),
-                   std::min(PREAMBLE.size(), sourceBuffer_.size()))) {
-    for (uint8_t b : sourceBuffer_) {
-      sink_->write(b);
+  for (unsigned int i = 0; i < std::min(PREAMBLE.size(), sourceBuffer_.size());
+       i++) {
+    if (sourceBuffer_[i] != PREAMBLE[i]) {
+      for (uint8_t b : sourceBuffer_) {
+        sink_->write(b);
+      }
+      sourceBuffer_.clear();
+      return;
     }
-    sourceBuffer_.clear();
-    return;
   }
   // Look for the next preamble to determine if we have a full packet at our
   // hands. Minimum size of a packet is 3 (preamble) + 1 type (data) + 2 (crc) =
@@ -58,10 +79,9 @@ void IRAM_ATTR BmsRelay::processNextByte() {
   }
   // This function is called with every new byte so we only need to look at the
   // last three bytes of the buffer.
-  if (!std::memcmp(
-          PREAMBLE.data(),
-          sourceBuffer_.data() + sourceBuffer_.size() - PREAMBLE.size(),
-          PREAMBLE.size())) {
+  if (std::memcmp(PREAMBLE.data(),
+                  sourceBuffer_.data() + sourceBuffer_.size() - PREAMBLE.size(),
+                  PREAMBLE.size())) {
     // No preamble found, let's do sanity check on accumulated size of the data
     // and flush it if it's over the threshold.
     if (sourceBuffer_.size() >= MAX_PACKET_SIZE) {
@@ -81,6 +101,6 @@ void IRAM_ATTR BmsRelay::processNextByte() {
   if (!p.isValid() || shouldForward(p)) {
     sink_->write(p.start(), p.len());
   }
-  sourceBuffer_.clear();
+  sourceBuffer_.resize(PREAMBLE.size());
   std::copy(PREAMBLE.begin(), PREAMBLE.end(), sourceBuffer_.begin());
 }
