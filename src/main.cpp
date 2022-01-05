@@ -21,7 +21,6 @@ extern "C" void setup() {
 }
 
 extern "C" void loop() {
-  Serial.getRxBufferSize();
   if (isRecovery) {
     ota_loop();
   } else {

@@ -26,13 +26,15 @@ class Packet {
     return start_ + 4;
   }
 
-  int data_lenght() const {
+  int dataLength() const {
     if (!valid_) {
       return -1;
     }
     // 3 byte preamble + 1 byte type + 2 byte CRC
     return len_ - 6;
   }
+
+  void doneUpdatingData();
 
   uint8_t* start() const { return start_; }
 
@@ -52,16 +54,35 @@ class BmsRelay {
   }
 
   void loop();
+
   void setByteReceivedCallback(const std::function<void()>& callback) {
     byteReceivedCallback_ = callback;
   };
 
+  /**
+   * @brief If set to non-zero value, spoofs captured BMS serial
+   * with the number provided here. The serial number can be found
+   * on the sticker on the bottom side of BMS. The lower number on
+   * the sticker without the 4 leading (most significant) digits
+   * goes here.
+   */
+  void setBMSSerialOverride(uint32_t serial) { serial_override_ = serial; }
+
+  /**
+   * @brief Get the captured BMS serial number.
+   *
+   * @return non-zero serial, if it's already been captured.
+   */
+  uint32_t getCapturedBMSSerial() { return captured_serial_; }
+
  private:
   void processNextByte();
-  bool shouldForward(const Packet& p);
+  bool shouldForward(Packet& p);
 
   std::function<void()> byteReceivedCallback_;
   std::vector<uint8_t> sourceBuffer_;
+  uint32_t serial_override_ = 0;
+  uint32 captured_serial_ = 0;
   Stream* const source_;
   Stream* const sink_;
 };

@@ -61,3 +61,9 @@ FF 55 AA 03 48 02 49
 ```
 
 First three bytes - preamble, fourth byte - message type. Next byte is the current battery percentage being reported by the board. e.g. 0x48 is 72 in decimal = 72% battery. Last two bytes are checksum.
+
+The `06` message encodes the BMS serial number.
+
+The data is 4 bytes long and is big-endian encoded `uint32_t` serial number of the BMS.
+Spoofing this number works around the BMS pairing which I've tested by
+swapping BMSes between two Pints.
