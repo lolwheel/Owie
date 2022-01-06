@@ -35,7 +35,7 @@ void bms_setup() {
   relay.setByteReceivedCallback(
       [] { digitalWrite(LED_BUILTIN, 1 - digitalRead(LED_BUILTIN)); });
   // An example serial override which defeats BMS pairing:
-  relay.setBMSSerialOverride(123456);
+  // relay.setBMSSerialOverride(123456);
 }
 
 void bms_loop() { relay.loop(); }
