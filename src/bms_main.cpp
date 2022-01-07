@@ -2,9 +2,9 @@
 
 #include "bms_relay.h"
 
-// UART RX is connected to the BMS A line
-// UART TX is connected to the MB A line
-// TX_INPUT_PIN must be soldered to the UART RX
+// UART RX is connected to the *BMS* White line
+// UART TX is connected to the *MB* White line
+// TX_INPUT_PIN must be soldered to the UART TX
 #define TX_INPUT_PIN 4
 // Connected to the MB B line
 #define TX_INVERSE_OUT_PIN 5
