@@ -17,7 +17,8 @@ void IRAM_ATTR txPinRiseInterrupt() { digitalWrite(TX_INVERSE_OUT_PIN, 0); }
 void IRAM_ATTR txPinFallInterrupt() { digitalWrite(TX_INVERSE_OUT_PIN, 1); }
 }  // namespace
 
-BmsRelay relay(&Serial, &Serial);
+BmsRelay relay([]() { return Serial.read(); },
+               [](uint8_t b) { return Serial.write(b); });
 
 void bms_setup() {
   Serial.begin(115200);

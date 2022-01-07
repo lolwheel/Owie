@@ -1,8 +1,6 @@
 #ifndef BMS_RELAY_H
 #define BMS_RELAY_H
 
-#include <Stream.h>
-
 #include <functional>
 #include <vector>
 
@@ -49,7 +47,17 @@ class Packet {
 
 class BmsRelay {
  public:
-  BmsRelay(Stream* source, Stream* sink) : source_(source), sink_(sink) {
+  /**
+   * @brief Function polled for new byte from BMS. Expected to return negative
+   * value when there's no data available on the wire.
+   */
+  typedef std::function<int()> Source;
+  /**
+   * @brief Function called to send data to the MB.
+   */
+  typedef std::function<size_t(uint8_t)> Sink;
+  BmsRelay(const Source& source, const Sink& sink)
+      : source_(source), sink_(sink) {
     sourceBuffer_.reserve(128);
   }
 
@@ -82,9 +90,9 @@ class BmsRelay {
   std::function<void()> byteReceivedCallback_;
   std::vector<uint8_t> sourceBuffer_;
   uint32_t serial_override_ = 0;
-  uint32 captured_serial_ = 0;
-  Stream* const source_;
-  Stream* const sink_;
+  uint32_t captured_serial_ = 0;
+  const Source source_;
+  const Sink sink_;
 };
 
 #endif  // BMS_RELAY_H
