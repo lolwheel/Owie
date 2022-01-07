@@ -51,10 +51,16 @@ bool BmsRelay::shouldForward(Packet& p) {
     // It is the last seven digits from the sticker on the back of the BMS.
     if (p.dataLength() == 4) {
       if (captured_serial_ == 0) {
-        captured_serial_ = __builtin_bswap32(*(uint32_t*)p.data());
+        for (int i = 0; i < 4; i++) {
+          captured_serial_ |= p.data()[i] << (8 * (3-i));
+        }
       }
       if (serial_override_ != 0) {
-        *((uint32_t*)p.data()) = __builtin_bswap32(serial_override_);
+        uint32_t serial_override_copy = serial_override_;
+        for (int i = 3; i >= 0; i--) {
+          p.data()[i] = serial_override_copy & 0xFF;
+          serial_override_copy >>= 8;
+        }
         p.doneUpdatingData();
       }
     }
