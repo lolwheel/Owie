@@ -1,6 +1,7 @@
 #ifndef BMS_RELAY_H
 #define BMS_RELAY_H
 
+#include <cstdint>
 #include <functional>
 #include <vector>
 
