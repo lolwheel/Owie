@@ -10,8 +10,8 @@ std::deque<int> mockBmsData;
 std::vector<int> mockDataOut;
 
 void setUp(void) {
-  relay.reset(new BmsRelay([&](void) { return mockBmsData.pop_front(); },
-                           [&](int8_t b) { mockDataOut.push_back(b); }));
+  relay.reset(new BmsRelay([]() { int data = mockBmsData.back(); mockBmsData.pop_front(); return data; },
+                           [](uint8_t b) { mockDataOut.push_back(b); return 1; }));
   mockBmsData.clear();
   mockDataOut.clear();
 }

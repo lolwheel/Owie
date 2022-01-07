@@ -1,3 +1,7 @@
+vscode:
+  extensions:
+    - ms-vscode.cpptools
+
 tasks:
   - before: platformio upgrade
   - command: platformio run -e d1_mini_lite_clone
