@@ -1,5 +1,5 @@
 {
-    "files.associations": {
-        "*.tcc": "cpp"
-    }
+    "editor.formatOnSave": true,
+    "editor.formatOnType": false,
+    "C_Cpp.clang_format_fallbackStyle": "Google",
 }
