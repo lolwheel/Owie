@@ -5,6 +5,7 @@
 
 #include "bms_relay.h"
 #include "data.h"
+#include "task_queue.h"
 
 // UART RX is connected to the *BMS* White line
 // UART TX is connected to the *MB* White line
@@ -66,9 +67,8 @@ void bms_setup() {
   // An example serial override which defeats BMS pairing:
   // relay.setBMSSerialOverride(123456);
   setupWebServer();
-}
-
-void bms_loop() {
-  relay.loop();
-  dnsServer.processNextRequest();
+  TaskQueue.postRecurringTask([&]() {
+    relay.loop();
+    dnsServer.processNextRequest();
+  });
 }

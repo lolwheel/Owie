@@ -4,6 +4,8 @@
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 
+#include "task_queue.h"
+
 #define SSID_NAME "OWEnhancer-recovery"
 
 namespace {
@@ -20,6 +22,5 @@ void ota_setup() {
   });
   AsyncElegantOTA.begin(&webServer);
   webServer.begin();
+  TaskQueue.postRecurringTask([&]() { dnsServer.processNextRequest(); });
 }
-
-void ota_loop() { dnsServer.processNextRequest(); }

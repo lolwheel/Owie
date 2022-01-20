@@ -1,21 +1,9 @@
 #ifndef TASK_QUEUE_H
 #define TASK_QUEUE_H
 
-#include <functional>
-#include <utility>
-#include <vector>
+#include <Arduino.h>
 
-class TaskQueueType {
- public:
-  typedef std::function<void(void)> Task;
-
-  TaskQueueType(){};
-  void postOneShotTask(const Task& task, unsigned long delayMs);
-  void process();
-
- private:
-  std::vector<std::pair<unsigned long, Task>> callbacks;
-};
+#include "task_queue_type.h"
 
 extern TaskQueueType TaskQueue;
 

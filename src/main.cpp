@@ -7,24 +7,14 @@
 #include "recovery.h"
 #include "task_queue.h"
 
-int isRecovery = false;
-
 extern "C" void setup() {
   WiFi.persistent(false);
   WiFi.setOutputPower(0);
-  isRecovery = isInRecoveryMode();
-  if (isRecovery) {
+  if (isInRecoveryMode()) {
     ota_setup();
   } else {
     bms_setup();
   }
 }
 
-extern "C" void loop() {
-  if (isRecovery) {
-    ota_loop();
-  } else {
-    bms_loop();
-  }
-  TaskQueue.process();
-}
+extern "C" void loop() { TaskQueue.process(); }
