@@ -1,6 +1,6 @@
-# OWEnhancer
+# Owie
 
-[![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/lolwheel/OWEnhancer)
+[![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/lolwheel/Owie)
 
 This project is inspired by the JWFFM modchip and aims to unlock battery expansion possibilities on otherwise
 locked Onewheels such as Onewheel XR with FW version 4210+
@@ -20,7 +20,7 @@ This is a hobby projet for its contributors and comes with absolutely no guarant
 - UPCOMING - fix the battery percentage reporting for Vamp-and-Ride setups and expanded battery packs.
 - UPCOMING - Removes the factory locking of battery capacity expansion, implemented in OW XRs with revisions 4210+ and Pints with revisions 5059+.
 
-# Installing OWEnhancer into your board
+# Installing Owie into your board
 
 ## Prerequisites:
 
@@ -30,7 +30,7 @@ This is a hobby projet for its contributors and comes with absolutely no guarant
 
 ## Installation:
 
-1. Install OWEnhancer fimrware onto your Wemos D1 mini. TODO(lolwheel): Write a page in details on how to do this.
+1. Install Owie fimrware onto your Wemos D1 mini. TODO(lolwheel): Write a page in details on how to do this.
 1. Disassemble your board and open the battery enclosure.
 1. Disconnect all wires from BMS, strictly in the following order:
    1. Battery main lead - an XT60 connector on the rightmost side of the BMS.

@@ -30,7 +30,7 @@ void TaskQueueType::process() {
     std::pop_heap(timedTasks_.begin(), timedTasks_.end(), comparator);
     timedTasks_.pop_back();
   }
-  for (auto& c : recurringTasks_) {
+  for (const auto& c : recurringTasks_) {
     c();
   }
 }

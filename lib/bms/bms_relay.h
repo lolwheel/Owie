@@ -64,8 +64,9 @@ class BmsRelay {
 
   void loop();
 
-  void setByteReceivedCallback(const std::function<void()>& callback) {
-    byteReceivedCallback_ = callback;
+  void setPacketReceivedCallback(
+      const std::function<void(const Packet&)>& callback) {
+    packetReceivedCallback_ = callback;
   };
 
   /**
@@ -88,7 +89,7 @@ class BmsRelay {
   void processNextByte();
   bool shouldForward(Packet& p);
 
-  std::function<void()> byteReceivedCallback_;
+  std::function<void(const Packet&)> packetReceivedCallback_;
   std::vector<uint8_t> sourceBuffer_;
   uint32_t serial_override_ = 0;
   uint32_t captured_serial_ = 0;

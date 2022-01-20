@@ -6,7 +6,7 @@
 
 #include "task_queue.h"
 
-#define SSID_NAME "OWEnhancer-recovery"
+#define SSID_NAME "Owie-recovery"
 
 namespace {
 DNSServer dnsServer;

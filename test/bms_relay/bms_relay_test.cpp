@@ -43,7 +43,8 @@ void testUnknownBytesGetsForwardedImmediately(void) {
 }
 
 void testSerialGetsRecordedAndIntercepted(void) {
-  addMockData({0x1, 0x2, 0x3, 0xFF, 0x55, 0xAA, 0x6, 0x1, 0x2, 0x3, 0x4, 0x2, 0xE});
+  addMockData(
+      {0x1, 0x2, 0x3, 0xFF, 0x55, 0xAA, 0x6, 0x1, 0x2, 0x3, 0x4, 0x2, 0xE});
   relay->setBMSSerialOverride(0x8040201);
   relay->loop();
   TEST_ASSERT_TRUE(mockBmsData.empty());
@@ -55,13 +56,32 @@ void testSerialGetsRecordedAndIntercepted(void) {
   relay->loop();
   // Now the original packet should have been parsed and rewritten.
   TEST_ASSERT_EQUAL(0x1020304, relay->getCapturedBMSSerial());
-  expectDataOut({0x1, 0x2, 0x3, 0xFF, 0x55, 0xAA, 0x6, 0x8, 0x4, 0x2, 0x1, 0x2, 0x13});
+  expectDataOut(
+      {0x1, 0x2, 0x3, 0xFF, 0x55, 0xAA, 0x6, 0x8, 0x4, 0x2, 0x1, 0x2, 0x13});
+}
+
+void testPacketCallback() {
+  addMockData({0x1, 0x2, 0x3, 0xFF, 0x55, 0xAA, 0x6, 0x1, 0x2, 0x3, 0x4, 0x2,
+               0xE, 0xFF, 0x55, 0xAA});
+  std::vector<uint8_t> receivedPacket;
+  relay->setPacketReceivedCallback([&](const Packet& p) {
+    const uint8_t* start = p.start();
+    receivedPacket.assign(start, start + p.len());
+  });
+  relay->loop();
+  std::vector<uint8_t> expected(
+      {0xFF, 0x55, 0xAA, 0x6, 0x1, 0x2, 0x3, 0x4, 0x2, 0xE});
+  TEST_ASSERT_EQUAL(expected.size(), receivedPacket.size());
+  for (int i = 0; i < expected.size(); i++) {
+    TEST_ASSERT_EQUAL(expected[i], receivedPacket[i]);
+  }
 }
 
 int main(int argc, char** argv) {
   UNITY_BEGIN();
   RUN_TEST(testUnknownBytesGetsForwardedImmediately);
   RUN_TEST(testSerialGetsRecordedAndIntercepted);
+  RUN_TEST(testPacketCallback);
   UNITY_END();
 
   return 0;

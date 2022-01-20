@@ -39,9 +39,6 @@ void BmsRelay::loop() {
     }
     sourceBuffer_.push_back(byte);
     processNextByte();
-    if (byteReceivedCallback_) {
-      byteReceivedCallback_();
-    }
   }
 }
 
@@ -52,7 +49,7 @@ bool BmsRelay::shouldForward(Packet& p) {
     if (p.dataLength() == 4) {
       if (captured_serial_ == 0) {
         for (int i = 0; i < 4; i++) {
-          captured_serial_ |= p.data()[i] << (8 * (3-i));
+          captured_serial_ |= p.data()[i] << (8 * (3 - i));
         }
       }
       if (serial_override_ != 0) {
@@ -110,6 +107,9 @@ void BmsRelay::processNextByte() {
   // We did find the next packet preamble, treat the data up until the last
   // three bytes (preamble) as a packet and perform the CRC check.
   Packet p(sourceBuffer_.data(), sourceBuffer_.size() - PREAMBLE.size());
+  if (packetReceivedCallback_) {
+    packetReceivedCallback_(p);
+  }
   if (!p.isValid() || shouldForward(p)) {
     for (int i = 0; i < p.len(); i++) {
       sink_(p.start()[i]);
