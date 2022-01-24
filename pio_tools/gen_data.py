@@ -9,12 +9,13 @@ if "idedata" in COMMAND_LINE_TARGETS:
 def GenData():
     dataDir = os.path.join(env["PROJECT_DIR"], "data")
     print("dataDir = %s\n" % dataDir)
-    genDir = os.path.join(dataDir, "gen")
+    genDir = os.path.join(env.subst("$BUILD_DIR"), 'inline_data')
     print("genDir = %s\n" % genDir)
     if not os.path.exists(dataDir):
         return
     if not os.path.exists(genDir):
         os.mkdir(genDir)
+    env.Append(CPPPATH=[genDir])
         
     files = sorted(file for file in os.listdir(dataDir) 
          if os.path.isfile(os.path.join(dataDir, file)))
@@ -24,7 +25,10 @@ def GenData():
         out.write("#ifndef DATA_H\n")
         out.write("#define DATA_H\n\n")
         for name in files:
-            out.write("static const unsigned char %s[] PROGMEM = {\n" % name.upper().replace(".", "_"))
+            varName = name.upper().replace(".", "_")
+            sizeName = varName + "_SIZE"
+            storageArrayName = varName + "_PROGMEM_ARRAY"
+            out.write("static const unsigned char %s[] PROGMEM = {\n" % storageArrayName)
             with open(os.path.join(dataDir, name), "rb") as f:
                 contents = f.read()
                 firstByte = True
@@ -35,6 +39,8 @@ def GenData():
                         firstByte = False
                     out.write(str(b))
             out.write("};\n")
+            out.write("#define %s FPSTR(%s)\n" % (varName, storageArrayName))
+            out.write("#define %s sizeof(%s)\n\n" % (sizeName, storageArrayName))
         out.write("\n#endif // DATA_H\n")
 
 GenData()
