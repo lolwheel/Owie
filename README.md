@@ -26,7 +26,7 @@ This is a hobby projet for its contributors and comes with absolutely no guarant
 
 - Have essential soldering skills and tools: Soldering iron, some 22 gauge or otherwise thin wires, fish tape or isolating tape.
 - Be comfortable with opening your board's battery enclosure. This requires a somewhat exotic Torx 5 point security bit, size TS20. [Amazon link](https://www.amazon.com/gp/product/B07TC79LVH).
-- Wemos D1 Mini Lite - the cheapest and most compact ESP8266 board that I'm aware of. You can find those on Aliexpress and Amazon. Buy version without the metal shield or ceramic WiFi antenna on it as they're too bulky to fit inside of the battery enclosure.
+- Wemos D1 Mini Lite - the cheapest and most compact ESP8266 board that I'm aware of. You can find those on Aliexpress and Amazon. Buy version without the metal shield or ceramic WiFi antenna on it as they're too bulky to fit inside of the battery enclosure. [5 pack Amazon Link](https://www.amazon.com/dp/B081PX9YFV).
 
 ## Installation:
 
