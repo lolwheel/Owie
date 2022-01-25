@@ -1,10 +1,13 @@
 #include "settings.h"
 
+#include <Esp.h>
+
 #include "EEPROM_Rotate.h"
 #include "dprint.h"
 #include "pb_decode.h"
 #include "pb_encode.h"
 #include "spi_flash_geometry.h"
+#include "task_queue.h"
 
 SettingsMsg Settings = SettingsMsg_init_default;
 
@@ -55,6 +58,12 @@ int32_t saveSettings() {
   e.commit();
   DPRINTF("Serialized settings, size = %d bytes.", stream.bytes_written);
   return stream.bytes_written;
+}
+
+int32_t saveSettingsAndRestartSoon() {
+  int32_t code = saveSettings();
+  TaskQueue.postOneShotTask([]() { ESP.restart(); }, 2000L);
+  return code;
 }
 
 void disableFlashPageRotation() { getEeprom().rotate(false); }

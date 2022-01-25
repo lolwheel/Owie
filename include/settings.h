@@ -10,6 +10,8 @@ void loadSettings();
  * @return Bytes written or -1 if writing failed.
  */
 int32_t saveSettings();
+
+int32_t saveSettingsAndRestartSoon();
 /**
  * @brief Call befor OTA.
  */

@@ -1,1 +1,192 @@
-<form action="wifi"><button>Wifi Configuration</button></form>
+<!DOCTYPE html>
+<html lang="en">
+<!-- The HTML markup is based on the main page of Tasmota -->
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+    <title>Owie - Status</title>
+    <style>
+        div,
+        fieldset,
+        input,
+        select {
+            padding: 5px;
+            font-size: 1em;
+        }
+
+        fieldset {
+            background: #4f4f4f;
+        }
+
+        p {
+            margin: 0.5em 0;
+        }
+
+        input {
+            width: 100%;
+            box-sizing: border-box;
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            background: #dddddd;
+            color: #000000;
+        }
+
+        input[type=checkbox],
+        input[type=radio] {
+            width: 1em;
+            margin-right: 6px;
+            vertical-align: -1px;
+        }
+
+        input[type=range] {
+            width: 99%;
+        }
+
+        select {
+            width: 100%;
+            background: #dddddd;
+            color: #000000;
+        }
+
+        textarea {
+            resize: vertical;
+            width: 98%;
+            height: 318px;
+            padding: 5px;
+            overflow: auto;
+            background: #1f1f1f;
+            color: #65c115;
+        }
+
+        body {
+            text-align: center;
+            font-family: verdana, sans-serif;
+            background: #252525;
+        }
+
+        td {
+            padding: 0px;
+        }
+
+        button {
+            border: 0;
+            border-radius: 0.3rem;
+            background: #1fa3ec;
+            color: #faffff;
+            line-height: 2.4rem;
+            font-size: 1.2rem;
+            width: 100%;
+            -webkit-transition-duration: 0.4s;
+            transition-duration: 0.4s;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0e70a4;
+        }
+
+        .bred {
+            background: #d43535;
+        }
+
+        .bred:hover {
+            background: #931f1f;
+        }
+
+        .bgrn {
+            background: #47c266;
+        }
+
+        .bgrn:hover {
+            background: #5aaf6f;
+        }
+
+        a {
+            color: #1fa3ec;
+            text-decoration: none;
+        }
+
+        .p {
+            float: left;
+            text-align: left;
+        }
+
+        .q {
+            float: right;
+            text-align: right;
+        }
+
+        .r {
+            border-radius: 0.3em;
+            padding: 2px;
+            margin: 6px 2px;
+        }
+
+        .hf {
+            display: none;
+        }
+    </style>
+    <script>
+        function getXhr() {
+            const content = document.getElementById("content");
+            const xhr = new XMLHttpRequest();
+            xhr.addEventListener("load", function (event) {
+                content.innerHTML = event.target.responseText;
+                rescanDocument();
+            });
+            xhr.addEventListener("error", function (event) {
+                content.innerHTML = 'Oops! Something went wrong.';
+            });
+            return xhr;
+        }
+        function handleFormSubmit(event) {
+            event.preventDefault();
+            const xhr = getXhr();
+            const form = event.target;
+            xhr.open(form.getAttribute('method') || 'GET', form.getAttribute('action'));
+            const formData = new FormData(form);
+            xhr.send(formData);
+        }
+
+        function handleLinkClick(event) {
+            event.preventDefault();
+            const xhr = getXhr();
+            xhr.open("GET", event.target.getAttribute('href'));
+            xhr.send();
+        }
+
+        function rescanDocument() {
+            Array.from(document.getElementsByTagName('form')).
+                filter(f => !f.hasAttribute('owie_procesed')).forEach((f) => {
+                    f.setAttribute('owie_procesed', '1');
+                    f.addEventListener("submit", handleFormSubmit);
+                });
+            Array.from(document.getElementsByTagName('a')).
+                filter((a) => !a.hasAttribute('owie_procesed')).forEach((a) => {
+                    a.setAttribute('owie_procesed', '1');
+                    a.addEventListener("click", handleLinkClick);
+                });
+        }
+        window.addEventListener('DOMContentLoaded', rescanDocument);
+    </script>
+</head>
+
+<body>
+    <div style="text-align:left;display:inline-block;color:#eaeaea;min-width:340px;">
+        <div style="text-align:center;color:#eaeaea;">
+            <h2>Owie</h2>
+        </div>
+        <div id="content">
+            <form action="/wifi">
+                <button>Wifi Configuration</button>
+            </form>
+        </div>
+        <div style="text-align:right;font-size:11px;">
+            <hr>
+            <p style="color:#aaa;">Owie %OWIE_version%</p>
+        </div>
+    </div>
+</body>
+
+</html>
