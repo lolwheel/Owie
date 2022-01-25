@@ -4,24 +4,23 @@
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 
-#define SSID_NAME "BMS OTA"
+#include "task_queue.h"
+
+#define SSID_NAME "Owie-recovery"
 
 namespace {
-// Init System Settings
 DNSServer dnsServer;
 AsyncWebServer webServer(80);
-
 }  // namespace
 
 void ota_setup() {
   WiFi.mode(WIFI_AP);
-  WiFi.softAP("BMS OTA");
-  dnsServer.start(53, "*", WiFi.softAPIP());  // DNS spoofing (Only HTTP)
+  WiFi.softAP(SSID_NAME);
+  dnsServer.start(53, "*", WiFi.softAPIP());  // DNS spoofing.
   webServer.onNotFound([&](AsyncWebServerRequest *request) {
     request->redirect("http://" + WiFi.softAPIP().toString() + "/update");
   });
   AsyncElegantOTA.begin(&webServer);
   webServer.begin();
+  TaskQueue.postRecurringTask([&]() { dnsServer.processNextRequest(); });
 }
-
-void ota_loop() { dnsServer.processNextRequest(); }
