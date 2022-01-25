@@ -120,6 +120,11 @@ The data is 4 bytes long and is big-endian encoded `uint32_t` serial number of t
 Spoofing this number works around the BMS pairing which I've tested by
 swapping BMSes between two Pints.
 
+## Confirmed working board versions
+
+Onewheel+ XR, 4210 | 4144
+Onewheel Pint, 
+
 ## Troubleshooting:
 
 ### Board reporting battery at 1% after install
