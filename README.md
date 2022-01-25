@@ -26,7 +26,7 @@ This is a hobby projet for its contributors and comes with absolutely no guarant
 
 - Have essential soldering skills and tools: Soldering iron, some 22 gauge or otherwise thin wires, fish tape or isolating tape.
 - Be comfortable with opening your board's battery enclosure. This requires a somewhat exotic Torx 5 point security bit, size TS20. [Amazon link](https://www.amazon.com/gp/product/B07TC79LVH).
-- Wemos D1 Mini Lite - the cheapest and most compact ESP8266 board that I'm aware of. You can find those on Aliexpress and Amazon. Buy version without the metal shield or ceramic WiFi antenna on it as they're too bulky to fit inside of the battery enclosure.
+- Wemos D1 Mini Lite - the cheapest and most compact ESP8266 board that I'm aware of. You can find those on Aliexpress and Amazon. Buy version without the metal shield or ceramic WiFi antenna on it as they're too bulky to fit inside of the battery enclosure. [5 pack Amazon Link](https://www.amazon.com/dp/B081PX9YFV).
 
 ## Installation:
 
@@ -119,3 +119,16 @@ The `06` message encodes the BMS serial number.
 The data is 4 bytes long and is big-endian encoded `uint32_t` serial number of the BMS.
 Spoofing this number works around the BMS pairing which I've tested by
 swapping BMSes between two Pints.
+
+## Confirmed working board versions
+
+Onewheel+ XR, 4210 | 4144
+Onewheel Pint, 
+
+## Troubleshooting:
+
+### Board reporting battery at 1% after install
+
+If after installing OWIE into your board it reports that your battery is at 1% even though it shouldn't, plug your board into a charger.
+This problem occurs because the BMS goes through a state reset and doesn't know the status of the battery, and plugging the board 
+into a charger corrects this issue by forcing the BMS (and controller potentially) to do a state check.
