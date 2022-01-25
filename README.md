@@ -119,3 +119,11 @@ The `06` message encodes the BMS serial number.
 The data is 4 bytes long and is big-endian encoded `uint32_t` serial number of the BMS.
 Spoofing this number works around the BMS pairing which I've tested by
 swapping BMSes between two Pints.
+
+## Troubleshooting:
+
+### Board reporting battery at 1% after install
+
+If after installing OWIE into your board it reports that your battery is at 1% even though it shouldn't, plug your board into a charger.
+This problem occurs because the BMS goes through a state reset and doesn't know the status of the battery, and plugging the board 
+into a charger corrects this issue by forcing the BMS (and controller potentially) to do a state check.
