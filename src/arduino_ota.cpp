@@ -6,11 +6,10 @@
 #include "task_queue.h"
 
 void setupArduinoOTA() {
-  ArduinoOTA.setRebootOnSuccess(false);
   ArduinoOTA.begin(false /* useMDNS */);
-  ArduinoOTA.onEnd([]() {
+  ArduinoOTA.onStart([]() {
     disableFlashPageRotation();
-    saveSettingsAndRestartSoon();
+    saveSettings();
   });
   TaskQueue.postRecurringTask([]() { ArduinoOTA.handle(); });
 }
