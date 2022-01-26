@@ -1,9 +1,10 @@
-#ifndef WEB_SERVER_H
-#define WEB_SERVER_H
+#ifndef NETWORK_H
+#define NETWORK_H
 
 #include <stddef.h>
 
+void setupWifi();
 void setupWebServer();
 void streamBMSPacket(const char* buffer, size_t len);
 
-#endif  // WEB_SERVER_H
+#endif  // NETWORK_H

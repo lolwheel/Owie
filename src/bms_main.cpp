@@ -1,8 +1,9 @@
 #include <Arduino.h>
 
+#include "arduino_ota.h"
 #include "bms_relay.h"
+#include "network.h"
 #include "task_queue.h"
-#include "web_server.h"
 
 // UART RX is connected to the *BMS* White line
 // UART TX is connected to the *MB* White line
@@ -43,6 +44,8 @@ void bms_setup() {
   });
   // An example serial override which defeats BMS pairing:
   // relay.setBMSSerialOverride(123456);
+  setupWifi();
   setupWebServer();
+  setupArduinoOTA();
   TaskQueue.postRecurringTask([&]() { relay.loop(); });
 }

@@ -1,4 +1,4 @@
-#include "web_server.h"
+#include "network.h"
 
 #include <DNSServer.h>
 #include <ESP8266WiFi.h>
@@ -34,7 +34,8 @@ String templateProcessor(const String &var) {
 
 }  // namespace
 
-void setupWebServer() {
+void setupWifi() {
+  WiFi.setOutputPower(6);
   bool stationMode = (strlen(Settings.ap_name) > 0);
   WiFi.mode(stationMode ? WIFI_AP_STA : WIFI_AP);
   char apName[64];
@@ -45,9 +46,16 @@ void setupWebServer() {
     WiFi.hostname(apName);
   }
   MDNS.begin("owie");
-  webServer.addHandler(&ws);
   dnsServer.start(53, "*", WiFi.softAPIP());  // DNS spoofing.
-  webServer.onNotFound([&](AsyncWebServerRequest *request) {
+  TaskQueue.postRecurringTask([]() {
+    dnsServer.processNextRequest();
+    MDNS.update();
+  });
+}
+
+void setupWebServer() {
+  webServer.addHandler(&ws);
+  webServer.onNotFound([](AsyncWebServerRequest *request) {
     if (request->host().indexOf("owie.local") >= 0) {
       request->send(404);
       return;
@@ -84,10 +92,6 @@ void setupWebServer() {
     request->send(404);
   });
   webServer.begin();
-  TaskQueue.postRecurringTask([]() {
-    dnsServer.processNextRequest();
-    MDNS.update();
-  });
 }
 
 void streamBMSPacket(const char *data, size_t len) { ws.binaryAll(data, len); }
