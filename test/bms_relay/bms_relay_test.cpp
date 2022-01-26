@@ -5,6 +5,8 @@
 #include <deque>
 #include <memory>
 
+#include "packet.h"
+
 std::unique_ptr<BmsRelay> relay;
 std::deque<int> mockBmsData;
 std::vector<uint8_t> mockDataOut;
@@ -64,9 +66,9 @@ void testPacketCallback() {
   addMockData({0x1, 0x2, 0x3, 0xFF, 0x55, 0xAA, 0x6, 0x1, 0x2, 0x3, 0x4, 0x2,
                0xE, 0xFF, 0x55, 0xAA});
   std::vector<uint8_t> receivedPacket;
-  relay->setPacketReceivedCallback([&](const Packet& p) {
-    const uint8_t* start = p.start();
-    receivedPacket.assign(start, start + p.len());
+  relay->addPacketCallback([&](BmsRelay*, Packet* p) {
+    const uint8_t* start = p->start();
+    receivedPacket.assign(start, start + p->len());
   });
   relay->loop();
   std::vector<uint8_t> expected(

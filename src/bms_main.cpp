@@ -3,6 +3,7 @@
 #include "arduino_ota.h"
 #include "bms_relay.h"
 #include "network.h"
+#include "packet.h"
 #include "task_queue.h"
 
 // UART RX is connected to the *BMS* White line
@@ -36,11 +37,11 @@ void bms_setup() {
                   RISING);
   attachInterrupt(digitalPinToInterrupt(TX_INPUT_PIN), txPinFallInterrupt,
                   FALLING);
-  relay.setPacketReceivedCallback([](const Packet& packet) {
+  relay.addPacketCallback([](BmsRelay*, Packet* packet) {
     static uint8_t ledState = 0;
     digitalWrite(LED_BUILTIN, ledState);
     ledState = 1 - ledState;
-    streamBMSPacket((const char*)packet.start(), packet.len());
+    streamBMSPacket((const char*)packet->start(), packet->len());
   });
   // An example serial override which defeats BMS pairing:
   // relay.setBMSSerialOverride(123456);

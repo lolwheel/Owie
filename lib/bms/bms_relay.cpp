@@ -2,33 +2,19 @@
 
 #include <cstring>
 
+#include "packet.h"
+#include "packet_parsers.h"
+
 namespace {
 const std::vector<uint8_t> PREAMBLE = {0xFF, 0x55, 0xAA};
 // Sanity check
 const uint8_t MAX_PACKET_SIZE = 128;
 }  // namespace
 
-void Packet::validate() {
-  valid_ = false;
-  if (len_ < 6) {
-    return;
-  }
-  uint16_t crc = ((uint16_t)(start_[len_ - 2])) << 8 | start_[len_ - 1];
-  for (int i = 0; i < len_ - 2; i++) {
-    crc -= start_[i];
-  }
-  if (crc == 0) {
-    valid_ = true;
-  }
-}
-
-void Packet::doneUpdatingData() {
-  uint16_t crc = 0;
-  for (int i = 0; i < len_ - 2; i++) {
-    crc += start_[i];
-  }
-  start_[len_ - 2] = (crc >> 8);
-  start_[len_ - 1] = (crc & 0xFF);
+BmsRelay::BmsRelay(const Source& source, const Sink& sink)
+    : source_(source), sink_(sink) {
+  sourceBuffer_.reserve(128);
+  addPacketCallback(bmsSerialParser);
 }
 
 void BmsRelay::loop() {
@@ -40,29 +26,6 @@ void BmsRelay::loop() {
     sourceBuffer_.push_back(byte);
     processNextByte();
   }
-}
-
-bool BmsRelay::shouldForward(Packet& p) {
-  if (p.getType() == 6) {
-    // 0x6 message has the BMS serial number encoded inside of it.
-    // It is the last seven digits from the sticker on the back of the BMS.
-    if (p.dataLength() == 4) {
-      if (captured_serial_ == 0) {
-        for (int i = 0; i < 4; i++) {
-          captured_serial_ |= p.data()[i] << (8 * (3 - i));
-        }
-      }
-      if (serial_override_ != 0) {
-        uint32_t serial_override_copy = serial_override_;
-        for (int i = 3; i >= 0; i--) {
-          p.data()[i] = serial_override_copy & 0xFF;
-          serial_override_copy >>= 8;
-        }
-        p.doneUpdatingData();
-      }
-    }
-  }
-  return true;
 }
 
 // Called with every new byte.
@@ -107,13 +70,12 @@ void BmsRelay::processNextByte() {
   // We did find the next packet preamble, treat the data up until the last
   // three bytes (preamble) as a packet and perform the CRC check.
   Packet p(sourceBuffer_.data(), sourceBuffer_.size() - PREAMBLE.size());
-  if (packetReceivedCallback_) {
-    packetReceivedCallback_(p);
+  for (auto callback : packetCallbacks_) {
+    callback(this, &p);
   }
-  if (!p.isValid() || shouldForward(p)) {
-    for (int i = 0; i < p.len(); i++) {
-      sink_(p.start()[i]);
-    }
+  p.recalculateCrcIfValid();
+  for (int i = 0; i < p.len(); i++) {
+    sink_(p.start()[i]);
   }
   sourceBuffer_.resize(PREAMBLE.size());
   std::copy(PREAMBLE.begin(), PREAMBLE.end(), sourceBuffer_.begin());
