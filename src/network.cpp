@@ -29,7 +29,7 @@ String templateProcessor(const String &var) {
     }
     return "";
   }
-  return "UNKNOWN";
+  return "<script>alert('UNKNOWN PLACEHOLDER')</script>";
 }
 
 }  // namespace
@@ -91,6 +91,11 @@ void setupWebServer() {
     }
     request->send(404);
   });
+  webServer.on("/monitor", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send_P(200, "text/html", MONITOR_HTML_PROGMEM_ARRAY,
+                    MONITOR_HTML_SIZE, templateProcessor);
+  });
+
   webServer.begin();
 }
 

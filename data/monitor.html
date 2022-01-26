@@ -1,0 +1,72 @@
+<textarea readonly="1" id="term" cols="340" name="t1" wrap="off"></textarea>
+<button id="startstop" onclick="connect();">Connect</button>
+<script>
+    let packets = [];
+    let lastError = '';
+    const term = document.getElementById("term");
+    const button = document.getElementById('startstop');
+    let socket;
+
+    function formatPacket(byteArray) {
+        var s = '';
+        byteArray.forEach((byte) => {
+            s += ('0' + byte.toString(16)).slice(-2);
+            s += ' ';
+        });
+        return s;
+    }
+
+    function updateTerminal() {
+        let text = '';
+        for (let i = 0; i < packets.length; i++) {
+            text += packets[i] || '';
+            text += '\n';
+        }
+        term.value = (text + lastError);
+    }
+
+    function stop() {
+        socket.close();
+        socket = undefined;
+    }
+
+    function connect() {
+        socket = new WebSocket(`ws://${window.location.hostname}/rawdata`);
+        socket.binaryType = "arraybuffer";
+        socket.onopen = function () {
+            lastError = 'connected';
+            updateTerminal();
+            button.innerText = 'Stop';
+            button.setAttribute('onclick', 'stop();');
+        }
+        socket.onclose = function () {
+            lastError = 'disconnected';
+            updateTerminal();
+            // Packets will get erased right after we reconnect.
+            packets = [];
+            button.innerText = 'Connect';
+            button.setAttribute('onclick', 'connect();');
+        }
+        socket.onmessage = function (event) {
+            if (!event.data instanceof ArrayBuffer) {
+                lastError = "non-binary data";
+                updateTerminal();
+                return;
+            }
+            const data = new Uint8Array(event.data);
+            if (data.length < 4) {
+                lastError = `data is too short, length = ${data.length}`;
+                updateTerminal();
+                return;
+            }
+            packets[data[3]] = formatPacket(data);
+            updateTerminal();
+        };
+
+        socket.onerror = function (error) {
+            lastError = "websocket error";
+            updateTerminal();
+        };
+    }
+    //# sourceURL=monitor.js
+</script>
