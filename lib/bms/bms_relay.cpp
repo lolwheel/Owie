@@ -15,6 +15,10 @@ BmsRelay::BmsRelay(const Source& source, const Sink& sink)
     : source_(source), sink_(sink) {
   sourceBuffer_.reserve(128);
   addPacketCallback(bmsSerialParser);
+  addPacketCallback(currentParser);
+  addPacketCallback(batteryPercentageParser);
+  addPacketCallback(cellVoltageParser);
+  addPacketCallback(temperatureParser);
 }
 
 void BmsRelay::loop() {

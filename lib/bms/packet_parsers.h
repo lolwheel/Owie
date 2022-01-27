@@ -6,7 +6,7 @@
 void bmsSerialParser(BmsRelay* relay, Packet* p);
 void currentParser(BmsRelay* relay, Packet* p);
 void batteryPercentageParser(BmsRelay* relay, Packet* p);
-void batteryVoltageParser(BmsRelay* relay, Packet* p);
-void batteryTemperature(BmsRelay* relay, Packet* p);
+void cellVoltageParser(BmsRelay* relay, Packet* p);
+void temperatureParser(BmsRelay* relay, Packet* p);
 
 #endif  // PACKET_PARSERS_H

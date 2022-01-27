@@ -79,11 +79,47 @@ void testPacketCallback() {
   }
 }
 
+void testBatteryPercentageParsing() {
+  addMockData({0xFF, 0x55, 0xAA, 0x3, 0x2B, 0x02, 0x2C, 0xFF, 0x55, 0xAA});
+  relay->loop();
+  TEST_ASSERT_EQUAL(43, relay->getBatteryPercentage());
+}
+
+void testCurrentParsing() {
+  addMockData({0xff, 0x55, 0xaa, 0x5, 0xff, 0xe8, 0x3, 0xea, 0xFF, 0x55, 0xAA});
+  relay->loop();
+  TEST_ASSERT_FLOAT_WITHIN(0.01, -1.2, relay->getCurrentInAmps());
+}
+
+void testCellVoltageParsing() {
+  addMockData({0xff, 0x55, 0xaa, 0x02, 0x0f, 0x14, 0x0f, 0x14, 0x0f, 0x14, 0x0f,
+               0x13, 0x0f, 0x14, 0x0f, 0x14, 0x0f, 0x14, 0x0f, 0x13, 0x0f, 0x14,
+               0x0f, 0x13, 0x0f, 0x13, 0x0f, 0x13, 0x0f, 0x13, 0x0f, 0x14, 0x0f,
+               0x14, 0x00, 0x2a, 0x04, 0x31, 0xFF, 0x55, 0xAA});
+  relay->loop();
+  uint16_t expected[15] = {3860, 3860, 3860, 3859, 3860, 3860, 3860, 3859,
+                           3860, 3859, 3859, 3859, 3859, 3860, 3860};
+  TEST_ASSERT_EQUAL_INT16_ARRAY(expected, relay->getCellMillivolts(), 15);
+  TEST_ASSERT_EQUAL(57894, relay->getTotalVoltageMillivolts());
+}
+
+void testTemperatureParsing() {
+  addMockData({0xff, 0x55, 0xaa, 0x04, 0x13, 0x14, 0x14, 0x14, 0x16, 0x02, 0xFF,
+               0x55, 0xAA});
+  relay->loop();
+  int8_t expected[5] = {19, 20, 20, 20, 22};
+  TEST_ASSERT_EQUAL_INT8_ARRAY(expected, relay->getTemperaturesCelsius(), 5);
+  TEST_ASSERT_EQUAL(20, relay->getAverageTemperatureCelsius());
+}
+
 int main(int argc, char** argv) {
   UNITY_BEGIN();
   RUN_TEST(testUnknownBytesGetsForwardedImmediately);
   RUN_TEST(testSerialGetsRecordedAndIntercepted);
   RUN_TEST(testPacketCallback);
+  RUN_TEST(testBatteryPercentageParsing);
+  RUN_TEST(testCurrentParsing);
+  RUN_TEST(testCellVoltageParsing);
   UNITY_END();
 
   return 0;

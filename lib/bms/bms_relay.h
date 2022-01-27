@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <limits>
 #include <vector>
 
 class Packet;
@@ -51,6 +52,32 @@ class BmsRelay {
    */
   uint32_t getCapturedBMSSerial() { return captured_serial_; }
 
+  /**
+   * @brief Current In Amps.
+   */
+  float getCurrentInAmps() { return current_; }
+
+  /**
+   * @brief Battery percentage.
+   */
+  int8_t getBatteryPercentage() { return battery_percentage_; }
+
+  /**
+   * @brief Cell voltages in millivolts.
+   * @return pointer to a 15 element array.
+   */
+  uint16_t* const getCellMillivolts() { return cell_millivolts_; }
+
+  uint16_t getTotalVoltageMillivolts() { return total_voltage_millivolts_; }
+
+  /**
+   * @brief Cell voltages in millivolts.
+   * @return pointer to a 5 element array.
+   */
+  int8_t* const getTemperaturesCelsius() { return temperatures_celsius_; }
+
+  uint8_t getAverageTemperatureCelsius() { return avg_temperature_celsius_; }
+
  private:
   void processNextByte();
   bool shouldForward(Packet& p);
@@ -59,10 +86,20 @@ class BmsRelay {
   std::vector<uint8_t> sourceBuffer_;
   uint32_t serial_override_ = 0;
   uint32_t captured_serial_ = 0;
+  float current_ = std::numeric_limits<float>::min();
+  int8_t battery_percentage_ = -1;
+  uint16_t cell_millivolts_[15] = {0};
+  uint16_t total_voltage_millivolts_ = 0;
+  int8_t temperatures_celsius_[5] = {0};
+  int8_t avg_temperature_celsius_ = 0;
   const Source source_;
   const Sink sink_;
 
   friend void bmsSerialParser(BmsRelay* relay, Packet* p);
+  friend void currentParser(BmsRelay* relay, Packet* p);
+  friend void batteryPercentageParser(BmsRelay* relay, Packet* p);
+  friend void cellVoltageParser(BmsRelay* relay, Packet* p);
+  friend void temperatureParser(BmsRelay* relay, Packet* p);
 };
 
 #endif  // BMS_RELAY_H
