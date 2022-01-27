@@ -22,7 +22,7 @@ void IRAM_ATTR txPinFallInterrupt() { digitalWrite(TX_INVERSE_OUT_PIN, 1); }
 }  // namespace
 
 BmsRelay relay([]() { return Serial.read(); },
-               [](uint8_t b) { return Serial.write(b); });
+               [](uint8_t b) { Serial.write(b); });
 
 void bms_setup() {
   Serial.begin(115200);
@@ -41,7 +41,7 @@ void bms_setup() {
     static uint8_t ledState = 0;
     digitalWrite(LED_BUILTIN, ledState);
     ledState = 1 - ledState;
-    streamBMSPacket((const char*)packet->start(), packet->len());
+    streamBMSPacket(packet->start(), packet->len());
   });
   // An example serial override which defeats BMS pairing:
   // relay.setBMSSerialOverride(123456);

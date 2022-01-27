@@ -99,4 +99,6 @@ void setupWebServer() {
   webServer.begin();
 }
 
-void streamBMSPacket(const char *data, size_t len) { ws.binaryAll(data, len); }
+void streamBMSPacket(uint8_t *const data, size_t len) {
+  ws.binaryAll((char *const)data, len);
+}
