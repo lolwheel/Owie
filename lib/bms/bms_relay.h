@@ -18,7 +18,7 @@ class BmsRelay {
   /**
    * @brief Function called to send data to the MB.
    */
-  typedef std::function<size_t(uint8_t)> Sink;
+  typedef std::function<void(uint8_t)> Sink;
 
   /**
    * @brief Packet callback.
@@ -81,6 +81,7 @@ class BmsRelay {
  private:
   void processNextByte();
   bool shouldForward(Packet& p);
+  void purgeUnknownData();
 
   std::vector<PacketCallback> packetCallbacks_;
   std::vector<uint8_t> sourceBuffer_;
