@@ -4,6 +4,7 @@
 #include "bms_relay.h"
 #include "network.h"
 #include "packet.h"
+#include "settings.h"
 #include "task_queue.h"
 
 // UART RX is connected to the *BMS* White line
@@ -51,6 +52,13 @@ void bms_setup() {
     unknownData.push_back(b);
     streamBMSPacket(&unknownData[0], unknownData.size());
   });
+  relay.setPowerOffCallback([]() { saveSettings(); });
+  // Returning flat out -1 amps throws incompatible error 23 in a couple of
+  // minutes on Pint 5314/5050
+  //
+  // TODO(everyone): Experiment heavily on what is the smallest value accepted
+  // by different boards without throwing the error.
+  relay.setCurrentRewriterCallback([](float amps) { return amps * 0.5; });
   // An example serial override which defeats BMS pairing:
   // relay.setBMSSerialOverride(123456);
   setupWifi();
