@@ -106,13 +106,17 @@ FF 55 AA 02 0E EB 0E EF 0E EC 0E ED 0E EF 0E ED 0E EF 0E EF 0E ED 0E F0 0E ED 0E
 
 First three bytes - preamble, fourth byte - message type. Next 30 bytes are 15 `uint16` representing cell voltages in volts \* 1000, e.g. `0EEB` = 3819 in decimal = 3.819 volts.
 
-The `03` message seems to encode the battery percentage.
+The `03` message encodes the battery percentage.
 
 ```
 FF 55 AA 03 48 02 49
 ```
 
 First three bytes - preamble, fourth byte - message type. Next byte is the current battery percentage being reported by the board. e.g. 0x48 is 72 in decimal = 72% battery. Last two bytes are checksum.
+
+The `04` message seems to encode the battery temperature.
+
+The `05` message encodes the current.
 
 The `06` message encodes the BMS serial number.
 
@@ -122,13 +126,13 @@ swapping BMSes between two Pints.
 
 ## Confirmed working board versions
 
-Onewheel+ XR, 4210 | 4144
-Onewheel Pint, 
+Onewheel+ XR, 4210 | 4144\
+Onewheel Pint, 5314 | 5050
 
 ## Troubleshooting:
 
 ### Board reporting battery at 1% after install
 
 If after installing OWIE into your board it reports that your battery is at 1% even though it shouldn't, plug your board into a charger.
-This problem occurs because the BMS goes through a state reset and doesn't know the status of the battery, and plugging the board 
+This problem occurs because the BMS goes through a state reset and doesn't know the status of the battery, and plugging the board
 into a charger corrects this issue by forcing the BMS (and controller potentially) to do a state check.
