@@ -36,7 +36,7 @@ String templateProcessor(const String &var) {
   return "<script>alert('UNKNOWN PLACEHOLDER')</script>";
 }
 
-}  // namespace
+} // namespace
 
 void setupWifi() {
   WiFi.setOutputPower(6);
@@ -50,7 +50,7 @@ void setupWifi() {
     WiFi.hostname(apName);
   }
   MDNS.begin("owie");
-  dnsServer.start(53, "*", WiFi.softAPIP());  // DNS spoofing.
+  dnsServer.start(53, "*", WiFi.softAPIP()); // DNS spoofing.
   TaskQueue.postRecurringTask([]() {
     dnsServer.processNextRequest();
     MDNS.update();
@@ -82,7 +82,7 @@ void setupWebServer() {
       if (ssidParam == nullptr || passwordParam == nullptr ||
           ssidParam->value().length() > sizeof(Settings.ap_name) ||
           passwordParam->value().length() > sizeof(Settings.ap_password)) {
-        request->send(200, "text/html", "Invalid SSID or Password.");
+        request->send(400, "text/html", "Invalid SSID or Password.");
         return;
       }
       std::strncpy(Settings.ap_name, ssidParam->value().c_str(),
@@ -104,7 +104,7 @@ void setupWebServer() {
     case HTTP_POST:
       const auto scaleParam = request->getParam("c", true);
       if (scaleParam == nullptr || scaleParam->value().length() < 1) {
-        request->send(200, "text/html", "Invalid scaling parameter.");
+        request->send(400, "text/html", "Invalid scaling parameter.");
         return;
       }
       Settings.scale_parameter = scaleParam->value().toFloat();
