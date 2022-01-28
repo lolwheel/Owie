@@ -36,6 +36,14 @@ class BmsRelay {
     packetCallbacks_.push_back(callback);
   }
 
+  void setCurrentRewriterCallback(const std::function<float(float)>& c) {
+    currentRewriterCallback_ = c;
+  }
+
+  void setPowerOffCallback(const std::function<void(void)>& c) {
+    powerOffCallback_ = c;
+  }
+
   void setUnknownDataCallback(const Sink& c) { unknownDataCallback_ = c; }
 
   /**
@@ -87,6 +95,9 @@ class BmsRelay {
 
   std::vector<PacketCallback> packetCallbacks_;
   Sink unknownDataCallback_;
+  std::function<float(float)> currentRewriterCallback_;
+  std::function<void(void)> powerOffCallback_;
+
   std::vector<uint8_t> sourceBuffer_;
   uint32_t serial_override_ = 0;
   uint32_t captured_serial_ = 0;

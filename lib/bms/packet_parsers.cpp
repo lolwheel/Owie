@@ -4,10 +4,12 @@
 #include "packet.h"
 
 namespace {
+
 inline int16_t int16FromNetworkOrder(const void* const p) {
   uint8_t* const charPointer = (uint8_t* const)p;
   return ((uint16_t)(*charPointer)) << 8 | *(charPointer + 1);
 }
+
 }  // namespace
 
 void BmsRelay::batteryPercentageParser(Packet& p) {
@@ -33,6 +35,12 @@ void BmsRelay::currentParser(Packet& p) {
   }
   int16_t current = int16FromNetworkOrder(p.data());
   current_ = current * 0.05;
+  if (currentRewriterCallback_) {
+    float floatRewrittenCurrent = currentRewriterCallback_(current_);
+    current = floatRewrittenCurrent * 20;
+    p.data()[0] = current >> 8;
+    p.data()[1] = current & 0xFF;
+  }
 }
 
 void BmsRelay::bmsSerialParser(Packet& p) {
@@ -101,4 +109,7 @@ void BmsRelay::powerOffParser(Packet& p) {
     return;
   }
   // We're about to shut down.
+  if (powerOffCallback_) {
+    powerOffCallback_();
+  }
 }
