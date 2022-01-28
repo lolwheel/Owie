@@ -13,7 +13,7 @@ const int8_t packetLengths[] = {7, -1, 38, 7, 11, 8,  10, 13, 7,
 
 BmsRelay::BmsRelay(const Source& source, const Sink& sink)
     : source_(source), sink_(sink) {
-  sourceBuffer_.reserve(32);
+  sourceBuffer_.reserve(64);
 }
 
 void BmsRelay::loop() {
@@ -71,7 +71,8 @@ void BmsRelay::processNextByte() {
   cellVoltageParser(p);
   temperatureParser(p);
   powerOffParser(p);
-
+  // Recalculate CRC twice, so that any logging callback see the correct CRCs
+  p.recalculateCrcIfValid();
   for (auto callback : packetCallbacks_) {
     callback(this, &p);
   }
