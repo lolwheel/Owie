@@ -3,6 +3,7 @@
 <script>
     let packets = [];
     let lastError = '';
+    let unknownData = '';
     const term = document.getElementById("term");
     const button = document.getElementById('startstop');
     let socket;
@@ -22,7 +23,7 @@
             text += packets[i] || '';
             text += '\n';
         }
-        term.value = (text + lastError);
+        term.value = (text + unknownData + lastError);
     }
 
     function stop() {
@@ -44,6 +45,7 @@
             updateTerminal();
             // Packets will get erased right after we reconnect.
             packets = [];
+            unknownData = '';
             button.innerText = 'Connect';
             button.setAttribute('onclick', 'connect();');
         }
@@ -54,6 +56,11 @@
                 return;
             }
             const data = new Uint8Array(event.data);
+            if (data[0] == 0) {
+                unknownData = `Unknown data: ${formatPacket(data.slice(1))}\n`;
+                updateTerminal();
+                return;
+            }
             if (data.length < 4) {
                 lastError = `data is too short, length = ${data.length}`;
                 updateTerminal();

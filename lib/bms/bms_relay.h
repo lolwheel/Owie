@@ -36,6 +36,8 @@ class BmsRelay {
     packetCallbacks_.push_back(callback);
   }
 
+  void setUnknownDataCallback(const Sink& c) { unknownDataCallback_ = c; }
+
   /**
    * @brief If set to non-zero value, spoofs captured BMS serial
    * with the number provided here. The serial number can be found
@@ -84,6 +86,7 @@ class BmsRelay {
   void purgeUnknownData();
 
   std::vector<PacketCallback> packetCallbacks_;
+  Sink unknownDataCallback_;
   std::vector<uint8_t> sourceBuffer_;
   uint32_t serial_override_ = 0;
   uint32_t captured_serial_ = 0;
@@ -96,11 +99,12 @@ class BmsRelay {
   const Source source_;
   const Sink sink_;
 
-  friend void bmsSerialParser(BmsRelay* relay, Packet* p);
-  friend void currentParser(BmsRelay* relay, Packet* p);
-  friend void batteryPercentageParser(BmsRelay* relay, Packet* p);
-  friend void cellVoltageParser(BmsRelay* relay, Packet* p);
-  friend void temperatureParser(BmsRelay* relay, Packet* p);
+  void bmsSerialParser(Packet& p);
+  void currentParser(Packet& p);
+  void batteryPercentageParser(Packet& p);
+  void cellVoltageParser(Packet& p);
+  void temperatureParser(Packet& p);
+  void powerOffParser(Packet& p);
 };
 
 #endif  // BMS_RELAY_H

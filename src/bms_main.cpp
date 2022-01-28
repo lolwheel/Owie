@@ -43,6 +43,14 @@ void bms_setup() {
     ledState = 1 - ledState;
     streamBMSPacket(packet->start(), packet->len());
   });
+  relay.setUnknownDataCallback([](uint8_t b) {
+    static std::vector<uint8_t> unknownData = {0};
+    if (unknownData.size() > 128) {
+      return;
+    }
+    unknownData.push_back(b);
+    streamBMSPacket(&unknownData[0], unknownData.size());
+  });
   // An example serial override which defeats BMS pairing:
   // relay.setBMSSerialOverride(123456);
   setupWifi();
