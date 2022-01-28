@@ -3,23 +3,17 @@
 #include <cstring>
 
 #include "packet.h"
-#include "packet_parsers.h"
 
 namespace {
 const uint8_t PREAMBLE[] = {0xFF, 0x55, 0xAA};
 
 const int8_t packetLengths[] = {7, -1, 38, 7, 11, 8,  10, 13, 7,
-                                7, -1, -1, 8, 9,  -1, 11, 16, 10};
+                                7, -1, 8,  8, 9,  -1, 11, 16, 10};
 }  // namespace
 
 BmsRelay::BmsRelay(const Source& source, const Sink& sink)
     : source_(source), sink_(sink) {
-  sourceBuffer_.reserve(128);
-  addPacketCallback(bmsSerialParser);
-  addPacketCallback(currentParser);
-  addPacketCallback(batteryPercentageParser);
-  addPacketCallback(cellVoltageParser);
-  addPacketCallback(temperatureParser);
+  sourceBuffer_.reserve(32);
 }
 
 void BmsRelay::loop() {
@@ -36,6 +30,11 @@ void BmsRelay::loop() {
 void BmsRelay::purgeUnknownData() {
   for (uint8_t b : sourceBuffer_) {
     sink_(b);
+  }
+  if (unknownDataCallback_) {
+    for (uint8_t b : sourceBuffer_) {
+      unknownDataCallback_(b);
+    }
   }
   sourceBuffer_.clear();
 }
@@ -65,6 +64,14 @@ void BmsRelay::processNextByte() {
     return;
   }
   Packet p(sourceBuffer_.data(), len);
+
+  bmsSerialParser(p);
+  currentParser(p);
+  batteryPercentageParser(p);
+  cellVoltageParser(p);
+  temperatureParser(p);
+  powerOffParser(p);
+
   for (auto callback : packetCallbacks_) {
     callback(this, &p);
   }
