@@ -28,6 +28,10 @@ String templateProcessor(const String &var) {
       return defaultPass;
     }
     return "";
+  } else if (var == "CAPACITY") {
+    char capacityStr[16]; // 16 bytes should be large enough
+    sprintf(capacityStr, "%2.2g", Settings.scale_parameter);
+    return capacityStr;
   }
   return "<script>alert('UNKNOWN PLACEHOLDER')</script>";
 }
@@ -68,26 +72,45 @@ void setupWebServer() {
   });
   webServer.on("/wifi", HTTP_ANY, [](AsyncWebServerRequest *request) {
     switch (request->method()) {
-      case HTTP_GET:
-        request->send_P(200, "text/html", WIFI_HTML_PROGMEM_ARRAY,
-                        WIFI_HTML_SIZE, templateProcessor);
+    case HTTP_GET:
+      request->send_P(200, "text/html", WIFI_HTML_PROGMEM_ARRAY, WIFI_HTML_SIZE,
+                      templateProcessor);
+      return;
+    case HTTP_POST:
+      const auto ssidParam = request->getParam("s", true);
+      const auto passwordParam = request->getParam("p", true);
+      if (ssidParam == nullptr || passwordParam == nullptr ||
+          ssidParam->value().length() > sizeof(Settings.ap_name) ||
+          passwordParam->value().length() > sizeof(Settings.ap_password)) {
+        request->send(200, "text/html", "Invalid SSID or Password.");
         return;
-      case HTTP_POST:
-        const auto ssidParam = request->getParam("s", true);
-        const auto passwordParam = request->getParam("p", true);
-        if (ssidParam == nullptr || passwordParam == nullptr ||
-            ssidParam->value().length() > sizeof(Settings.ap_name) ||
-            passwordParam->value().length() > sizeof(Settings.ap_password)) {
-          request->send(200, "text/html", "Invalid SSID or Password.");
-          return;
-        }
-        std::strncpy(Settings.ap_name, ssidParam->value().c_str(),
-                     sizeof(Settings.ap_name));
-        std::strncpy(Settings.ap_password, passwordParam->value().c_str(),
-                     sizeof(Settings.ap_password));
-        saveSettingsAndRestartSoon();
-        request->send(200, "text/html", "WiFi settings saved, restarting...");
+      }
+      std::strncpy(Settings.ap_name, ssidParam->value().c_str(),
+                   sizeof(Settings.ap_name));
+      std::strncpy(Settings.ap_password, passwordParam->value().c_str(),
+                   sizeof(Settings.ap_password));
+      saveSettingsAndRestartSoon();
+      request->send(200, "text/html", "WiFi settings saved, restarting...");
+      return;
+    }
+    request->send(404);
+  });
+  webServer.on("/batteryvalues", HTTP_ANY, [](AsyncWebServerRequest *request) {
+    switch (request->method()) {
+    case HTTP_GET:
+      request->send_P(200, "text/html", BATTERYVALUES_HTML_PROGMEM_ARRAY,
+                      BATTERYVALUES_HTML_SIZE, templateProcessor);
+      return;
+    case HTTP_POST:
+      const auto scaleParam = request->getParam("c", true);
+      if (scaleParam == nullptr || scaleParam->value().length() < 1) {
+        request->send(200, "text/html", "Invalid scaling parameter.");
         return;
+      }
+      Settings.scale_parameter = scaleParam->value().toFloat();
+      saveSettingsAndRestartSoon();
+      request->send(200, "text/html", "Scaling settings saved, restarting...");
+      return;
     }
     request->send(404);
   });

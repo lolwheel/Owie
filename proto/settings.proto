@@ -4,4 +4,5 @@ message SettingsMsg {
   uint32 quick_power_cycle_count = 1;
   string ap_name = 2;
   string ap_password = 3;
+  float scale_parameter = 4;
 }
