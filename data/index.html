@@ -140,6 +140,7 @@
             });
             return xhr;
         }
+
         function handleFormSubmit(event) {
             event.preventDefault();
             const xhr = getXhr();
@@ -159,22 +160,22 @@
         function rescanContent() {
             const content = document.getElementById('content');
             Array.from(content.getElementsByTagName('form')).
-                filter(f => !f.hasAttribute('owie_procesed')).forEach((f) => {
-                    f.setAttribute('owie_procesed', '1');
-                    f.addEventListener("submit", handleFormSubmit);
-                });
+            filter(f => !f.hasAttribute('owie_procesed')).forEach((f) => {
+                f.setAttribute('owie_procesed', '1');
+                f.addEventListener("submit", handleFormSubmit);
+            });
             Array.from(content.getElementsByTagName('a')).
-                filter((a) => !a.hasAttribute('owie_procesed')).forEach((a) => {
-                    a.setAttribute('owie_procesed', '1');
-                    a.addEventListener("click", handleLinkClick);
-                });
+            filter((a) => !a.hasAttribute('owie_procesed')).forEach((a) => {
+                a.setAttribute('owie_procesed', '1');
+                a.addEventListener("click", handleLinkClick);
+            });
             Array.from(content.getElementsByTagName('script')).
-                filter((s) => !s.hasAttribute('owie_procesed')).forEach((s) => {
-                    s.setAttribute('owie_procesed', '1');
-                    const clone = document.createElement('script');
-                    clone.text = s.innerHTML;
-                    s.parentElement.replaceChild(clone, s);
-                });
+            filter((s) => !s.hasAttribute('owie_procesed')).forEach((s) => {
+                s.setAttribute('owie_procesed', '1');
+                const clone = document.createElement('script');
+                clone.text = s.innerHTML;
+                s.parentElement.replaceChild(clone, s);
+            });
         }
         window.addEventListener('DOMContentLoaded', rescanContent);
     </script>
@@ -185,6 +186,9 @@
         <div style="text-align:center;color:#eaeaea;">
             <h2>Owie</h2>
         </div>
+        <hr>
+        <p style="text-align:center;font-size:11px;">Coefficient: %COEFFICIENT% Offset: %OFFSET%</p>
+        <hr>
         <div id="content">
             <form action="/wifi">
                 <button>Wifi Configuration</button>
@@ -195,14 +199,12 @@
             </form>
             <p></p>
             <form action="/batteryvalues">
-                <button>Change Battery Values</button>
+                <button>Change BMS Values</button>
             </form>
         </div>
-        <div style="text-align:right;font-size:11px;">
-            <hr>
-            <p style="color:#aaa;">Owie %OWIE_version%</p>
-            <p style="color:#aaa;">Currently scaling battery by %CAPACITY%</p>
-        </div>
+        <hr>
+        <!-- <p style="text-align:center;font-size:11px;"> Current: %CURRENT% Voltage: %VOLTAGE%</p> -->
+        <p style="text-align:right;font-size:11px;">Owie %OWIE_version%</p>
     </div>
 </body>
 

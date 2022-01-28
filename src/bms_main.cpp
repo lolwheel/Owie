@@ -20,7 +20,7 @@ namespace {
 // of the TX A line.
 void IRAM_ATTR txPinRiseInterrupt() { digitalWrite(TX_INVERSE_OUT_PIN, 0); }
 void IRAM_ATTR txPinFallInterrupt() { digitalWrite(TX_INVERSE_OUT_PIN, 1); }
-}  // namespace
+} // namespace
 
 BmsRelay relay([]() { return Serial.read(); },
                [](uint8_t b) { Serial.write(b); });
@@ -38,7 +38,7 @@ void bms_setup() {
                   RISING);
   attachInterrupt(digitalPinToInterrupt(TX_INPUT_PIN), txPinFallInterrupt,
                   FALLING);
-  relay.addPacketCallback([](BmsRelay*, Packet* packet) {
+  relay.addPacketCallback([](BmsRelay *, Packet *packet) {
     static uint8_t ledState = 0;
     digitalWrite(LED_BUILTIN, ledState);
     ledState = 1 - ledState;
@@ -58,7 +58,9 @@ void bms_setup() {
   //
   // TODO(everyone): Experiment heavily on what is the smallest value accepted
   // by different boards without throwing the error.
-  relay.setCurrentRewriterCallback([](float amps) { return amps * 0.5; });
+  relay.setCurrentRewriterCallback([](float amps) {
+    return (Settings.coefficient * 2) * amps + Settings.offset;
+  });
   // An example serial override which defeats BMS pairing:
   // relay.setBMSSerialOverride(123456);
   setupWifi();

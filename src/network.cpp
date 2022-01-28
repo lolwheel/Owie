@@ -28,10 +28,14 @@ String templateProcessor(const String &var) {
       return defaultPass;
     }
     return "";
-  } else if (var == "CAPACITY") {
-    char capacityStr[16]; // 16 bytes should be large enough
-    sprintf(capacityStr, "%2.2g", Settings.scale_parameter);
-    return capacityStr;
+  } else if (var == "COEFFICIENT") {
+    char bufStr[16]; // 16 bytes should be large enough
+    sprintf(bufStr, "%2.2g", Settings.coefficient);
+    return bufStr;
+  } else if (var == "OFFSET") {
+    char bufStr[16]; // 16 bytes should be large enough
+    sprintf(bufStr, "%2.2g", Settings.offset);
+    return bufStr;
   }
   return "<script>alert('UNKNOWN PLACEHOLDER')</script>";
 }
@@ -102,12 +106,18 @@ void setupWebServer() {
                       BATTERYVALUES_HTML_SIZE, templateProcessor);
       return;
     case HTTP_POST:
-      const auto scaleParam = request->getParam("c", true);
-      if (scaleParam == nullptr || scaleParam->value().length() < 1) {
-        request->send(400, "text/html", "Invalid scaling parameter.");
+      const auto coefficient = request->getParam("coefficient", true);
+      const auto offset = request->getParam("offset", true);
+      if (coefficient == nullptr || coefficient->value().length() < 1) {
+        request->send(400, "text/html", "Invalid current override value.");
+        return;
+      } else if (offset == nullptr || offset->value().length() < 1) {
+        request->send(400, "text/html", "Invalid current override enabled.");
         return;
       }
-      Settings.scale_parameter = scaleParam->value().toFloat();
+      Settings.coefficient = coefficient->value().toFloat();
+      Settings.offset = offset->value().toFloat();
+
       saveSettingsAndRestartSoon();
       request->send(200, "text/html", "Scaling settings saved, restarting...");
       return;
