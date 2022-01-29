@@ -30,11 +30,11 @@ String templateProcessor(const String &var) {
     return "";
   } else if (var == "COEFFICIENT") {
     char bufStr[16]; // 16 bytes should be large enough
-    sprintf(bufStr, "%2.2g", Settings.coefficient);
+    snprintf(bufStr, "%2.2g", Settings.coefficient);
     return bufStr;
   } else if (var == "OFFSET") {
     char bufStr[16]; // 16 bytes should be large enough
-    sprintf(bufStr, "%2.2g", Settings.offset);
+    snprintf(bufStr, "%2.2g", Settings.offset);
     return bufStr;
   }
   return "<script>alert('UNKNOWN PLACEHOLDER')</script>";
@@ -99,20 +99,17 @@ void setupWebServer() {
     }
     request->send(404);
   });
-  webServer.on("/batteryvalues", HTTP_ANY, [](AsyncWebServerRequest *request) {
+  webServer.on("/settings", HTTP_ANY, [](AsyncWebServerRequest *request) {
     switch (request->method()) {
     case HTTP_GET:
-      request->send_P(200, "text/html", BATTERYVALUES_HTML_PROGMEM_ARRAY,
-                      BATTERYVALUES_HTML_SIZE, templateProcessor);
+      request->send_P(200, "text/html", SETTINGS_HTML_PROGMEM_ARRAY,
+                      SETTINGS_HTML_SIZE, templateProcessor);
       return;
     case HTTP_POST:
       const auto coefficient = request->getParam("coefficient", true);
       const auto offset = request->getParam("offset", true);
-      if (coefficient == nullptr || coefficient->value().length() < 1) {
-        request->send(400, "text/html", "Invalid current override value.");
-        return;
-      } else if (offset == nullptr || offset->value().length() < 1) {
-        request->send(400, "text/html", "Invalid current override enabled.");
+      if (coefficient == nullptr || offset == nullptr) {
+        request->send(400, "text/html", "Invalid value entered.");
         return;
       }
       Settings.coefficient = coefficient->value().toFloat();
