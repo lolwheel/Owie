@@ -59,6 +59,10 @@ void bms_setup() {
   // TODO(everyone): Experiment heavily on what is the smallest value accepted
   // by different boards without throwing the error.
   relay.setCurrentRewriterCallback([](float amps) { return amps * 0.5; });
+  relay.setPowerOffCallback([]() {
+    Settings.graceful_shutdown_count++;
+    saveSettings();
+  });
   // An example serial override which defeats BMS pairing:
   // relay.setBMSSerialOverride(123456);
   setupWifi();

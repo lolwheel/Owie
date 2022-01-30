@@ -28,6 +28,8 @@ String templateProcessor(const String &var) {
       return defaultPass;
     }
     return "";
+  } else if (var == "GRACEFUL_SHUTDOWN_COUNT") {
+    return String(Settings.graceful_shutdown_count);
   }
   return "<script>alert('UNKNOWN PLACEHOLDER')</script>";
 }
