@@ -59,8 +59,7 @@ void bms_setup() {
   // TODO(everyone): Experiment heavily on what is the smallest value accepted
   // by different boards without throwing the error.
   relay.setCurrentRewriterCallback([](float amps) {
-    // coefficient is multiplied by 2 because the reported current is scaled by
-    // .05
+    // scaling coefficient for accurate reporting in owce
     return (Settings.coefficient * 2) * amps + Settings.offset;
   });
   // An example serial override which defeats BMS pairing:

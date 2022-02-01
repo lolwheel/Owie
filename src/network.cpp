@@ -28,13 +28,13 @@ String templateProcessor(const String &var) {
       return defaultPass;
     }
     return "";
-  } else if (var == "COEFFICIENT") {
+  } else if (var == "CURRENT_MULTIPLIER") {
     char bufStr[16]; // 16 bytes should be large enough
-    snprintf(bufStr, "%2.2g", Settings.coefficient);
+    snprintf(bufStr, 16, "%2.2g", Settings.coefficient);
     return bufStr;
-  } else if (var == "OFFSET") {
+  } else if (var == "CURRENT_OFFSET_AMPS") {
     char bufStr[16]; // 16 bytes should be large enough
-    snprintf(bufStr, "%2.2g", Settings.offset);
+    snprintf(bufStr, 16, "%2.2g", Settings.offset);
     return bufStr;
   }
   return "<script>alert('UNKNOWN PLACEHOLDER')</script>";
