@@ -108,7 +108,7 @@ void setupWebServer() {
                       SETTINGS_HTML_SIZE, templateProcessor);
       return;
     case HTTP_POST:
-      const auto coefficient = request->getParam("coefficient", true);
+      const auto coefficient = request->getParam("multiplier", true);
       const auto offset = request->getParam("offset", true);
       if (coefficient == nullptr || offset == nullptr) {
         request->send(400, "text/html", "Invalid value entered.");
