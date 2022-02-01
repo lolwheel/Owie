@@ -61,7 +61,7 @@ void bms_setup() {
   relay.setCurrentRewriterCallback([](float amps) {
     // scaling coefficient for accurate reporting in owce
     return (Settings.coefficient * 2) * amps + Settings.offset;
-  }
+  });
   relay.setPowerOffCallback([]() {
     Settings.graceful_shutdown_count++;
     saveSettings();
