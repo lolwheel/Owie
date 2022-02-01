@@ -25,10 +25,14 @@ void TaskQueueType::postRecurringTask(const Task& task) {
 
 void TaskQueueType::process() {
   auto time = millis_();
+  std::vector<Task> toExecute;
   while (!timedTasks_.empty() && time > timedTasks_.front().first) {
-    timedTasks_.front().second();
+    toExecute.push_back(timedTasks_.front().second);
     std::pop_heap(timedTasks_.begin(), timedTasks_.end(), comparator);
     timedTasks_.pop_back();
+  }
+  for (const auto& c : toExecute) {
+    c();
   }
   for (const auto& c : recurringTasks_) {
     c();

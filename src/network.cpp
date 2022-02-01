@@ -36,6 +36,8 @@ String templateProcessor(const String &var) {
     char bufStr[16]; // 16 bytes should be large enough
     snprintf(bufStr, 16, "%2.2g", Settings.offset);
     return bufStr;
+  } else if (var == "GRACEFUL_SHUTDOWN_COUNT") {
+    return String(Settings.graceful_shutdown_count);
   }
   return "<script>alert('UNKNOWN PLACEHOLDER')</script>";
 }

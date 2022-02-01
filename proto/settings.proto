@@ -6,4 +6,5 @@ message SettingsMsg {
   string ap_password = 3;
   float coefficient = 4;
   float offset = 5;
+  int32 graceful_shutdown_count = 6;
 }

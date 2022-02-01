@@ -5,6 +5,8 @@
 
 namespace {
 
+const float CURRENT_SCALER = 0.055;
+
 inline int16_t int16FromNetworkOrder(const void* const p) {
   uint8_t* const charPointer = (uint8_t* const)p;
   return ((uint16_t)(*charPointer)) << 8 | *(charPointer + 1);
@@ -28,16 +30,16 @@ void BmsRelay::currentParser(Packet& p) {
     return;
   }
   // 0x5 message encodes current as signed int16.
-  // The scaling factor (tested on a Pint) seems to be 0.05
-  // i.e. 1 in the data message below corresponds to 0.05 Amps.
+  // The scaling factor (tested on a Pint) seems to be 0.055
+  // i.e. 1 in the data message below corresponds to 0.055 Amps.
   if (p.dataLength() != 2) {
     return;
   }
   int16_t current = int16FromNetworkOrder(p.data());
-  current_ = current * 0.05;
+  current_ = current * CURRENT_SCALER;
   if (currentRewriterCallback_) {
     float floatRewrittenCurrent = currentRewriterCallback_(current_);
-    current = floatRewrittenCurrent * 20;
+    current = floatRewrittenCurrent / CURRENT_SCALER;
     p.data()[0] = current >> 8;
     p.data()[1] = current & 0xFF;
   }
