@@ -22,7 +22,17 @@ void BmsRelay::batteryPercentageParser(Packet& p) {
   if (p.dataLength() != 1) {
     return;
   }
-  battery_percentage_ = *(int8_t*)p.data();
+  bmsSocPercent_ = *(int8_t*)p.data();
+  if (socRewriterCallback_) {
+    bool shouldForward = true;
+    int8_t rewrittenSoc = socRewriterCallback_(bmsSocPercent_, &shouldForward);
+    if (!shouldForward) {
+      p.setShouldForward(false);
+      return;
+    }
+    overriddenSoc_ = rewrittenSoc;
+    p.data()[0] = rewrittenSoc;
+  }
 }
 
 void BmsRelay::currentParser(Packet& p) {
@@ -38,7 +48,13 @@ void BmsRelay::currentParser(Packet& p) {
   int16_t current = int16FromNetworkOrder(p.data());
   current_ = current * CURRENT_SCALER;
   if (currentRewriterCallback_) {
-    float floatRewrittenCurrent = currentRewriterCallback_(current_);
+    bool shouldForward = true;
+    float floatRewrittenCurrent =
+        currentRewriterCallback_(current_, &shouldForward);
+    if (!shouldForward) {
+      p.setShouldForward(false);
+      return;
+    }
     current = floatRewrittenCurrent / CURRENT_SCALER;
     p.data()[0] = current >> 8;
     p.data()[1] = current & 0xFF;

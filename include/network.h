@@ -5,8 +5,10 @@
 
 #include <cstdint>
 
+class BmsRelay;
+
 void setupWifi();
-void setupWebServer();
+void setupWebServer(BmsRelay* bmsRelay);
 void streamBMSPacket(uint8_t* const buffer, size_t len);
 
 #endif  // NETWORK_H

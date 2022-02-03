@@ -29,6 +29,12 @@ EEPROM_Rotate& getEeprom() {
   return e;
 }
 
+void maybeInitDefaults(SettingsMsg* s) {
+  if (s->real_board_capacity_mah == 0) {
+    s->real_board_capacity_mah = 10000;
+  }
+}
+
 }  // namespace
 
 void loadSettings() {
@@ -39,6 +45,7 @@ void loadSettings() {
         pb_istream_from_buffer(getEeprom().getConstDataPtr() + 2, len);
     if (pb_decode(&istream, &SettingsMsg_msg, &Settings)) {
       DPRINTF("Read and decoded settings, size = %d bytes.", len);
+      maybeInitDefaults(&Settings);
       return;
     }
   }

@@ -36,12 +36,16 @@ class BmsRelay {
     packetCallbacks_.push_back(callback);
   }
 
-  void setCurrentRewriterCallback(const std::function<float(float)>& c) {
+  void setCurrentRewriterCallback(const std::function<float(float, bool*)>& c) {
     currentRewriterCallback_ = c;
   }
 
   void setPowerOffCallback(const std::function<void(void)>& c) {
     powerOffCallback_ = c;
+  }
+
+  void setSocRewriterCallback(const std::function<int8_t(int8_t, bool*)>& c) {
+    socRewriterCallback_ = c;
   }
 
   void setUnknownDataCallback(const Sink& c) { unknownDataCallback_ = c; }
@@ -68,9 +72,14 @@ class BmsRelay {
   float getCurrentInAmps() { return current_; }
 
   /**
-   * @brief Battery percentage.
+   * @brief Battery percentage as reported by the BMS.
    */
-  int8_t getBatteryPercentage() { return battery_percentage_; }
+  int8_t getBmsReportedSOC() { return bmsSocPercent_; }
+
+  /**
+   * @brief Spoofed battery percentage sent to the controller.
+   */
+  int8_t getOverriddenSoc() { return overriddenSoc_; }
 
   /**
    * @brief Cell voltages in millivolts.
@@ -95,14 +104,16 @@ class BmsRelay {
 
   std::vector<PacketCallback> packetCallbacks_;
   Sink unknownDataCallback_;
-  std::function<float(float)> currentRewriterCallback_;
+  std::function<float(float, bool*)> currentRewriterCallback_;
+  std::function<int8_t(int8_t, bool*)> socRewriterCallback_;
   std::function<void(void)> powerOffCallback_;
 
   std::vector<uint8_t> sourceBuffer_;
   uint32_t serial_override_ = 0;
   uint32_t captured_serial_ = 0;
   float current_ = std::numeric_limits<float>::min();
-  int8_t battery_percentage_ = -1;
+  int8_t bmsSocPercent_ = -1;
+  int8_t overriddenSoc_ = -1;
   uint16_t cell_millivolts_[15] = {0};
   uint16_t total_voltage_millivolts_ = 0;
   int8_t temperatures_celsius_[5] = {0};

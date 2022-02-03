@@ -7,6 +7,7 @@
 
 #include <cstring>
 
+#include "bms_relay.h"
 #include "data.h"
 #include "settings.h"
 #include "task_queue.h"
@@ -17,9 +18,24 @@ AsyncWebServer webServer(80);
 AsyncWebSocket ws("/rawdata");
 
 const String defaultPass("****");
+BmsRelay *relay;
 
 String templateProcessor(const String &var) {
-  if (var == "OWIE_version") {
+  if (var == "TOTAL_VOLTAGE") {
+    return String(relay->getTotalVoltageMillivolts() / 1000.0,
+                  /* decimalPlaces = */ 1);
+  } else if (var == "CURRENT_AMPS") {
+    return String(relay->getCurrentInAmps(),
+                  /* decimalPlaces = */ 1);
+  } else if (var == "BMS_SOC") {
+    return String(relay->getBmsReportedSOC());
+  } else if (var == "OVERRIDDEN_SOC") {
+    return String(relay->getOverriddenSoc());
+  } else if (var == "BATTERY_TOTAL_CAP_MAH") {
+    return String(Settings.real_board_capacity_mah);
+  } else if (var == "BATTERY_MAH_TILL_EMPTY") {
+    return String((int)(Settings.milliampseconds_till_empty / 3600));
+  } else if (var == "OWIE_version") {
     return "0.0.1";
   } else if (var == "SSID") {
     return Settings.ap_name;
@@ -37,7 +53,7 @@ String templateProcessor(const String &var) {
 }  // namespace
 
 void setupWifi() {
-  WiFi.setOutputPower(6);
+  WiFi.setOutputPower(9);
   bool stationMode = (strlen(Settings.ap_name) > 0);
   WiFi.mode(stationMode ? WIFI_AP_STA : WIFI_AP);
   char apName[64];
@@ -55,7 +71,8 @@ void setupWifi() {
   });
 }
 
-void setupWebServer() {
+void setupWebServer(BmsRelay *bmsRelay) {
+  relay = bmsRelay;
   webServer.addHandler(&ws);
   webServer.onNotFound([](AsyncWebServerRequest *request) {
     if (request->host().indexOf("owie.local") >= 0) {

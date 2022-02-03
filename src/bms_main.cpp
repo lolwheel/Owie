@@ -1,5 +1,8 @@
 #include <Arduino.h>
 
+#include <algorithm>
+#include <cmath>
+
 #include "arduino_ota.h"
 #include "bms_relay.h"
 #include "network.h"
@@ -25,6 +28,12 @@ void IRAM_ATTR txPinFallInterrupt() { digitalWrite(TX_INVERSE_OUT_PIN, 1); }
 BmsRelay relay([]() { return Serial.read(); },
                [](uint8_t b) { Serial.write(b); });
 
+int openCircuitSocFromVoltage(float voltageVolts) {
+  // kindly provided by biell@ in https://github.com/lolwheel/Owie/issues/1
+  return std::clamp((int)(99.9 / (0.8 + pow(1.24, (54 - voltageVolts))) - 10),
+                    1, 100);
+}
+
 void bms_setup() {
   Serial.begin(115200);
 
@@ -38,6 +47,7 @@ void bms_setup() {
                   RISING);
   attachInterrupt(digitalPinToInterrupt(TX_INPUT_PIN), txPinFallInterrupt,
                   FALLING);
+
   relay.addPacketCallback([](BmsRelay*, Packet* packet) {
     static uint8_t ledState = 0;
     digitalWrite(LED_BUILTIN, ledState);
@@ -52,13 +62,47 @@ void bms_setup() {
     unknownData.push_back(b);
     streamBMSPacket(&unknownData[0], unknownData.size());
   });
-  relay.setPowerOffCallback([]() { saveSettings(); });
-  // Returning flat out -1 amps throws incompatible error 23 in a couple of
-  // minutes on Pint 5314/5050
-  //
-  // TODO(everyone): Experiment heavily on what is the smallest value accepted
-  // by different boards without throwing the error.
-  relay.setCurrentRewriterCallback([](float amps) { return amps * 0.5; });
+  relay.setCurrentRewriterCallback([](float amps, bool* shouldForward) {
+    static unsigned long lastCurrentMessageMillis = 0;
+    static float lastCurrent = 0;
+    if (lastCurrentMessageMillis == 0) {
+      lastCurrent = amps;
+      lastCurrentMessageMillis = millis();
+      return 0;
+    }
+    const unsigned long now = millis();
+    const unsigned long millisElapsed = now - lastCurrentMessageMillis;
+    lastCurrentMessageMillis = now;
+    Settings.milliampseconds_till_empty -=
+        (lastCurrent + amps) / 2 * millisElapsed;
+    if (Settings.milliampseconds_till_empty <= 0) {
+      Settings.milliampseconds_till_empty = 1;
+    } else {
+      Settings.real_board_capacity_mah =
+          max(Settings.real_board_capacity_mah,
+              (int)(Settings.milliampseconds_till_empty / 3600));
+    }
+    *shouldForward = false;
+    return 0;
+  });
+  relay.setSocRewriterCallback([&](int8_t bmsSoc, bool* shouldForward) {
+    if (relay.getTotalVoltageMillivolts() == 0) {
+      return 99;
+    }
+    // Assume that the first time we boot the battery is very close to open
+    // state and approximate the SOC just by voltage.
+    if (Settings.milliampseconds_till_empty == 0) {
+      if (relay.getTotalVoltageMillivolts() == 0) {
+        return 99;
+      }
+      int8_t estimatedSoc =
+          openCircuitSocFromVoltage(relay.getTotalVoltageMillivolts() / 1000.0);
+      Settings.milliampseconds_till_empty =
+          Settings.real_board_capacity_mah * estimatedSoc * 36.0;
+    }
+    return max(5, (int)(Settings.milliampseconds_till_empty / 36.0 /
+                        Settings.real_board_capacity_mah));
+  });
   relay.setPowerOffCallback([]() {
     Settings.graceful_shutdown_count++;
     saveSettings();
@@ -66,7 +110,7 @@ void bms_setup() {
   // An example serial override which defeats BMS pairing:
   // relay.setBMSSerialOverride(123456);
   setupWifi();
-  setupWebServer();
+  setupWebServer(&relay);
   setupArduinoOTA();
   TaskQueue.postRecurringTask([&]() { relay.loop(); });
 }

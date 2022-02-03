@@ -77,8 +77,10 @@ void BmsRelay::processNextByte() {
     callback(this, &p);
   }
   p.recalculateCrcIfValid();
-  for (int i = 0; i < p.len(); i++) {
-    sink_(p.start()[i]);
+  if (p.shouldForward()) {
+    for (int i = 0; i < p.len(); i++) {
+      sink_(p.start()[i]);
+    }
   }
   sourceBuffer_.clear();
 }

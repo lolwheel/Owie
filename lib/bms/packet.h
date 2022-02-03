@@ -31,6 +31,12 @@ class Packet {
     return len_ - 6;
   }
 
+  void setShouldForward(bool shouldForward) {
+    this->shouldForward_ = shouldForward;
+  }
+
+  bool shouldForward() { return this->shouldForward_; }
+
   void recalculateCrcIfValid();
 
   uint8_t* start() const { return start_; }
@@ -42,6 +48,7 @@ class Packet {
   uint8_t* start_;
   uint8_t len_;
   bool valid_ = false;
+  bool shouldForward_ = true;
 };
 
 #endif  // PACKET_H
