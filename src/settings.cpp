@@ -9,11 +9,10 @@
 #include "spi_flash_geometry.h"
 #include "task_queue.h"
 
-SettingsMsg Settings = SettingsMsg_init_default;
-
 namespace {
+SettingsMsg __settings = SettingsMsg_init_default;
 
-SettingsMsg DefaultSettings = SettingsMsg_init_default;
+SettingsMsg DEFAULT_SETTINGS = SettingsMsg_init_default;
 // 3 bytes needed by EEPROM_Rotate + 2 byte proto message size
 const size_t MAX_SETTINGS_SIZE = SPI_FLASH_SEC_SIZE - 5;
 
@@ -28,14 +27,9 @@ EEPROM_Rotate& getEeprom() {
   }
   return e;
 }
-
-void maybeInitDefaults(SettingsMsg* s) {
-  if (s->real_board_capacity_mah == 0) {
-    s->real_board_capacity_mah = 10000;
-  }
-}
-
 }  // namespace
+
+SettingsMsg* Settings = &__settings;
 
 void loadSettings() {
   auto& e = getEeprom();
@@ -43,21 +37,20 @@ void loadSettings() {
   if (len <= MAX_SETTINGS_SIZE) {
     auto istream =
         pb_istream_from_buffer(getEeprom().getConstDataPtr() + 2, len);
-    if (pb_decode(&istream, &SettingsMsg_msg, &Settings)) {
+    if (pb_decode(&istream, &SettingsMsg_msg, Settings)) {
       DPRINTF("Read and decoded settings, size = %d bytes.", len);
-      maybeInitDefaults(&Settings);
       return;
     }
   }
   DPRINTLN("Failed to decode settings, resetting.");
-  Settings = DefaultSettings;
+  *Settings = DEFAULT_SETTINGS;
   saveSettings();
 }
 
 int32_t saveSettings() {
   auto& e = getEeprom();
   auto stream = pb_ostream_from_buffer(e.getDataPtr() + 2, MAX_SETTINGS_SIZE);
-  if (!pb_encode(&stream, &SettingsMsg_msg, &Settings)) {
+  if (!pb_encode(&stream, &SettingsMsg_msg, Settings)) {
     DPRINTLN("Failed to encode settings.");
     return -1;
   }

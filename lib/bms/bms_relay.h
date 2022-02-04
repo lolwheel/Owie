@@ -25,7 +25,10 @@ class BmsRelay {
    */
   typedef std::function<void(BmsRelay*, Packet*)> PacketCallback;
 
-  BmsRelay(const Source& source, const Sink& sink);
+  typedef std::function<unsigned long()> Millis;
+
+  BmsRelay(const Source& source, const Sink& sink, const Millis& millis,
+           int32_t batteryCapacityMah);
 
   /**
    * @brief Call from arduino loop.
@@ -36,8 +39,8 @@ class BmsRelay {
     packetCallbacks_.push_back(callback);
   }
 
-  void setCurrentRewriterCallback(const std::function<float(float, bool*)>& c) {
-    currentRewriterCallback_ = c;
+  void setCurrentCallback(const std::function<void(float)>& c) {
+    currentCallback_ = c;
   }
 
   void setPowerOffCallback(const std::function<void(void)>& c) {
@@ -79,7 +82,11 @@ class BmsRelay {
   /**
    * @brief Spoofed battery percentage sent to the controller.
    */
-  int8_t getOverriddenSoc() { return overriddenSoc_; }
+  int8_t getOverriddenSoc() {
+    return getMahTillEmpty() * 100 / getBatteryCapacityOverrideMah();
+  }
+
+  int32_t getMahTillEmpty() { return milliamp_seconds_till_empty_ / 3600; }
 
   /**
    * @brief Cell voltages in millivolts.
@@ -88,6 +95,8 @@ class BmsRelay {
   uint16_t* const getCellMillivolts() { return cell_millivolts_; }
 
   uint16_t getTotalVoltageMillivolts() { return total_voltage_millivolts_; }
+
+  int32_t getBatteryCapacityOverrideMah() { return battery_capacity_override_; }
 
   /**
    * @brief Cell voltages in millivolts.
@@ -104,7 +113,7 @@ class BmsRelay {
 
   std::vector<PacketCallback> packetCallbacks_;
   Sink unknownDataCallback_;
-  std::function<float(float, bool*)> currentRewriterCallback_;
+  std::function<void(float)> currentCallback_;
   std::function<int8_t(int8_t, bool*)> socRewriterCallback_;
   std::function<void(void)> powerOffCallback_;
 
@@ -113,14 +122,20 @@ class BmsRelay {
   uint32_t captured_serial_ = 0;
   float current_ = std::numeric_limits<float>::min();
   int8_t bmsSocPercent_ = -1;
-  int8_t overriddenSoc_ = -1;
   uint16_t cell_millivolts_[15] = {0};
   uint16_t total_voltage_millivolts_ = 0;
   int8_t temperatures_celsius_[5] = {0};
   int8_t avg_temperature_celsius_ = 0;
+  unsigned long last_current_message_millis_ = 0;
+  float last_current_ = 0;
+  int32_t milliamp_seconds_till_empty_ = 0;
+  bool milliamp_seconds_till_empty_initialized_ = false;
   const Source source_;
   const Sink sink_;
+  const Millis millis_;
+  const int32_t battery_capacity_override_ = 0;
 
+  void chargingStatusParser(Packet& p);
   void bmsSerialParser(Packet& p);
   void currentParser(Packet& p);
   void batteryPercentageParser(Packet& p);

@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <cmath>
 #include <cstdint>
 
 #include "bms_relay.h"
@@ -12,6 +14,12 @@ inline int16_t int16FromNetworkOrder(const void* const p) {
   return ((uint16_t)(*charPointer)) << 8 | *(charPointer + 1);
 }
 
+int openCircuitSocFromVoltage(float voltageVolts) {
+  // kindly provided by biell@ in https://github.com/lolwheel/Owie/issues/1
+  return std::clamp((int)(99.9 / (0.8 + pow(1.24, (54 - voltageVolts))) - 10),
+                    1, 100);
+}
+
 }  // namespace
 
 void BmsRelay::batteryPercentageParser(Packet& p) {
@@ -23,16 +31,22 @@ void BmsRelay::batteryPercentageParser(Packet& p) {
     return;
   }
   bmsSocPercent_ = *(int8_t*)p.data();
-  if (socRewriterCallback_) {
-    bool shouldForward = true;
-    int8_t rewrittenSoc = socRewriterCallback_(bmsSocPercent_, &shouldForward);
-    if (!shouldForward) {
-      p.setShouldForward(false);
-      return;
-    }
-    overriddenSoc_ = rewrittenSoc;
-    p.data()[0] = rewrittenSoc;
+  if (getTotalVoltageMillivolts() == 0) {
+    // If we don't have voltage, swallow the packet
+    p.setShouldForward(false);
+    return;
   }
+  // Assume that the first time we run the battery is very close to open
+  // state and approximate the SOC just by voltage.
+  if (!milliamp_seconds_till_empty_initialized_) {
+    int8_t estimatedSoc =
+        openCircuitSocFromVoltage(getTotalVoltageMillivolts() / 1000.0);
+    milliamp_seconds_till_empty_ +=
+        battery_capacity_override_ * estimatedSoc * 36.0;
+    milliamp_seconds_till_empty_initialized_ = true;
+  }
+  p.data()[0] = std::max(5, (int)getOverriddenSoc());
+  ;
 }
 
 void BmsRelay::currentParser(Packet& p) {
@@ -45,20 +59,18 @@ void BmsRelay::currentParser(Packet& p) {
   if (p.dataLength() != 2) {
     return;
   }
-  int16_t current = int16FromNetworkOrder(p.data());
-  current_ = current * CURRENT_SCALER;
-  if (currentRewriterCallback_) {
-    bool shouldForward = true;
-    float floatRewrittenCurrent =
-        currentRewriterCallback_(current_, &shouldForward);
-    if (!shouldForward) {
-      p.setShouldForward(false);
-      return;
-    }
-    current = floatRewrittenCurrent / CURRENT_SCALER;
-    p.data()[0] = current >> 8;
-    p.data()[1] = current & 0xFF;
+  current_ = int16FromNetworkOrder(p.data()) * CURRENT_SCALER;
+
+  if (last_current_message_millis_ == 0) {
+    last_current_ = current_;
+    last_current_message_millis_ = millis_();
   }
+  const unsigned long now = millis_();
+  const unsigned long millisElapsed = now - last_current_message_millis_;
+  last_current_message_millis_ = now;
+  milliamp_seconds_till_empty_ -=
+      (last_current_ + current_) / 2 * millisElapsed;
+  p.setShouldForward(false);
 }
 
 void BmsRelay::bmsSerialParser(Packet& p) {
@@ -130,4 +142,24 @@ void BmsRelay::powerOffParser(Packet& p) {
   if (powerOffCallback_) {
     powerOffCallback_();
   }
+}
+
+void BmsRelay::chargingStatusParser(Packet& p) {
+  if (p.getType() != 0) {
+    return;
+  }
+  int8_t status = p.data()[0];
+  // This one bit seems to indicate charging, block every other message.
+  // Otherwise my Pint 5059 throws Error 23.
+  if ((status & 0x20) == 0) {
+    p.setShouldForward(false);
+  }
+  // Interesting observation is that if I swallow chargin packets too, the board
+  // assumes riding state even with the charger plugged in. This is potentially
+  // enabling Charge-n-Ride setups though I haven't tested this(and have no
+  // plans to). It's likely that the BMS will shut down when regen
+  // current exceeds the charging current limit, at least on
+  // Pints. This will be a very interesting experiment to run on XRs where the
+  // BMS charging port isn't utilised and the charging current probably goes
+  // through the main HV bus from the controller board.
 }

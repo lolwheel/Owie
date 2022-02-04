@@ -5,6 +5,5 @@ message SettingsMsg {
   string ap_name = 2;
   string ap_password = 3;
   int32 graceful_shutdown_count = 4;
-  float milliampseconds_till_empty = 5;
   int32 real_board_capacity_mah = 6;
 }

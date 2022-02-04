@@ -118,16 +118,16 @@ void testPacketCallback() {
   }
 }
 
-void testBatteryPercentageParsing() {
+void testBatterySocParsing() {
   addMockData({0xFF, 0x55, 0xAA, 0x3, 0x2B, 0x02, 0x2C, 0xFF, 0x55, 0xAA});
   relay->loop();
-  TEST_ASSERT_EQUAL(43, relay->getBatteryPercentage());
+  TEST_ASSERT_EQUAL(43, relay->getBmsReportedSOC());
 }
 
 void testCurrentParsing() {
   addMockData({0xff, 0x55, 0xaa, 0x5, 0xff, 0xe8, 0x3, 0xea, 0xFF, 0x55, 0xAA});
   relay->loop();
-  TEST_ASSERT_FLOAT_WITHIN(0.01, -1.2, relay->getCurrentInAmps());
+  TEST_ASSERT_FLOAT_WITHIN(0.01, -1.32, relay->getCurrentInAmps());
 }
 
 void testCellVoltageParsing() {
@@ -158,7 +158,7 @@ int main(int argc, char** argv) {
   RUN_TEST(testSerialGetsRecordedAndIntercepted);
   RUN_TEST(testUnknownBytesGetsForwardedImmediately);
   RUN_TEST(testPacketCallback);
-  RUN_TEST(testBatteryPercentageParsing);
+  RUN_TEST(testBatterySocParsing);
   RUN_TEST(testCurrentParsing);
   RUN_TEST(testCellVoltageParsing);
   UNITY_END();

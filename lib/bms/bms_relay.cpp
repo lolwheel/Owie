@@ -11,8 +11,12 @@ const int8_t packetLengths[] = {7, -1, 38, 7, 11, 8,  10, 13, 7,
                                 7, -1, 8,  8, 9,  -1, 11, 16, 10};
 }  // namespace
 
-BmsRelay::BmsRelay(const Source& source, const Sink& sink)
-    : source_(source), sink_(sink) {
+BmsRelay::BmsRelay(const Source& source, const Sink& sink, const Millis& millis,
+                   int32_t batteryCapacityMah)
+    : source_(source),
+      sink_(sink),
+      millis_(millis),
+      battery_capacity_override_(batteryCapacityMah) {
   sourceBuffer_.reserve(64);
 }
 
@@ -65,16 +69,19 @@ void BmsRelay::processNextByte() {
   }
   Packet p(sourceBuffer_.data(), len);
 
+  chargingStatusParser(p);
   bmsSerialParser(p);
   currentParser(p);
   batteryPercentageParser(p);
   cellVoltageParser(p);
   temperatureParser(p);
   powerOffParser(p);
-  // Recalculate CRC twice, so that any logging callback see the correct CRCs
+  //  Recalculate CRC so that logging callbacks see the correct CRCs
   p.recalculateCrcIfValid();
-  for (auto callback : packetCallbacks_) {
-    callback(this, &p);
+  if (p.shouldForward()) {
+    for (auto callback : packetCallbacks_) {
+      callback(this, &p);
+    }
   }
   p.recalculateCrcIfValid();
   if (p.shouldForward()) {

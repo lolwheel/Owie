@@ -32,20 +32,20 @@ String templateProcessor(const String &var) {
   } else if (var == "OVERRIDDEN_SOC") {
     return String(relay->getOverriddenSoc());
   } else if (var == "BATTERY_TOTAL_CAP_MAH") {
-    return String(Settings.real_board_capacity_mah);
+    return String(relay->getBatteryCapacityOverrideMah());
   } else if (var == "BATTERY_MAH_TILL_EMPTY") {
-    return String((int)(Settings.milliampseconds_till_empty / 3600));
+    return String(relay->getMahTillEmpty());
   } else if (var == "OWIE_version") {
     return "0.0.1";
   } else if (var == "SSID") {
-    return Settings.ap_name;
+    return Settings->ap_name;
   } else if (var == "PASS") {
-    if (strlen(Settings.ap_password) > 0) {
+    if (strlen(Settings->ap_password) > 0) {
       return defaultPass;
     }
     return "";
   } else if (var == "GRACEFUL_SHUTDOWN_COUNT") {
-    return String(Settings.graceful_shutdown_count);
+    return String(Settings->graceful_shutdown_count);
   }
   return "<script>alert('UNKNOWN PLACEHOLDER')</script>";
 }
@@ -54,13 +54,13 @@ String templateProcessor(const String &var) {
 
 void setupWifi() {
   WiFi.setOutputPower(9);
-  bool stationMode = (strlen(Settings.ap_name) > 0);
+  bool stationMode = (strlen(Settings->ap_name) > 0);
   WiFi.mode(stationMode ? WIFI_AP_STA : WIFI_AP);
   char apName[64];
   sprintf(apName, "Owie-%04X", ESP.getChipId() & 0xFFFF);
   WiFi.softAP(apName);
   if (stationMode) {
-    WiFi.begin(Settings.ap_name, Settings.ap_password);
+    WiFi.begin(Settings->ap_name, Settings->ap_password);
     WiFi.hostname(apName);
   }
   MDNS.begin("owie");
@@ -95,15 +95,15 @@ void setupWebServer(BmsRelay *bmsRelay) {
         const auto ssidParam = request->getParam("s", true);
         const auto passwordParam = request->getParam("p", true);
         if (ssidParam == nullptr || passwordParam == nullptr ||
-            ssidParam->value().length() > sizeof(Settings.ap_name) ||
-            passwordParam->value().length() > sizeof(Settings.ap_password)) {
+            ssidParam->value().length() > sizeof(Settings->ap_name) ||
+            passwordParam->value().length() > sizeof(Settings->ap_password)) {
           request->send(200, "text/html", "Invalid SSID or Password.");
           return;
         }
-        std::strncpy(Settings.ap_name, ssidParam->value().c_str(),
-                     sizeof(Settings.ap_name));
-        std::strncpy(Settings.ap_password, passwordParam->value().c_str(),
-                     sizeof(Settings.ap_password));
+        std::strncpy(Settings->ap_name, ssidParam->value().c_str(),
+                     sizeof(Settings->ap_name));
+        std::strncpy(Settings->ap_password, passwordParam->value().c_str(),
+                     sizeof(Settings->ap_password));
         saveSettingsAndRestartSoon();
         request->send(200, "text/html", "WiFi settings saved, restarting...");
         return;
