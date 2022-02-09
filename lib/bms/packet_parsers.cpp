@@ -7,8 +7,6 @@
 
 namespace {
 
-const float CURRENT_SCALER = 0.055;
-
 inline int16_t int16FromNetworkOrder(const void* const p) {
   uint8_t* const charPointer = (uint8_t* const)p;
   return ((uint16_t)(*charPointer)) << 8 | *(charPointer + 1);
@@ -27,26 +25,16 @@ void BmsRelay::batteryPercentageParser(Packet& p) {
     return;
   }
   // 0x3 message is just one byte containing battery percentage.
-  if (p.dataLength() != 1) {
-    return;
-  }
-  bmsSocPercent_ = *(int8_t*)p.data();
-  if (getTotalVoltageMillivolts() == 0) {
+  bms_soc_percent_ = *(int8_t*)p.data();
+  if (filtered_total_voltage_millivolts_ == 0) {
     // If we don't have voltage, swallow the packet
     p.setShouldForward(false);
     return;
   }
-  // Assume that the first time we run the battery is very close to open
-  // state and approximate the SOC just by voltage.
-  if (!milliamp_seconds_till_empty_initialized_) {
-    int8_t estimatedSoc =
-        openCircuitSocFromVoltage(getTotalVoltageMillivolts() / 1000.0);
-    milliamp_seconds_till_empty_ +=
-        battery_capacity_override_ * estimatedSoc * 36.0;
-    milliamp_seconds_till_empty_initialized_ = true;
-  }
-  p.data()[0] = std::max(5, (int)getOverriddenSoc());
-  ;
+  overridden_soc_percent_ = std::max(
+      5,
+      openCircuitSocFromVoltage(filtered_total_voltage_millivolts_ / 1000.0));
+  p.data()[0] = std::max(5, (int)overridden_soc_percent_);
 }
 
 void BmsRelay::currentParser(Packet& p) {
@@ -56,10 +44,7 @@ void BmsRelay::currentParser(Packet& p) {
   // 0x5 message encodes current as signed int16.
   // The scaling factor (tested on a Pint) seems to be 0.055
   // i.e. 1 in the data message below corresponds to 0.055 Amps.
-  if (p.dataLength() != 2) {
-    return;
-  }
-  current_ = int16FromNetworkOrder(p.data()) * CURRENT_SCALER;
+  current_ = int16FromNetworkOrder(p.data());
 
   if (last_current_message_millis_ == 0) {
     last_current_ = current_;
@@ -68,8 +53,13 @@ void BmsRelay::currentParser(Packet& p) {
   const unsigned long now = millis_();
   const unsigned long millisElapsed = now - last_current_message_millis_;
   last_current_message_millis_ = now;
-  milliamp_seconds_till_empty_ -=
+  const int32_t current_times_milliseconds =
       (last_current_ + current_) / 2 * millisElapsed;
+  if (current_times_milliseconds > 0) {
+    current_times_milliseconds_used_ += current_times_milliseconds;
+  } else {
+    current_times_milliseconds_regenerated_ -= current_times_milliseconds;
+  }
   p.setShouldForward(false);
 }
 
@@ -79,9 +69,6 @@ void BmsRelay::bmsSerialParser(Packet& p) {
   }
   // 0x6 message has the BMS serial number encoded inside of it.
   // It is the last seven digits from the sticker on the back of the BMS.
-  if (p.dataLength() != 4) {
-    return;
-  }
   if (captured_serial_ == 0) {
     for (int i = 0; i < 4; i++) {
       captured_serial_ |= p.data()[i] << (8 * (3 - i));
@@ -103,9 +90,6 @@ void BmsRelay::cellVoltageParser(Packet& p) {
   }
   // The data in this packet is 16 int16-s. First 15 of them is
   // individual cell voltages in millivolts. The last value is mysterious.
-  if (p.dataLength() != 32) {
-    return;
-  }
   const uint8_t* const data = p.data();
   uint16_t total_voltage = 0;
   for (int i = 0; i < 15; i++) {
@@ -114,14 +98,15 @@ void BmsRelay::cellVoltageParser(Packet& p) {
     cell_millivolts_[i] = cellVoltage;
   }
   total_voltage_millivolts_ = total_voltage;
+  if (filtered_total_voltage_millivolts_ == 0) {
+    total_voltage_filter_.setTo(total_voltage);
+  }
+  filtered_total_voltage_millivolts_ =
+      total_voltage_filter_.step(total_voltage);
 }
 
 void BmsRelay::temperatureParser(Packet& p) {
   if (p.getType() != 4) {
-    return;
-  }
-  // The data seems to encode 5 uint8_t temperature readings in celsius
-  if (p.dataLength() != 5) {
     return;
   }
   int8_t* const temperatures = (int8_t*)p.data();

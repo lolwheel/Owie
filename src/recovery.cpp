@@ -28,6 +28,7 @@ void recovery_setup() {
     saveSettings();
   });
   dnsServer.start(53, "*", WiFi.softAPIP());  // DNS spoofing.
+  dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
   webServer.onNotFound([&](AsyncWebServerRequest *request) {
     request->redirect("http://" + WiFi.softAPIP().toString() + "/update");
   });

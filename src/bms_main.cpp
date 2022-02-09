@@ -24,19 +24,9 @@ void IRAM_ATTR txPinFallInterrupt() { digitalWrite(TX_INVERSE_OUT_PIN, 1); }
 
 BmsRelay* relay;
 
-void maybeInitSettingsToSensibleDefaults() {
-  // CBXR is around 10Ah
-  if (Settings->real_board_capacity_mah <= 0 ||
-      Settings->real_board_capacity_mah > 100000) {
-    Settings->real_board_capacity_mah = 10000;
-  }
-}
-
 void bms_setup() {
-  maybeInitSettingsToSensibleDefaults();
   relay = new BmsRelay([]() { return Serial.read(); },
-                       [](uint8_t b) { Serial.write(b); }, millis,
-                       Settings->real_board_capacity_mah);
+                       [](uint8_t b) { Serial.write(b); }, millis);
   Serial.begin(115200);
 
   // The B line idle is 0

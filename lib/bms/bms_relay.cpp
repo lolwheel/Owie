@@ -11,12 +11,8 @@ const int8_t packetLengths[] = {7, -1, 38, 7, 11, 8,  10, 13, 7,
                                 7, -1, 8,  8, 9,  -1, 11, 16, 10};
 }  // namespace
 
-BmsRelay::BmsRelay(const Source& source, const Sink& sink, const Millis& millis,
-                   int32_t batteryCapacityMah)
-    : source_(source),
-      sink_(sink),
-      millis_(millis),
-      battery_capacity_override_(batteryCapacityMah) {
+BmsRelay::BmsRelay(const Source& source, const Sink& sink, const Millis& millis)
+    : source_(source), sink_(sink), millis_(millis) {
   sourceBuffer_.reserve(64);
 }
 

@@ -30,11 +30,11 @@ String templateProcessor(const String &var) {
   } else if (var == "BMS_SOC") {
     return String(relay->getBmsReportedSOC());
   } else if (var == "OVERRIDDEN_SOC") {
-    return String(relay->getOverriddenSoc());
-  } else if (var == "BATTERY_TOTAL_CAP_MAH") {
-    return String(relay->getBatteryCapacityOverrideMah());
-  } else if (var == "BATTERY_MAH_TILL_EMPTY") {
-    return String(relay->getMahTillEmpty());
+    return String(relay->getOverriddenSOC());
+  } else if (var == "USED_CHARGE_MAH") {
+    return String(relay->getUsedChargeMah());
+  } else if (var == "REGENERATED_CHARGE_MAH") {
+    return String(relay->getRegeneratedChargeMah());
   } else if (var == "OWIE_version") {
     return "0.0.1";
   } else if (var == "SSID") {
@@ -64,6 +64,7 @@ void setupWifi() {
     WiFi.hostname(apName);
   }
   MDNS.begin("owie");
+  dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
   dnsServer.start(53, "*", WiFi.softAPIP());  // DNS spoofing.
   TaskQueue.postRecurringTask([]() {
     dnsServer.processNextRequest();

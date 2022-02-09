@@ -6,6 +6,8 @@
 #include <limits>
 #include <vector>
 
+#include "filter.h"
+
 class Packet;
 
 class BmsRelay {
@@ -27,8 +29,7 @@ class BmsRelay {
 
   typedef std::function<unsigned long()> Millis;
 
-  BmsRelay(const Source& source, const Sink& sink, const Millis& millis,
-           int32_t batteryCapacityMah);
+  BmsRelay(const Source& source, const Sink& sink, const Millis& millis);
 
   /**
    * @brief Call from arduino loop.
@@ -37,10 +38,6 @@ class BmsRelay {
 
   void addPacketCallback(const PacketCallback& callback) {
     packetCallbacks_.push_back(callback);
-  }
-
-  void setCurrentCallback(const std::function<void(float)>& c) {
-    currentCallback_ = c;
   }
 
   void setPowerOffCallback(const std::function<void(void)>& c) {
@@ -72,22 +69,17 @@ class BmsRelay {
   /**
    * @brief Current In Amps.
    */
-  float getCurrentInAmps() { return current_; }
+  float getCurrentInAmps() { return current_ * CURRENT_SCALER; }
 
   /**
    * @brief Battery percentage as reported by the BMS.
    */
-  int8_t getBmsReportedSOC() { return bmsSocPercent_; }
+  int8_t getBmsReportedSOC() { return bms_soc_percent_; }
 
   /**
    * @brief Spoofed battery percentage sent to the controller.
    */
-  int8_t getOverriddenSoc() {
-    return getMahTillEmpty() * 100 / getBatteryCapacityOverrideMah();
-  }
-
-  int32_t getMahTillEmpty() { return milliamp_seconds_till_empty_ / 3600; }
-
+  int8_t getOverriddenSOC() { return overridden_soc_percent_; }
   /**
    * @brief Cell voltages in millivolts.
    * @return pointer to a 15 element array.
@@ -95,8 +87,6 @@ class BmsRelay {
   uint16_t* const getCellMillivolts() { return cell_millivolts_; }
 
   uint16_t getTotalVoltageMillivolts() { return total_voltage_millivolts_; }
-
-  int32_t getBatteryCapacityOverrideMah() { return battery_capacity_override_; }
 
   /**
    * @brief Cell voltages in millivolts.
@@ -106,34 +96,44 @@ class BmsRelay {
 
   uint8_t getAverageTemperatureCelsius() { return avg_temperature_celsius_; }
 
+  int32_t getUsedChargeMah() {
+    return current_times_milliseconds_used_ / 3600 * CURRENT_SCALER;
+  }
+  int32_t getRegeneratedChargeMah() {
+    return current_times_milliseconds_regenerated_ / 3600 * CURRENT_SCALER;
+  }
+
  private:
+  static constexpr float CURRENT_SCALER = 0.055;
   void processNextByte();
-  bool shouldForward(Packet& p);
   void purgeUnknownData();
 
   std::vector<PacketCallback> packetCallbacks_;
   Sink unknownDataCallback_;
-  std::function<void(float)> currentCallback_;
   std::function<int8_t(int8_t, bool*)> socRewriterCallback_;
   std::function<void(void)> powerOffCallback_;
 
   std::vector<uint8_t> sourceBuffer_;
   uint32_t serial_override_ = 0;
   uint32_t captured_serial_ = 0;
-  float current_ = std::numeric_limits<float>::min();
-  int8_t bmsSocPercent_ = -1;
+  int16_t current_ = 0;
+
+  int8_t bms_soc_percent_ = -1;
+  int8_t overridden_soc_percent_ = -1;
   uint16_t cell_millivolts_[15] = {0};
   uint16_t total_voltage_millivolts_ = 0;
+  LowPassFilter total_voltage_filter_;
+  uint16_t filtered_total_voltage_millivolts_ = 0;
+
   int8_t temperatures_celsius_[5] = {0};
   int8_t avg_temperature_celsius_ = 0;
   unsigned long last_current_message_millis_ = 0;
-  float last_current_ = 0;
-  int32_t milliamp_seconds_till_empty_ = 0;
-  bool milliamp_seconds_till_empty_initialized_ = false;
+  int16_t last_current_ = 0;
+  int32_t current_times_milliseconds_used_ = 0;
+  int32_t current_times_milliseconds_regenerated_ = 0;
   const Source source_;
   const Sink sink_;
   const Millis millis_;
-  const int32_t battery_capacity_override_ = 0;
 
   void chargingStatusParser(Packet& p);
   void bmsSerialParser(Packet& p);
