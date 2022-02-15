@@ -40,7 +40,7 @@ void bms_setup() {
   attachInterrupt(digitalPinToInterrupt(TX_INPUT_PIN), txPinFallInterrupt,
                   FALLING);
 
-  relay->addPacketCallback([](BmsRelay*, Packet* packet) {
+  relay->addReceivedPacketCallback([](BmsRelay*, Packet* packet) {
     static uint8_t ledState = 0;
     digitalWrite(LED_BUILTIN, ledState);
     ledState = 1 - ledState;
