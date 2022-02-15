@@ -64,7 +64,9 @@ void BmsRelay::processNextByte() {
     return;
   }
   Packet p(sourceBuffer_.data(), len);
-
+  for (auto& callback : receivedPacketCallbacks_) {
+    callback(this, &p);
+  };
   chargingStatusParser(p);
   bmsSerialParser(p);
   currentParser(p);
@@ -75,7 +77,7 @@ void BmsRelay::processNextByte() {
   //  Recalculate CRC so that logging callbacks see the correct CRCs
   p.recalculateCrcIfValid();
   if (p.shouldForward()) {
-    for (auto callback : packetCallbacks_) {
+    for (auto& callback : forwardedPacketCallbacks_) {
       callback(this, &p);
     }
   }

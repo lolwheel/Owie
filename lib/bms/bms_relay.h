@@ -36,8 +36,12 @@ class BmsRelay {
    */
   void loop();
 
-  void addPacketCallback(const PacketCallback& callback) {
-    packetCallbacks_.push_back(callback);
+  void addReceivedPacketCallback(const PacketCallback& callback) {
+    receivedPacketCallbacks_.push_back(callback);
+  }
+
+  void addForwardedPacketCallback(const PacketCallback& callback) {
+    forwardedPacketCallbacks_.push_back(callback);
   }
 
   void setPowerOffCallback(const std::function<void(void)>& c) {
@@ -108,7 +112,8 @@ class BmsRelay {
   void processNextByte();
   void purgeUnknownData();
 
-  std::vector<PacketCallback> packetCallbacks_;
+  std::vector<PacketCallback> receivedPacketCallbacks_;
+  std::vector<PacketCallback> forwardedPacketCallbacks_;
   Sink unknownDataCallback_;
   std::function<int8_t(int8_t, bool*)> socRewriterCallback_;
   std::function<void(void)> powerOffCallback_;

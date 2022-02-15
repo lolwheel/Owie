@@ -11,6 +11,7 @@
 std::unique_ptr<BmsRelay> relay;
 std::deque<int> mockBmsData;
 std::vector<uint8_t> mockDataOut;
+unsigned long timeMillis = 0;
 
 void setUp(void) {
   relay.reset(new BmsRelay(
@@ -25,7 +26,8 @@ void setUp(void) {
       [&](uint8_t b) {
         mockDataOut.push_back(b);
         return 1;
-      }));
+      },
+      [&]() { return timeMillis; }));
   mockBmsData.clear();
   mockDataOut.clear();
 }
@@ -88,7 +90,7 @@ void testPacketLengths() {
        0x03, 0x03, 0x02, 0x34},
       {0xff, 0x55, 0xaa, 0x11, 0x00, 0x00, 0x00, 0x00, 0x02, 0x0f}};
   std::vector<uint8_t> receivedPacket;
-  relay->addPacketCallback([&](BmsRelay*, Packet* p) {
+  relay->addReceivedPacketCallback([&](BmsRelay*, Packet* p) {
     TEST_ASSERT_TRUE(p->isValid());
     receivedPacket = std::vector<uint8_t>(p->start(), p->start() + p->len());
   });
@@ -105,7 +107,7 @@ void testPacketCallback() {
   addMockData({0x1, 0x2, 0x3, 0xFF, 0x55, 0xAA, 0x6, 0x1, 0x2, 0x3, 0x4, 0x2,
                0xE, 0xFF, 0x55, 0xAA});
   std::vector<uint8_t> receivedPacket;
-  relay->addPacketCallback([&](BmsRelay*, Packet* p) {
+  relay->addReceivedPacketCallback([&](BmsRelay*, Packet* p) {
     const uint8_t* start = p->start();
     receivedPacket.assign(start, start + p->len());
   });

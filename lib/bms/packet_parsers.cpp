@@ -7,6 +7,11 @@
 
 namespace {
 
+template <class T>
+inline T clamp(T x, T upper, T lower) {
+  return std::min(upper, std::max(x, lower));
+}
+
 inline int16_t int16FromNetworkOrder(const void* const p) {
   uint8_t* const charPointer = (uint8_t* const)p;
   return ((uint16_t)(*charPointer)) << 8 | *(charPointer + 1);
@@ -14,8 +19,8 @@ inline int16_t int16FromNetworkOrder(const void* const p) {
 
 int openCircuitSocFromVoltage(float voltageVolts) {
   // kindly provided by biell@ in https://github.com/lolwheel/Owie/issues/1
-  return std::clamp((int)(99.9 / (0.8 + pow(1.24, (54 - voltageVolts))) - 10),
-                    1, 100);
+  return clamp((int)(99.9 / (0.8 + pow(1.29, (54 - voltageVolts))) - 10), 1,
+               100);
 }
 
 }  // namespace
