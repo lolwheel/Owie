@@ -46,26 +46,29 @@ void BmsRelay::currentParser(Packet& p) {
   if (p.getType() != 5) {
     return;
   }
+  p.setShouldForward(false);
+
   // 0x5 message encodes current as signed int16.
   // The scaling factor (tested on a Pint) seems to be 0.055
   // i.e. 1 in the data message below corresponds to 0.055 Amps.
   current_ = int16FromNetworkOrder(p.data());
 
+  const unsigned long now = millis_();
   if (last_current_message_millis_ == 0) {
     last_current_ = current_;
-    last_current_message_millis_ = millis_();
+    last_current_message_millis_ = now;
+    return;
   }
-  const unsigned long now = millis_();
   const unsigned long millisElapsed = now - last_current_message_millis_;
   last_current_message_millis_ = now;
   const int32_t current_times_milliseconds =
-      (last_current_ + current_) / 2 * millisElapsed;
+      (last_current_ + current_) * millisElapsed / 2;
+  last_current_ = current_;
   if (current_times_milliseconds > 0) {
     current_times_milliseconds_used_ += current_times_milliseconds;
   } else {
     current_times_milliseconds_regenerated_ -= current_times_milliseconds;
   }
-  p.setShouldForward(false);
 }
 
 void BmsRelay::bmsSerialParser(Packet& p) {

@@ -71,11 +71,6 @@ class BmsRelay {
   uint32_t getCapturedBMSSerial() { return captured_serial_; }
 
   /**
-   * @brief Current In Amps.
-   */
-  float getCurrentInAmps() { return current_ * CURRENT_SCALER; }
-
-  /**
    * @brief Battery percentage as reported by the BMS.
    */
   int8_t getBmsReportedSOC() { return bms_soc_percent_; }
@@ -99,6 +94,11 @@ class BmsRelay {
   int8_t* const getTemperaturesCelsius() { return temperatures_celsius_; }
 
   uint8_t getAverageTemperatureCelsius() { return avg_temperature_celsius_; }
+
+  /**
+   * @brief Current In Amps.
+   */
+  float getCurrentInAmps() { return current_ * CURRENT_SCALER; }
 
   int32_t getUsedChargeMah() {
     return current_times_milliseconds_used_ / 3600 * CURRENT_SCALER;
