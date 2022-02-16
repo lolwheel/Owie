@@ -11,6 +11,7 @@
 #include "data.h"
 #include "settings.h"
 #include "task_queue.h"
+#include "web_ota.h"
 
 namespace {
 DNSServer dnsServer;
@@ -74,6 +75,7 @@ void setupWifi() {
 
 void setupWebServer(BmsRelay *bmsRelay) {
   relay = bmsRelay;
+  WebOta::begin(&webServer);
   webServer.addHandler(&ws);
   webServer.onNotFound([](AsyncWebServerRequest *request) {
     if (request->host().indexOf("owie.local") >= 0) {

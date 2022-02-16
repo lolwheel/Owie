@@ -8,7 +8,7 @@
 namespace {
 
 template <class T>
-inline T clamp(T x, T upper, T lower) {
+inline T clamp(T x, T lower, T upper) {
   return std::min(upper, std::max(x, lower));
 }
 

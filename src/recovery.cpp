@@ -1,7 +1,6 @@
 #include "recovery.h"
 
 #include <ArduinoOTA.h>
-#include <AsyncElegantOTA.h>
 #include <DNSServer.h>
 #include <ESP8266WiFi.h>
 #include <ESPAsyncTCP.h>
@@ -9,6 +8,7 @@
 
 #include "settings.h"
 #include "task_queue.h"
+#include "web_ota.h"
 
 #define SSID_NAME "Owie-recovery"
 
@@ -32,7 +32,7 @@ void recovery_setup() {
   webServer.onNotFound([&](AsyncWebServerRequest *request) {
     request->redirect("http://" + WiFi.softAPIP().toString() + "/update");
   });
-  AsyncElegantOTA.begin(&webServer);
+  WebOta::begin(&webServer);
   webServer.begin();
   TaskQueue.postRecurringTask([&]() {
     dnsServer.processNextRequest();
