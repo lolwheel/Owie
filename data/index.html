@@ -86,14 +86,6 @@
             background: #0e70a4;
         }
 
-        .bred {
-            background: #d43535;
-        }
-
-        .bred:hover {
-            background: #931f1f;
-        }
-
         .bgrn {
             background: #47c266;
         }
@@ -125,6 +117,13 @@
 
         .hf {
             display: none;
+        }
+
+        .cell-voltages td {
+            padding: 2px;
+            background: #354b4d;
+            border: 0px;
+            border-radius: 0.2rem;
         }
     </style>
     <script>
@@ -212,8 +211,10 @@
                     <td>%REGENERATED_CHARGE_MAH% mAh</td>
                 </tr>
                 <tr>
-                    <th>Graceful shutdown count:</th>
-                    <td>%GRACEFUL_SHUTDOWN_COUNT%</td>
+                    <th>Cell voltages</th>
+                    <td>
+                        <table class="cell-voltages">%CELL_VOLTAGE_TABLE%</table>
+                    </td>
                 </tr>
             </table>
             <hr>

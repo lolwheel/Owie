@@ -47,6 +47,20 @@ String templateProcessor(const String &var) {
     return "";
   } else if (var == "GRACEFUL_SHUTDOWN_COUNT") {
     return String(Settings->graceful_shutdown_count);
+  } else if (var == "CELL_VOLTAGE_TABLE") {
+    const uint16_t *cellMillivolts = relay->getCellMillivolts();
+    String out;
+    out.reserve(256);
+    for (int i = 0; i < 3; i++) {
+      out.concat("<tr>");
+      for (int j = 0; j < 5; j++) {
+        out.concat("<td>");
+        out.concat(cellMillivolts[i * 5 + j] / 1000.0);
+        out.concat("</td>");
+      }
+      out.concat("<tr>");
+    }
+    return out;
   }
   return "<script>alert('UNKNOWN PLACEHOLDER')</script>";
 }
