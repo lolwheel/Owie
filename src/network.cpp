@@ -21,10 +21,27 @@ AsyncWebSocket ws("/rawdata");
 const String defaultPass("****");
 BmsRelay *relay;
 
+inline String uptimeString() {
+  const unsigned long nowSecs = millis() / 1000;
+  const int hrs = nowSecs / 3600;
+  const int mins = (nowSecs % 3600) / 60;
+  const int secs = nowSecs % 60;
+  String ret;
+  if (hrs) {
+    ret.concat(hrs);
+    ret.concat('h');
+  }
+  ret.concat(mins);
+  ret.concat('m');
+  ret.concat(secs);
+  ret.concat('s');
+  return ret;
+}
+
 String templateProcessor(const String &var) {
   if (var == "TOTAL_VOLTAGE") {
     return String(relay->getTotalVoltageMillivolts() / 1000.0,
-                  /* decimalPlaces = */ 1);
+                  /* decimalPlaces = */ 2);
   } else if (var == "CURRENT_AMPS") {
     return String(relay->getCurrentInAmps(),
                   /* decimalPlaces = */ 1);
@@ -47,6 +64,8 @@ String templateProcessor(const String &var) {
     return "";
   } else if (var == "GRACEFUL_SHUTDOWN_COUNT") {
     return String(Settings->graceful_shutdown_count);
+  } else if (var == "UPTIME") {
+    return uptimeString();
   } else if (var == "CELL_VOLTAGE_TABLE") {
     const uint16_t *cellMillivolts = relay->getCellMillivolts();
     String out;

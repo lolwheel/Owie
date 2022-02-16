@@ -101,10 +101,10 @@ class BmsRelay {
   float getCurrentInAmps() { return current_ * CURRENT_SCALER; }
 
   int32_t getUsedChargeMah() {
-    return current_times_milliseconds_used_ / 3600 * CURRENT_SCALER;
+    return current_times_milliseconds_used_ * CURRENT_SCALER / 3600;
   }
   int32_t getRegeneratedChargeMah() {
-    return current_times_milliseconds_regenerated_ / 3600 * CURRENT_SCALER;
+    return current_times_milliseconds_regenerated_ * CURRENT_SCALER / 3600;
   }
 
  private:
