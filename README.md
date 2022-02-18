@@ -33,8 +33,8 @@ This is a hobby projet for its contributors and comes with absolutely no guarant
 1. Install Owie fimrware onto your Wemos D1 mini. TODO(lolwheel): Write a page in details on how to do this.
 1. Disassemble your board and open the battery enclosure.
 1. Disconnect all wires from BMS, strictly in the following order:
+   1. Battery balance lead - the leftmost connector (24 wires) on the BMS.
    1. Battery main lead - an XT60 connector on the rightmost side of the BMS.
-   1. Battery balance lead - the leftmost connector on the BMS.
    1. All the other wires to the BMS, the order here doesn't matter.
 1. Prepare your Wemos D1 Mini and BMS:
    1. Tin 4 consecutive pins on Wemos D1 Mini marked as **TX, RX, D1, D2** as well as **5v, GND** pins.
