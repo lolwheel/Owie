@@ -28,9 +28,23 @@ This is a hobby projet for its contributors and comes with absolutely no guarant
 - Be comfortable with opening your board's battery enclosure. This requires a somewhat exotic Torx 5 point security bit, size TS20. [Amazon link](https://www.amazon.com/gp/product/B07TC79LVH).
 - Wemos D1 Mini Lite - the cheapest and most compact ESP8266 board that I'm aware of. You can find those on Aliexpress and Amazon. Buy version without the metal shield or ceramic WiFi antenna on it as they're too bulky to fit inside of the battery enclosure. [5 pack Amazon Link](https://www.amazon.com/dp/B081PX9YFV).
 
-## Installation:
+## Build and download firmware
+1. Click `Gitpod Ready-to-Code` button at the top of the readme, and connect with your github account
+1. Once container is up, expand left menu .pio > d1_mini_lite_clone, and right click on firmware.bin -> download
 
+## Install firmware on chip
+
+### MacOS
+1. Install esptools using `pip install esptools`
+1. To find port your chip is connected to, type `ls /dev/tty* | grep serial` which should output something like `/dev/tty.usbserial-1410`
+1. Flash firmware to chip with
+   `esptool.py --port PORT --baud 1000000 write_flash --flash_size=4MB -fm dio 0 PATH_TO_FIRMWARE` replacing PORT and PATH_TO_FIRMWARE to the previously downloaded firmware
+   Eg: `esptool.py --port /dev/tty.usbserial-1410 --baud 1000000 write_flash --flash_size=4MB -fm dio 0 ~/Downloads/firmware.bi`
+
+### Other OS
 1. Install Owie fimrware onto your Wemos D1 mini. TODO(lolwheel): Write a page in details on how to do this.
+
+## Installation:
 1. Disassemble your board and open the battery enclosure.
 1. Disconnect all wires from BMS, strictly in the following order:
    1. Battery balance lead - the leftmost connector (24 wires) on the BMS.
