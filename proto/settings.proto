@@ -6,4 +6,5 @@ message SettingsMsg {
   string ap_password = 3;
   int32 graceful_shutdown_count = 4;
   int32 bms_serial = 5;
+  string ap_self_password = 6;
 }

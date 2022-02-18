@@ -82,6 +82,8 @@ String templateProcessor(const String &var) {
     return out;
   } else if (var == "BMS_SERIAL") {
     return String(Settings->bms_serial);
+  } else if (var == "AP_SELF") {
+    return Settings->ap_self_password;
   }
   return "<script>alert('UNKNOWN PLACEHOLDER')</script>";
 }
@@ -94,7 +96,11 @@ void setupWifi() {
   WiFi.mode(stationMode ? WIFI_AP_STA : WIFI_AP);
   char apName[64];
   sprintf(apName, "Owie-%04X", ESP.getChipId() & 0xFFFF);
-  WiFi.softAP(apName);
+  if (Settings->ap_self_password != "") {
+    WiFi.softAP(apName, Settings->ap_self_password);
+  } else {
+    WiFi.softAP(apName);
+  }
   if (stationMode) {
     WiFi.begin(Settings->ap_name, Settings->ap_password);
     WiFi.hostname(apName);
@@ -160,11 +166,19 @@ void setupWebServer(BmsRelay *bmsRelay) {
       return;
     case HTTP_POST:
       const auto bmsSerialParam = request->getParam("bs", true);
+      const auto apSelfPassword = request->getParam("pw", true);
       if (bmsSerialParam == nullptr) {
         request->send(400, "text/html", "Invalid BMS Serial number.");
         return;
       }
+      if (apSelfPassword == nullptr || apSelfPassword->value().length() >
+                                           sizeof(Settings->ap_self_password)) {
+        request->send(400, "text/html", "Invalid AP password.");
+        return;
+      }
       Settings->bms_serial = bmsSerialParam->value().toInt();
+      std::strncpy(Settings->ap_self_password, apSelfPassword->value().c_str(),
+                   sizeof(Settings->ap_self_password));
       saveSettingsAndRestartSoon();
       request->send(200, "text/html", "Settings saved, restarting...");
       return;
