@@ -96,7 +96,7 @@ void setupWifi() {
   WiFi.mode(stationMode ? WIFI_AP_STA : WIFI_AP);
   char apName[64];
   sprintf(apName, "Owie-%04X", ESP.getChipId() & 0xFFFF);
-  if (Settings->ap_self_password != "") {
+  if (strcmp(Settings->ap_self_password, "") != 0) {
     WiFi.softAP(apName, Settings->ap_self_password);
   } else {
     WiFi.softAP(apName);
@@ -174,9 +174,10 @@ void setupWebServer(BmsRelay *bmsRelay) {
       if (apSelfPassword == nullptr ||
           apSelfPassword->value().length() >
               sizeof(Settings->ap_self_password) ||
-          apSelfPassword->value().length() <
-              8) { // this check is necessary so the user can't set too small of
-                   // a password and thus the network wont' show up
+          (apSelfPassword->value().length() < 8 &&
+           apSelfPassword->value().length() >
+               0)) { // this check is necessary so the user can't set a too
+                     // small password and thus the network wont' show up
         request->send(400, "text/html", "Invalid AP password.");
         return;
       }
