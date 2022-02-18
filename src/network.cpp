@@ -171,8 +171,12 @@ void setupWebServer(BmsRelay *bmsRelay) {
         request->send(400, "text/html", "Invalid BMS Serial number.");
         return;
       }
-      if (apSelfPassword == nullptr || apSelfPassword->value().length() >
-                                           sizeof(Settings->ap_self_password)) {
+      if (apSelfPassword == nullptr ||
+          apSelfPassword->value().length() >
+              sizeof(Settings->ap_self_password) ||
+          apSelfPassword->value().length() <
+              8) { // this check is necessary so the user can't set too small of
+                   // a password and thus the network wont' show up
         request->send(400, "text/html", "Invalid AP password.");
         return;
       }
