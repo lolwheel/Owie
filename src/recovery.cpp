@@ -29,15 +29,7 @@ void recovery_setup() {
   });
   dnsServer.start(53, "*", WiFi.softAPIP());  // DNS spoofing.
   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
-  webServer.on("/reset", HTTP_ANY, [](AsyncWebServerRequest *request) {
-    std::strncpy(Settings->ap_self_password, "",
-                 sizeof(Settings->ap_self_password));
-    saveSettingsAndRestartSoon();
-    request->send_P(
-        200, "text/html",
-        "<HTML><body><p>Settings have been reset</p></body></html>");
-    return;
-  });
+  nukeSettings();
   webServer.onNotFound([&](AsyncWebServerRequest *request) {
     request->redirect("http://" + WiFi.softAPIP().toString() + "/update");
   });
@@ -47,4 +39,17 @@ void recovery_setup() {
     dnsServer.processNextRequest();
     ArduinoOTA.handle();
   });
+}
+
+void nukeSettings() {
+  // resetting wifi password
+  std::strncpy(Settings->ap_self_password, "",
+               sizeof(Settings->ap_self_password));
+  // resetting wifi relay settings
+  std::strncpy(Settings->ap_name, "", sizeof(Settings->ap_self_password));
+  std::strncpy(Settings->ap_password, "", sizeof(Settings->ap_self_password));
+  // resetting bms serial override
+  Settings->bms_serial = 0;
+  saveSettings();
+  return;
 }
