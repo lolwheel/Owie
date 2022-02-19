@@ -1,4 +1,4 @@
-# Owie ![Owie Logo](https://github.com/sethstuart/Owie/tree/main/docs/owieAssets/OwieLogoLarge.png)
+# Owie ![Owie Logo](https://github.com/sethstuart/Owie/blob/main/docs/owieAssets/OwieLogoLarge.png)
 
 [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/lolwheel/Owie)
 
@@ -29,7 +29,7 @@ This is a hobby projet for its contributors and comes with absolutely no guarant
 - Wemos D1 Mini Lite - the cheapest and most compact ESP8266 board that I'm aware of. You can find those on Aliexpress and Amazon. Buy version without the metal shield or ceramic WiFi antenna on it as they're too bulky to fit inside of the battery enclosure. [5 pack Amazon Link](https://www.amazon.com/dp/B081PX9YFV).
 
 ## Installation:
-![Console](https://github.com/sethstuart/Owie/tree/main/docs/owieAssets/BatteryConsole.png)
+![Console](https://github.com/sethstuart/Owie/blob/main/docs/owieAssets/BatteryConsole.png)
 1. Install Owie fimrware onto your Wemos D1 mini. TODO(lolwheel): Write a page in details on how to do this.
 1. Disassemble your board and open the battery enclosure.
 1. Disconnect all wires from BMS, strictly in the following order:
