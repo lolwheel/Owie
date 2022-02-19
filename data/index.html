@@ -146,6 +146,7 @@
             xhr.open(form.getAttribute('method') || 'GET', form.getAttribute('action'));
             const formData = new FormData(form);
             xhr.send(formData);
+            goHome(event);
         }
 
         function handleLinkClick(event) {
@@ -153,6 +154,16 @@
             const xhr = getXhr();
             xhr.open("GET", event.target.getAttribute('href'));
             xhr.send();
+        }
+
+        function goHome(event) {
+            const form = event.target;
+            const homeButton = document.getElementById("homeButton");
+            if (form.action == null) {
+                homeButton.style.display = "none";
+            } else {
+                homeButton.style.display = "block";
+            }
         }
 
         function rescanContent() {
@@ -176,14 +187,16 @@
                 });
         }
         window.addEventListener('DOMContentLoaded', rescanContent);
+        window.addEventListener('load', goHome);
     </script>
 </head>
 
 <body>
     <div style="text-align:left;display:inline-block;color:#eaeaea;min-width:340px;">
-        <div style="text-align:center;color:#eaeaea;">
+        <div id="statusHeader" style="text-align:center;color:#eaeaea;">
             <h2>Owie Status</h2>
         </div>
+
         <div id="content">
             <table>
                 <tr>
@@ -230,7 +243,13 @@
                 <button>Monitor BMS data</button>
             </form>
         </div>
-        <div style="text-align:right;font-size:11px;">
+        <div id="homeButton" style="text-align:right;font-size:11px;">
+            <hr>
+            <form action="/">
+                <button>Back</button>
+            </form>
+        </div>
+        <div id="version" style="text-align:right;font-size:11px;">
             <hr>
             <p style="color:#aaa;">Owie %OWIE_version%</p>
         </div>
