@@ -80,6 +80,8 @@ String templateProcessor(const String &var) {
       out.concat("<tr>");
     }
     return out;
+  } else if (var == "BMS_SERIAL") {
+    return String(Settings->bms_serial);
   }
   return "<script>alert('UNKNOWN PLACEHOLDER')</script>";
 }
@@ -149,6 +151,25 @@ void setupWebServer(BmsRelay *bmsRelay) {
   webServer.on("/monitor", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send_P(200, "text/html", MONITOR_HTML_PROGMEM_ARRAY,
                     MONITOR_HTML_SIZE, templateProcessor);
+  });
+  webServer.on("/settings", HTTP_ANY, [](AsyncWebServerRequest *request) {
+    switch (request->method()) {
+    case HTTP_GET:
+      request->send_P(200, "text/html", SETTINGS_HTML_PROGMEM_ARRAY,
+                      SETTINGS_HTML_SIZE, templateProcessor);
+      return;
+    case HTTP_POST:
+      const auto bmsSerialParam = request->getParam("bs", true);
+      if (bmsSerialParam == nullptr) {
+        request->send(400, "text/html", "Invalid BMS Serial number.");
+        return;
+      }
+      Settings->bms_serial = bmsSerialParam->value().toInt();
+      saveSettingsAndRestartSoon();
+      request->send(200, "text/html", "Settings saved, restarting...");
+      return;
+    }
+    request->send(404);
   });
 
   webServer.begin();

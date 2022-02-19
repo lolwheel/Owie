@@ -60,6 +60,11 @@ void bms_setup() {
   });
   // An example serial override which defeats BMS pairing:
   // relay.setBMSSerialOverride(123456);
+
+  if (Settings->bms_serial != 0) {
+    relay->setBMSSerialOverride(Settings->bms_serial);
+  }
+
   setupWifi();
   setupWebServer(relay);
   setupArduinoOTA();
