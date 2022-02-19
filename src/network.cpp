@@ -80,15 +80,20 @@ String templateProcessor(const String &var) {
       out.concat("<tr>");
     }
     return out;
-  } else if (var == "BMS_SERIAL") {
-    return String(Settings->bms_serial);
-  } else if (var == "AP_SELF") {
+  } else if (var == "BMS_SERIAL_OVERRIDE") {
+    // so it doesn't return 0 when no override is set
+    if (Settings->bms_serial == 0) {
+      return "";
+    } else {
+      return String(Settings->bms_serial);
+    }
+  } else if (var == "AP_PASSWORD") {
     return Settings->ap_self_password;
   }
   return "<script>alert('UNKNOWN PLACEHOLDER')</script>";
 }
 
-}  // namespace
+} // namespace
 
 void setupWifi() {
   WiFi.setOutputPower(9);
@@ -96,18 +101,14 @@ void setupWifi() {
   WiFi.mode(stationMode ? WIFI_AP_STA : WIFI_AP);
   char apName[64];
   sprintf(apName, "Owie-%04X", ESP.getChipId() & 0xFFFF);
-  if (strcmp(Settings->ap_self_password, "") != 0) {
-    WiFi.softAP(apName, Settings->ap_self_password);
-  } else {
-    WiFi.softAP(apName);
-  }
+  WiFi.softAP(apName, Settings->ap_self_password);
   if (stationMode) {
     WiFi.begin(Settings->ap_name, Settings->ap_password);
     WiFi.hostname(apName);
   }
   MDNS.begin("owie");
   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
-  dnsServer.start(53, "*", WiFi.softAPIP());  // DNS spoofing.
+  dnsServer.start(53, "*", WiFi.softAPIP()); // DNS spoofing.
   TaskQueue.postRecurringTask([]() {
     dnsServer.processNextRequest();
     MDNS.update();
@@ -181,7 +182,12 @@ void setupWebServer(BmsRelay *bmsRelay) {
         request->send(400, "text/html", "Invalid AP password.");
         return;
       }
-      Settings->bms_serial = bmsSerialParam->value().toInt();
+      // allows user to leave bms serial field blank instead of having to put 0
+      if (strcmp(bmsSerialParam->value().c_str(), "") == 0) {
+        Settings->bms_serial = 0;
+      } else {
+        Settings->bms_serial = bmsSerialParam->value().toInt();
+      }
       std::strncpy(Settings->ap_self_password, apSelfPassword->value().c_str(),
                    sizeof(Settings->ap_self_password));
       saveSettingsAndRestartSoon();

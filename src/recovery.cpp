@@ -29,6 +29,15 @@ void recovery_setup() {
   });
   dnsServer.start(53, "*", WiFi.softAPIP());  // DNS spoofing.
   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
+  webServer.on("/reset", HTTP_ANY, [](AsyncWebServerRequest *request) {
+    std::strncpy(Settings->ap_self_password, "",
+                 sizeof(Settings->ap_self_password));
+    saveSettingsAndRestartSoon();
+    request->send_P(
+        200, "text/html",
+        "<HTML><body><p>Settings have been reset</p></body></html>");
+    return;
+  });
   webServer.onNotFound([&](AsyncWebServerRequest *request) {
     request->redirect("http://" + WiFi.softAPIP().toString() + "/update");
   });
