@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="300"
+   height="150"
+   viewBox="0 0 79.374998 39.687525"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   sodipodi:docname="OwieLogo.svg"
+   inkscape:export-filename="C:\Users\8bit\Desktop\OWIE_Workspace\Owie\data\OwieLogoLarge.png"
+   inkscape:export-xdpi="112.2"
+   inkscape:export-ydpi="112.2"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="true"
+     units="px"
+     inkscape:zoom="2.6964653"
+     inkscape:cx="153.3489"
+     inkscape:cy="77.323449"
+     inkscape:window-width="1680"
+     inkscape:window-height="987"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1"
+     inkscape:snap-others="false" />
+  <defs
+     id="defs2">
+    <rect
+       x="6.4260516"
+       y="49.671642"
+       width="116.53731"
+       height="72.597015"
+       id="rect22790" />
+    <inkscape:path-effect
+       effect="spiro"
+       id="path-effect3324"
+       is_visible="true"
+       lpeversion="1" />
+    <linearGradient
+       id="linearGradient2970"
+       inkscape:swatch="solid">
+      <stop
+         style="stop-color:#a9c5f1;stop-opacity:1;"
+         offset="0"
+         id="stop2968" />
+    </linearGradient>
+    <inkscape:path-effect
+       effect="spiro"
+       id="path-effect902"
+       is_visible="true"
+       lpeversion="1" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <text
+       xml:space="preserve"
+       transform="scale(0.26458333)"
+       id="text22788"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:42.6667px;line-height:1.25;font-family:'Trebuchet MS';-inkscape-font-specification:'Trebuchet MS';white-space:pre;shape-inside:url(#rect22790);fill:none;fill-opacity:1;stroke:#000000;stroke-opacity:1" />
+    <g
+       id="g49966"
+       transform="matrix(2.5937425,0,0,2.5937425,-5.0140119,-46.284495)"
+       inkscape:export-filename="C:\Users\8bit\Desktop\OWIE_Workspace\Owie\data\OwieLogo.png"
+       inkscape:export-xdpi="118.02"
+       inkscape:export-ydpi="118.02">
+      <g
+         id="g12798"
+         transform="matrix(1.3540234,0,0,1.3540234,17.01709,15.605105)">
+        <g
+           id="g12582">
+          <rect
+             style="fill:#deb577;fill-opacity:1;stroke:#000000;stroke-width:0.05;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+             id="rect3446"
+             width="1.2292172"
+             height="3.3085485"
+             x="-0.69584125"
+             y="4.4137955"
+             rx="0.32166424"
+             ry="0.41931242"
+             transform="rotate(-45)" />
+          <rect
+             style="fill:#ee935d;fill-opacity:1;stroke:none;stroke-width:0.0315593;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+             id="rect3446-3"
+             width="0.99945688"
+             height="1.621129"
+             x="-0.58096123"
+             y="5.2575049"
+             rx="0.26154009"
+             ry="0.20545553"
+             transform="rotate(-45)" />
+        </g>
+        <g
+           id="g12582-6"
+           transform="matrix(-1,0,0,1,8.4666661,0)">
+          <rect
+             style="fill:#deb577;fill-opacity:1;stroke:#000000;stroke-width:0.05;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+             id="rect3446-4"
+             width="1.2292172"
+             height="3.3085485"
+             x="-0.69584125"
+             y="4.4137955"
+             rx="0.32166424"
+             ry="0.41931242"
+             transform="rotate(-45)" />
+          <rect
+             style="fill:#ee935d;fill-opacity:1;stroke:none;stroke-width:0.0315593;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+             id="rect3446-3-1"
+             width="0.99945688"
+             height="1.621129"
+             x="-0.58096123"
+             y="5.2575049"
+             rx="0.26154009"
+             ry="0.20545553"
+             transform="rotate(-45)" />
+        </g>
+      </g>
+      <g
+         aria-label="Owie"
+         id="text38857"
+         style="font-size:13.4056px;line-height:1.25;fill:#faffff;stroke:#252525;stroke-width:0.18">
+        <path
+           d="m 2.6374506,26.370852 q 0,-2.081534 1.0407667,-3.482314 1.0473125,-1.400781 2.821198,-1.400781 1.9964394,0 3.0568433,1.289504 1.0669494,1.289503 1.0669494,3.593591 0,2.362998 -1.0669494,3.704867 -1.0669496,1.335324 -3.0568433,1.335324 -1.8131597,0 -2.8408351,-1.413872 -1.0211296,-1.413872 -1.0211296,-3.626319 z m 1.3745976,0 q 0,1.649517 0.6480246,2.755741 0.6545703,1.106223 1.8393425,1.106223 1.3418691,0 2.0422593,-1.014584 0.7069359,-1.014584 0.7069359,-2.84738 0,-3.704868 -2.7491952,-3.704868 -1.2175008,0 -1.8524339,0.994947 -0.6349332,0.994946 -0.6349332,2.709921 z"
+           style="font-family:'Trebuchet MS';-inkscape-font-specification:'Trebuchet MS'"
+           id="path49121" />
+        <path
+           d="m 18.51078,31.378314 h -0.327285 l -2.055351,-4.771817 -2.048805,4.771817 h -0.327285 l -2.507005,-7.160999 h 1.328778 l 1.498966,4.601629 1.865525,-4.601629 h 0.327286 l 1.924436,4.601629 1.610243,-4.601629 h 1.224047 z"
+           style="font-family:'Trebuchet MS';-inkscape-font-specification:'Trebuchet MS'"
+           id="path49123" />
+        <path
+           d="m 22.608389,31.2474 v -5.963135 h -0.962218 v -1.047313 h 2.205902 V 31.2474 Z"
+           style="font-family:'Trebuchet MS';-inkscape-font-specification:'Trebuchet MS'"
+           id="path49125"
+           sodipodi:nodetypes="ccccccc" />
+        <path
+           d="m 31.7331,27.863272 h -5.053283 q 0,1.230592 0.674207,1.891708 0.595659,0.576022 1.531695,0.576022 1.066949,0 1.780431,-0.621842 l 0.523656,0.896761 q -0.288011,0.288011 -0.88367,0.497474 -0.74621,0.274919 -1.662608,0.274919 -1.322232,0 -2.245176,-0.896761 -1.027676,-0.988401 -1.027676,-2.657555 0,-1.734612 1.053859,-2.781924 0.942581,-0.936036 2.232084,-0.936036 1.498966,0 2.349908,0.844396 0.824758,0.811667 0.824758,2.153536 0,0.41238 -0.09819,0.759302 z m -3.017569,-2.709921 q -0.831305,0 -1.394235,0.536747 -0.536748,0.510565 -0.608751,1.269867 h 3.881602 q 0,-0.752756 -0.47129,-1.256775 -0.517111,-0.549839 -1.407326,-0.549839 z"
+           style="font-family:'Trebuchet MS';-inkscape-font-specification:'Trebuchet MS'"
+           id="path49127" />
+      </g>
+    </g>
+  </g>
+</svg>
