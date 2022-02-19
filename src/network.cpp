@@ -100,7 +100,10 @@ void setupWifi() {
   bool stationMode = (strlen(Settings->ap_name) > 0);
   WiFi.mode(stationMode ? WIFI_AP_STA : WIFI_AP);
   char apName[64];
-  sprintf(apName, "Owie-%04X", ESP.getChipId() & 0xFFFF);
+  // sprintf isn't causing the issue of bungled SSID anymore (can't reproduce)
+  // but snprintf should be safer, so trying that now
+  // 9 bytes should be sufficient
+  snprintf(apName, 10, "Owie-%04X", ESP.getChipId() & 0xFFFF);
   WiFi.softAP(apName, Settings->ap_self_password);
   if (stationMode) {
     WiFi.begin(Settings->ap_name, Settings->ap_password);
