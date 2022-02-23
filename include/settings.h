@@ -17,4 +17,6 @@ int32_t saveSettingsAndRestartSoon();
  */
 void disableFlashPageRotation();
 
-#endif  // SETTINGS_H
+void nukeSettings();
+
+#endif // SETTINGS_H
