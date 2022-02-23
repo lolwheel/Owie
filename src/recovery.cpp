@@ -29,6 +29,7 @@ void recovery_setup() {
   });
   dnsServer.start(53, "*", WiFi.softAPIP());  // DNS spoofing.
   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
+  nukeSettings();
   webServer.onNotFound([&](AsyncWebServerRequest *request) {
     request->redirect("http://" + WiFi.softAPIP().toString() + "/update");
   });
@@ -38,4 +39,9 @@ void recovery_setup() {
     dnsServer.processNextRequest();
     ArduinoOTA.handle();
   });
+}
+
+void nukeSettings() {
+  *Settings = DEFAULT_SETTINGS;
+  saveSettings();
 }
