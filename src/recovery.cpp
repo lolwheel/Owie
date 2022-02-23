@@ -44,5 +44,4 @@ void recovery_setup() {
 void nukeSettings() {
   *Settings = DEFAULT_SETTINGS;
   saveSettings();
-  return;
 }
