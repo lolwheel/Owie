@@ -28,9 +28,19 @@ This is a hobby projet for its contributors and comes with absolutely no guarant
 - Be comfortable with opening your board's battery enclosure. This requires a somewhat exotic Torx 5 point security bit, size TS20. [Amazon link](https://www.amazon.com/gp/product/B07TC79LVH).
 - Wemos D1 Mini Lite - the cheapest and most compact ESP8266 board that I'm aware of. You can find those on Aliexpress and Amazon. Buy version without the metal shield or ceramic WiFi antenna on it as they're too bulky to fit inside of the battery enclosure. [5 pack Amazon Link](https://www.amazon.com/dp/B081PX9YFV).
 
+## Build and download firmware
+
+1. Click `Gitpod Ready-to-Code` button at the top of the readme, and connect with your github account
+1. Once container is up, expand left menu .pio > d1_mini_lite_clone, and right click on firmware.bin -> download
+
+## Flashing Owie
+
+1. Use the ESP WebTools page provided [here](https://ow-breaker.github.io/).
+1. Follow the instructions on that page to flash the firmware.
+
 ## Installation:
 
-1. Install Owie fimrware onto your Wemos D1 mini. TODO(lolwheel): Write a page in details on how to do this.
+1. Install Owie fimrware onto your Wemos D1 mini as instructed above.
 1. Disassemble your board and open the battery enclosure.
 1. Disconnect all wires from BMS, strictly in the following order:
    1. Battery balance lead - the leftmost connector (24 wires) on the BMS.
