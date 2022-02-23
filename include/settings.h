@@ -5,6 +5,8 @@
 
 extern SettingsMsg *Settings;
 
+extern SettingsMsg DEFAULT_SETTINGS;
+
 void loadSettings();
 /**
  * @return Bytes written or -1 if writing failed.

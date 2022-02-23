@@ -6,13 +6,13 @@
 #include "dprint.h"
 #include "pb_decode.h"
 #include "pb_encode.h"
+#include "recovery.h"
 #include "spi_flash_geometry.h"
 #include "task_queue.h"
 
 namespace {
 SettingsMsg __settings = SettingsMsg_init_default;
 
-SettingsMsg DEFAULT_SETTINGS = SettingsMsg_init_default;
 // 3 bytes needed by EEPROM_Rotate + 2 byte proto message size
 const size_t MAX_SETTINGS_SIZE = SPI_FLASH_SEC_SIZE - 5;
 
@@ -30,6 +30,7 @@ EEPROM_Rotate& getEeprom() {
 }  // namespace
 
 SettingsMsg* Settings = &__settings;
+SettingsMsg DEFAULT_SETTINGS = SettingsMsg_init_default;
 
 void loadSettings() {
   auto& e = getEeprom();
