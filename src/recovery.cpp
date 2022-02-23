@@ -40,8 +40,3 @@ void recovery_setup() {
     ArduinoOTA.handle();
   });
 }
-
-void nukeSettings() {
-  *Settings = DEFAULT_SETTINGS;
-  saveSettings();
-}
