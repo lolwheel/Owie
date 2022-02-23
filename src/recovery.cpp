@@ -42,14 +42,7 @@ void recovery_setup() {
 }
 
 void nukeSettings() {
-  // resetting wifi password
-  std::strncpy(Settings->ap_self_password, "",
-               sizeof(Settings->ap_self_password));
-  // resetting wifi relay settings
-  std::strncpy(Settings->ap_name, "", sizeof(Settings->ap_self_password));
-  std::strncpy(Settings->ap_password, "", sizeof(Settings->ap_self_password));
-  // resetting bms serial override
-  Settings->bms_serial = 0;
+  *Settings = DEFAULT_SETTINGS;
   saveSettings();
   return;
 }

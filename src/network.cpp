@@ -103,7 +103,7 @@ void setupWifi() {
   // sprintf isn't causing the issue of bungled SSID anymore (can't reproduce)
   // but snprintf should be safer, so trying that now
   // 9 bytes should be sufficient
-  snprintf(apName, 10, "Owie-%04X", ESP.getChipId() & 0xFFFF);
+  snprintf(apName, sizeof(apName), "Owie-%04X", ESP.getChipId() & 0xFFFF);
   WiFi.softAP(apName, Settings->ap_self_password);
   if (stationMode) {
     WiFi.begin(Settings->ap_name, Settings->ap_password);
@@ -186,7 +186,7 @@ void setupWebServer(BmsRelay *bmsRelay) {
         return;
       }
       // allows user to leave bms serial field blank instead of having to put 0
-      if (strcmp(bmsSerialParam->value().c_str(), "") == 0) {
+      if (bmsSerialParam->value().length() == 0) {
         Settings->bms_serial = 0;
       } else {
         Settings->bms_serial = bmsSerialParam->value().toInt();

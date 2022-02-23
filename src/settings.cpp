@@ -43,8 +43,7 @@ void loadSettings() {
     }
   }
   DPRINTLN("Failed to decode settings, resetting.");
-  *Settings = DEFAULT_SETTINGS;
-  saveSettings();
+  nukeSettings(); // nukeSettings() calls saveSettings()
 }
 
 int32_t saveSettings() {
