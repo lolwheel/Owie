@@ -13,6 +13,8 @@
 namespace {
 SettingsMsg __settings = SettingsMsg_init_default;
 
+SettingsMsg DEFAULT_SETTINGS = SettingsMsg_init_default;
+
 // 3 bytes needed by EEPROM_Rotate + 2 byte proto message size
 const size_t MAX_SETTINGS_SIZE = SPI_FLASH_SEC_SIZE - 5;
 
@@ -29,8 +31,7 @@ EEPROM_Rotate& getEeprom() {
 }
 }  // namespace
 
-SettingsMsg* Settings = &__settings;
-SettingsMsg DEFAULT_SETTINGS = SettingsMsg_init_default;
+SettingsMsg *Settings = &__settings;
 
 void loadSettings() {
   auto& e = getEeprom();
@@ -67,3 +68,8 @@ int32_t saveSettingsAndRestartSoon() {
 }
 
 void disableFlashPageRotation() { getEeprom().rotate(false); }
+
+void nukeSettings() {
+  *Settings = DEFAULT_SETTINGS;
+  saveSettings();
+}

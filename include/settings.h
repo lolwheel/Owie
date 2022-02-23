@@ -5,8 +5,6 @@
 
 extern SettingsMsg *Settings;
 
-extern SettingsMsg DEFAULT_SETTINGS;
-
 void loadSettings();
 /**
  * @return Bytes written or -1 if writing failed.
@@ -19,4 +17,6 @@ int32_t saveSettingsAndRestartSoon();
  */
 void disableFlashPageRotation();
 
-#endif  // SETTINGS_H
+void nukeSettings();
+
+#endif // SETTINGS_H
