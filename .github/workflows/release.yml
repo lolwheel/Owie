@@ -45,6 +45,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          release_name: Release ${{ github.ref }}
+          name: Release ${{ github.ref }}
           body: ${{steps.build_changelog.outputs.changelog}}
-          files: /.pio/build/d1_mini_lite_clone/firmware.bin
+          files: .pio/build/d1_mini_lite_clone/firmware.bin
