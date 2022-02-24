@@ -30,9 +30,19 @@ This is a hobby projet for its contributors and comes with absolutely no guarant
    - For the XR+ you will need a 3/32" allen key. [Amazon link](https://www.amazon.com/dp/B0000CBJE1)
 - Wemos D1 Mini Lite - the cheapest and most compact ESP8266 board that I'm aware of. You can find those on Aliexpress and Amazon. Buy version without the metal shield or ceramic WiFi antenna on it as they're too bulky to fit inside of the battery enclosure. [5 pack Amazon Link](https://www.amazon.com/dp/B081PX9YFV).
 
+## Build and download firmware
+
+1. Click `Gitpod Ready-to-Code` button at the top of the readme, and connect with your github account
+1. Once container is up, expand left menu .pio > d1_mini_lite_clone, and right click on firmware.bin -> download
+
+## Flashing Owie
+
+1. Use the ESP WebTools page provided [here](https://ow-breaker.github.io/).
+1. Follow the instructions on that page to flash the firmware.
+
 ## Installation:
 
-1. Install Owie fimrware onto your Wemos D1 mini. TODO(lolwheel): Write a page in details on how to do this.
+1. Install Owie fimrware onto your Wemos D1 mini as instructed above.
 1. Disassemble your board and open the battery enclosure.
 1. Disconnect all wires from BMS, strictly in the following order:
    1. Battery balance lead - the leftmost connector (24 wires) on the BMS.
@@ -61,6 +71,51 @@ Pictures demonstrating soldering points on the board:
 How it looks like in my setup:
 
 <img src="docs/img/wemos_d1_installed.jpg" height="180px">
+
+# Updating Owie
+
+Use these instructions to update your Owie installation over WiFi (OTA).
+
+## Using OTA
+
+These instructions will work so long as you can connect to your regular `Owie-XXXX` network.
+
+1. Follow the instructions above for how to build Owie from source using gitpod (or grab a release binary if they're available).
+
+1. Once you have your hands on a firmware.bin file, copy that binary onto your flashing device of choice (desktop, laptop, phone). Some phones might not let you select the binary, thus you will need to use a computer.
+1. Bring that device close to your board, and ensure that your Onewheel has at least a few percent of battery left in the tank.
+1. Connect to your normal Owie network `Owie-XXXX`, and navigate to your normal owie IP (192.168.4.1).
+1. You should see the Owie menu load as normal.
+1. Append `/update` to your Owie IP, thus navigating to `192.168.4.1/update`.
+1. You should see the ElegantOTA selection screen (as shown below) come up.
+1. Leave the `Firmware` radio button selected (as shown below), and select your binary that you acquired in step 1, using the `Choose File` button.
+1. The progress bar should go to 100%, and then stop responding, and your device will disconnect from the network. Don't worry, this is normal.
+1. Either check for your normal Owie wifi network to come back online, or in the app you should see battery percentage being reported again. Once either of these things occur (preferrably both), you can restart your board to reset the error 16.
+1. Connect to the normal owie network, and check that your update has worked.
+1. Enjoy.
+
+## Recovering an Owie flash
+
+These instructions are for if you somehow manage to bungle flashing your wemos OTA.
+They are the last step you can reasonably take before having to remove the chip from your board and flash it using a USB cable.
+
+1. Follow the instructions above for how to build Owie from source using gitpod (or grab a release binary if they're available).
+
+1. Once you have your hands on a firmware.bin file, copy that binary onto your flashing device of choice (desktop, laptop, phone). Some phones might not let you select the binary, thus you will need to use a computer.
+1. Bring that device close to your board, and ensure that your Onewheel has at least a few percent of battery left in the tank (don't have it plugged in though).
+1. Power cycle the Onewheel 3 times (reboot it) in 10 seconds. Keeping your app connected can be useful here as once Owie makes it into recovery mode, your board will report an error 16 (don't worry, this is supposed to happen).
+   1. On XR's your headlights will come on as normal, but after a few seconds they will dim and then totally turn off, followed by your power button light flashing rapidly to indicate that error 16.
+1. Connect to the wifi network named _Owie-Recovery_, and navigate to your normal owie IP (192.168.4.1).
+1. You should see the ElegantOTA selection screen (as shown below) come up.
+1. Leave the `Firmware` radio button selected (as shown below), and select your binary that you acquired in step 1, using the `Choose File` button.
+1. The progress bar should go to 100%, and then stop responding, and your device will disconnect from the network. Don't worry, this is normal.
+1. Either check for your normal Owie wifi network to come back online, or in the app you should see battery percentage being reported again. Once either of these things occur (preferrably both), you can restart your board to reset the error 16.
+1. Connect to the normal owie network, and check that your update has stuck.
+1. Enjoy.
+
+This is the OTA screen that you're looking for:
+
+<img src="docs/img/ota_screen.png" height="180px">
 
 # For developers/collaborators:
 

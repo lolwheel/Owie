@@ -80,28 +80,38 @@ String templateProcessor(const String &var) {
       out.concat("<tr>");
     }
     return out;
-  } else if (var == "BMS_SERIAL") {
-    return String(Settings->bms_serial);
+  } else if (var == "BMS_SERIAL_OVERRIDE") {
+    // so it doesn't return 0 when no override is set
+    if (Settings->bms_serial == 0) {
+      return "";
+    } else {
+      return String(Settings->bms_serial);
+    }
+  } else if (var == "AP_PASSWORD") {
+    return Settings->ap_self_password;
   }
   return "<script>alert('UNKNOWN PLACEHOLDER')</script>";
 }
 
-}  // namespace
+} // namespace
 
 void setupWifi() {
   WiFi.setOutputPower(9);
   bool stationMode = (strlen(Settings->ap_name) > 0);
   WiFi.mode(stationMode ? WIFI_AP_STA : WIFI_AP);
   char apName[64];
-  sprintf(apName, "Owie-%04X", ESP.getChipId() & 0xFFFF);
-  WiFi.softAP(apName);
+  // sprintf isn't causing the issue of bungled SSID anymore (can't reproduce)
+  // but snprintf should be safer, so trying that now
+  // 9 bytes should be sufficient
+  snprintf(apName, sizeof(apName), "Owie-%04X", ESP.getChipId() & 0xFFFF);
+  WiFi.softAP(apName, Settings->ap_self_password);
   if (stationMode) {
     WiFi.begin(Settings->ap_name, Settings->ap_password);
     WiFi.hostname(apName);
   }
   MDNS.begin("owie");
   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
-  dnsServer.start(53, "*", WiFi.softAPIP());  // DNS spoofing.
+  dnsServer.start(53, "*", WiFi.softAPIP()); // DNS spoofing.
   TaskQueue.postRecurringTask([]() {
     dnsServer.processNextRequest();
     MDNS.update();
@@ -160,11 +170,29 @@ void setupWebServer(BmsRelay *bmsRelay) {
       return;
     case HTTP_POST:
       const auto bmsSerialParam = request->getParam("bs", true);
+      const auto apSelfPassword = request->getParam("pw", true);
       if (bmsSerialParam == nullptr) {
         request->send(400, "text/html", "Invalid BMS Serial number.");
         return;
       }
-      Settings->bms_serial = bmsSerialParam->value().toInt();
+      if (apSelfPassword == nullptr ||
+          apSelfPassword->value().length() >
+              sizeof(Settings->ap_self_password) ||
+          (apSelfPassword->value().length() < 8 &&
+           apSelfPassword->value().length() >
+               0)) { // this check is necessary so the user can't set a too
+                     // small password and thus the network wont' show up
+        request->send(400, "text/html", "Invalid AP password.");
+        return;
+      }
+      // allows user to leave bms serial field blank instead of having to put 0
+      if (bmsSerialParam->value().length() == 0) {
+        Settings->bms_serial = 0;
+      } else {
+        Settings->bms_serial = bmsSerialParam->value().toInt();
+      }
+      std::strncpy(Settings->ap_self_password, apSelfPassword->value().c_str(),
+                   sizeof(Settings->ap_self_password));
       saveSettingsAndRestartSoon();
       request->send(200, "text/html", "Settings saved, restarting...");
       return;
