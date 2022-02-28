@@ -153,6 +153,17 @@ void testTemperatureParsing() {
   TEST_ASSERT_EQUAL(20, relay->getAverageTemperatureCelsius());
 }
 
+void testBlocksStatusPacketsUnlessCharging() {
+  addMockData({0xff, 0x55, 0xaa, 0x0, 0x1, 0x1, 0xFF, 0x1});
+  relay->loop();
+  expectDataOut({0x1});
+  mockDataOut.clear();
+  // Charging bit is present, expect all data to go through.
+  addMockData({0xff, 0x55, 0xaa, 0x0, 0x21, 0x2, 0x1F, 0x1});
+  relay->loop();
+  expectDataOut({0xff, 0x55, 0xaa, 0x0, 0x21, 0x2, 0x1F, 0x1});
+}
+
 int main(int argc, char** argv) {
   UNITY_BEGIN();
   RUN_TEST(testUnknownDataAfterKnownPacketGetsFlushedImmediately);
@@ -163,6 +174,7 @@ int main(int argc, char** argv) {
   RUN_TEST(testBatterySocParsing);
   RUN_TEST(testCurrentParsing);
   RUN_TEST(testCellVoltageParsing);
+  RUN_TEST(testBlocksStatusPacketsUnlessCharging);
   UNITY_END();
 
   return 0;
