@@ -233,12 +233,22 @@
             <form action="/settings">
                 <button>Settings</button>
             </form>
-        </div>
+        <p></p>
+        <form action="/unlock" id="unlockButton" style="display: none">
+          <button>Unlock Board</button>
+        </form>
+      </div>
         <div style="text-align:right;font-size:11px;">
             <hr>
             <p style="color:#aaa;">Owie %OWIE_version%</p>
         <p style="color: #aaa">Board is currently: %LOCK_STATUS%</p>
     </div>
+    <script>
+      var unlockButton = document.getElementById("unlockButton");
+      if ("%LOCK_STATUS%" === "locked") {
+        document.getElementById("unlockButton").style.display = "block";
+      }
+    </script>
 </body>
 
 </html>

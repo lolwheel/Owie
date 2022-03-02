@@ -65,6 +65,11 @@ void bms_setup() {
     relay->setBMSSerialOverride(Settings->bms_serial);
   }
 
+  // actually locks the board without altering the bypassed serial
+  if (Settings->board_locked) {
+    relay->setBMSSerialOverride(5);
+  }
+
   setupWifi();
   setupWebServer(relay);
   setupArduinoOTA();

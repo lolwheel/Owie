@@ -195,12 +195,17 @@ void setupWebServer(BmsRelay *bmsRelay) {
       }
       std::strncpy(Settings->ap_self_password, apSelfPassword->value().c_str(),
                    sizeof(Settings->ap_self_password));
-      Settings->board_locked = false; // unlock the board
       saveSettingsAndRestartSoon();
       request->send(200, "text/html", "Settings saved, restarting...");
       return;
     }
     request->send(404);
+  });
+  webServer.on("/unlock", HTTP_GET, [](AsyncWebServerRequest *request) {
+    Settings->board_locked = false; // unlock the board
+    saveSettingsAndRestartSoon();
+    request->send(200, "text/html", "Board unlocked, restarting...");
+    return;
   });
 
   webServer.begin();
