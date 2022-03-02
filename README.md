@@ -18,6 +18,7 @@ This is a hobby projet for its contributors and comes with absolutely no guarant
 - Defeats BMS <-> Controller pairing and allows you to use any Pint or XR BMS in your board.
 - Shows various stats about your battery on a web page through WiFi - Voltage, current, individual cell voltages and more.
 - Supports future firmware updates via WiFi - no need to reopen your board.
+- Adds password protection to your board
 
 # Installing Owie into your board
 
@@ -25,8 +26,8 @@ This is a hobby projet for its contributors and comes with absolutely no guarant
 
 - Have essential soldering skills and tools: Soldering iron, some 22 gauge or otherwise thin wires, fish tape or isolating tape.
 - Be comfortable with opening your board's battery enclosure.
-   - For the PINT you require a somewhat exotic Torx 5 point security bit, size TS20. [Amazon link](https://www.amazon.com/gp/product/B07TC79LVH)
-   - For the XR+ you will need a 3/32" Allen key. [Amazon link](https://www.amazon.com/dp/B0000CBJE1)
+  - For the PINT you require a somewhat exotic Torx 5 point security bit, size TS20. [Amazon link](https://www.amazon.com/gp/product/B07TC79LVH)
+  - For the XR+ you will need a 3/32" Allen key. [Amazon link](https://www.amazon.com/dp/B0000CBJE1)
 - Wemos D1 Mini Lite - the cheapest and most compact ESP8266 board that I'm aware of. You can find those on Aliexpress and Amazon. Buy version without the metal shield or ceramic WiFi antenna on it as they're too bulky to fit inside of the battery enclosure. [5 pack Amazon Link](https://www.amazon.com/dp/B081PX9YFV).
 
 ## Build and download firmware
@@ -39,8 +40,8 @@ This is a hobby projet for its contributors and comes with absolutely no guarant
 1. Use the ESP WebTools page provided [here](https://ow-breaker.github.io/).
 1. Follow the instructions on that page to flash the firmware.
 1. Verify the flash success: When the chip is on, you should see
-a WiFi network called `Owie-XXXX`. Connecting to it should send you
-straight to the status page of the Owie board. Don't worry about the data because the board isn't hooked up yet.
+   a WiFi network called `Owie-XXXX`. Connecting to it should send you
+   straight to the status page of the Owie board. Don't worry about the data because the board isn't hooked up yet.
 
 ## Installation:
 
@@ -78,7 +79,6 @@ If after installing OWIE into your board it reports that your battery is at 1% e
 This problem occurs because the BMS goes through a state reset and doesn't know the status of the battery, and plugging the board
 into a charger corrects this issue by forcing the BMS (and controller potentially) to do a state check.
 
-
 Pictures demonstrating soldering points on the board:
 
 <img src= "docs/img/wemos_d1_top.png?raw=true" height="180px">
@@ -88,6 +88,31 @@ Pictures demonstrating soldering points on the board:
 How it looks like in my setup:
 
 <img src="docs/img/wemos_d1_installed.jpg" height="180px">
+
+# Using Owie
+
+## Parking your board (password protection)
+
+**WARNING:** Arming your board for parking **will** disable the emergency recovery mode (3 restarts), so if you forget your network password, the only way to recover is to reflash via USB.
+The normal OTA update mode will still be functional as normal (see below for OTA instructions).
+Disarming the board will restore the emergency recovery mode.
+
+Use these instructions if you want to be able to 'park' your onewheel using the power button sequence.
+The park functionality comes by interrupting all communication between the BMS and the controller, thus causing an error 16.
+This functionality can be removed quite easily by someone motivated enough and with enough knowledge; all that's required is to open up the board, remove Owie and solder the wires back together, or to reflash it via USB.
+
+1. Set an Owie network password in `Settings`.
+1. Tap the `Arm` button in `Settings`. This arms your board so you can put it into 'park'.
+1. When you need to park your board, just restart it. Always start from an on state then turn it off, then back on, then off again; all in under 10 seconds.
+
+## Un-parking your board
+
+Use these instructions to un-park your board so you can go ride.
+
+1. Power on your board normally. Ignore the error 16 (that's how the board gets parked).
+1. Connect to your password protected Owie network.
+1. On the status screen, click the `Unlock` button.
+1. Then as the button will remind you, restart your board to get rid of the error 16.
 
 # Updating Owie
 
@@ -167,4 +192,5 @@ The data frames sent by BMS are of the following general format:
 1. Checksum - last two bytes of the frame - simply sum of all of the bytes in the frame, including the preamble.
 
 ## Message types:
+
 I've isolated all message parsing code in `src/lib/bms/packet_parses.cpp`, the code should be self-explanatory.
