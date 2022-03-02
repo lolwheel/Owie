@@ -18,7 +18,7 @@
 
   <button>Save</button>
 </form>
-<p>
+<p id="btnField" style="display: none">
   <button onclick="toggleArming(this)" id="armBtn">
     %BOARD_LOCK_ARMED_INV%
   </button>
@@ -40,5 +40,9 @@
     };
 
     xhr.send();
+  }
+
+  if ("%AP_PASSWORD%" !== "") {
+    document.getElementById("btnField").style.display = "block";
   }
 </script>

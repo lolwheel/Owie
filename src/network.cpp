@@ -216,9 +216,7 @@ void setupWebServer(BmsRelay *bmsRelay) {
       return;
     } else if (request->hasParam("toggleArm")) {
       Settings->board_lock_armed = !Settings->board_lock_armed;
-      if (!Settings->board_lock_armed) {
-        Settings->board_locked = false;
-      }
+      Settings->board_locked = false; // unlock the board
       String retval = Settings->board_lock_armed ? "Disarm" : "Arm";
       saveSettingsAndRestartSoon();
       request->send(200, "text/html", retval);

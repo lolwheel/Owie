@@ -40,12 +40,14 @@ void bms_setup() {
   attachInterrupt(digitalPinToInterrupt(TX_INPUT_PIN), txPinFallInterrupt,
                   FALLING);
 
-  relay->addReceivedPacketCallback([](BmsRelay*, Packet* packet) {
-    static uint8_t ledState = 0;
-    digitalWrite(LED_BUILTIN, ledState);
-    ledState = 1 - ledState;
-    streamBMSPacket(packet->start(), packet->len());
-  });
+  if (!Settings->board_locked) { // prevent it from sending packets along?
+    relay->addReceivedPacketCallback([](BmsRelay *, Packet *packet) {
+      static uint8_t ledState = 0;
+      digitalWrite(LED_BUILTIN, ledState);
+      ledState = 1 - ledState;
+      streamBMSPacket(packet->start(), packet->len());
+    });
+  }
   relay->setUnknownDataCallback([](uint8_t b) {
     static std::vector<uint8_t> unknownData = {0};
     if (unknownData.size() > 128) {
@@ -63,11 +65,6 @@ void bms_setup() {
 
   if (Settings->bms_serial != 0) {
     relay->setBMSSerialOverride(Settings->bms_serial);
-  }
-
-  // actually locks the board without altering the bypassed serial
-  if (Settings->board_locked) {
-    relay->setBMSSerialOverride(5);
   }
 
   setupWifi();

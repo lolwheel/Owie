@@ -13,24 +13,24 @@ void resetQuickPowerCycleCount() {
   DPRINTF("Wrote QPC = %d\n", Settings->quick_power_cycle_count);
 }
 
-void isLocked() {
+bool isLocked() {
+  // no password set or board isn't armed, won't lock
   if (strcmp(Settings->ap_self_password, "") == 0 ||
       !Settings->board_lock_armed) {
     // making sure the board can't go into a locked state
     Settings->board_locked = false;
-    return;
+    return false;
   }
   if (Settings->quick_power_cycle_count > 0) {
     Settings->quick_power_cycle_count = 0;
     Settings->board_locked = true;
   } else {
-    // this should clearly put it into the locked state
-    Settings->quick_power_cycle_count = 3;
+    Settings->quick_power_cycle_count++;
     // Reset in 10 seconds;
     TaskQueue.postOneShotTask(resetQuickPowerCycleCount, 10000L);
   }
   saveSettings();
-  return;
+  return Settings->board_locked;
 }
 
 extern "C" void setup() {
