@@ -54,7 +54,7 @@ String templateProcessor(const String &var) {
   } else if (var == "REGENERATED_CHARGE_MAH") {
     return String(relay->getRegeneratedChargeMah());
   } else if (var == "OWIE_version") {
-    return "0.0.1";
+    return "1.0.0";
   } else if (var == "SSID") {
     return Settings->ap_name;
   } else if (var == "PASS") {
@@ -102,7 +102,6 @@ void setupWifi() {
   char apName[64];
   // sprintf isn't causing the issue of bungled SSID anymore (can't reproduce)
   // but snprintf should be safer, so trying that now
-  // 9 bytes should be sufficient
   snprintf(apName, sizeof(apName), "Owie-%04X", ESP.getChipId() & 0xFFFF);
   WiFi.softAP(apName, Settings->ap_self_password);
   if (stationMode) {
