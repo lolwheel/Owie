@@ -13,22 +13,6 @@ void resetQuickPowerCycleCount() {
   DPRINTF("Wrote QPC = %d\n", Settings->quick_power_cycle_count);
 }
 
-bool isInRecoveryMode() {
-  DPRINTF("Read QPC = %d\n", Settings->quick_power_cycle_count);
-  bool recovery = false;
-  if (Settings->quick_power_cycle_count > 1) {
-    recovery = true;
-    Settings->quick_power_cycle_count = 0;
-  } else {
-    Settings->quick_power_cycle_count++;
-    // Reset in 10 seconds;
-    TaskQueue.postOneShotTask(resetQuickPowerCycleCount, 10000L);
-  }
-  saveSettings();
-  DPRINTF("Wrote QPC = %d\n", Settings->quick_power_cycle_count);
-  return recovery;
-}
-
 void isLocked() {
   if (strcmp(Settings->ap_self_password, "") == 0 ||
       !Settings->board_lock_armed) {
