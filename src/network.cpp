@@ -205,23 +205,26 @@ void setupWebServer(BmsRelay *bmsRelay) {
     }
     request->send(404);
   });
-  webServer.on("/unlock", HTTP_GET, [](AsyncWebServerRequest *request) {
-    Settings->board_locked = false; // unlock the board
-    saveSettingsAndRestartSoon();
-    request->send(200, "text/html",
-                  "Board unlocked, restarting Owie. Please wait a few seconds "
-                  "and reboot your board.");
-    return;
-  });
-  webServer.on("/toggleArming", HTTP_GET, [](AsyncWebServerRequest *request) {
-    Settings->board_lock_armed = !Settings->board_lock_armed;
-    if (!Settings->board_lock_armed) {
-      Settings->board_locked = false;
+  webServer.on("/lock", HTTP_GET, [](AsyncWebServerRequest *request) {
+    if (request->hasParam("unlock")) {
+      Settings->board_locked = false; // unlock the board
+      saveSettingsAndRestartSoon();
+      request->send(
+          200, "text/html",
+          "Board unlocked, restarting Owie. Please wait a few seconds "
+          "and reboot your board.");
+      return;
+    } else if (request->hasParam("toggleArm")) {
+      Settings->board_lock_armed = !Settings->board_lock_armed;
+      if (!Settings->board_lock_armed) {
+        Settings->board_locked = false;
+      }
+      String retval = Settings->board_lock_armed ? "Disarm" : "Arm";
+      saveSettingsAndRestartSoon();
+      request->send(200, "text/html", retval);
+      return;
     }
-    String retval = Settings->board_lock_armed ? "Disarm" : "Arm";
-    saveSettingsAndRestartSoon();
-    request->send(200, "text/html", retval);
-    return;
+    request->send(404);
   });
 
   webServer.begin();

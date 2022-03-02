@@ -247,7 +247,21 @@
       </div>
     </div>
     <script>
-      var unlockButton = document.getElementById("unlockButton");
+      function unlockBoard(btn) {
+        let xhr = new XMLHttpRequest();
+        xhr.open("GET", "/lock?unlock");
+        xhr.responseType = "text";
+
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            btn.innerHTML = xhr.responseText;
+          } else {
+            btn.innerHTML = "Error: " + xhr.status;
+          }
+        };
+        xhr.send();
+      }
+
       if ("%LOCK_STATUS%" === "locked") {
         document.getElementById("unlockButton").style.display = "block";
       }
