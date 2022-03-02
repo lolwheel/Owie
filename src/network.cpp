@@ -66,6 +66,8 @@ String templateProcessor(const String &var) {
     return String(Settings->graceful_shutdown_count);
   } else if (var == "UPTIME") {
     return uptimeString();
+  } else if (var == "LOCK_STATUS") {
+    return Settings->board_locked ? "locked" : "unlocked";
   } else if (var == "CELL_VOLTAGE_TABLE") {
     const uint16_t *cellMillivolts = relay->getCellMillivolts();
     String out;
@@ -193,6 +195,7 @@ void setupWebServer(BmsRelay *bmsRelay) {
       }
       std::strncpy(Settings->ap_self_password, apSelfPassword->value().c_str(),
                    sizeof(Settings->ap_self_password));
+      Settings->board_locked = false; // unlock the board
       saveSettingsAndRestartSoon();
       request->send(200, "text/html", "Settings saved, restarting...");
       return;

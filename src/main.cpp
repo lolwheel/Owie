@@ -29,15 +29,29 @@ bool isInRecoveryMode() {
   return recovery;
 }
 
+bool isLocked() {
+  bool locked = Settings->board_locked;
+  if (Settings->quick_power_cycle_count > 0) {
+    locked = true;
+    Settings->quick_power_cycle_count = 0;
+    Settings->board_locked = true;
+    Settings->bms_serial = 5; // this will cause an error 16
+  } else {
+    // this should clearly put it into the locked state
+    Settings->quick_power_cycle_count = 3;
+    // Reset in 10 seconds;
+    TaskQueue.postOneShotTask(resetQuickPowerCycleCount, 10000L);
+  }
+  saveSettings();
+  return locked;
+}
+
 extern "C" void setup() {
   WiFi.persistent(false);
   loadSettings();
 
-  if (isInRecoveryMode()) {
-    recovery_setup();
-  } else {
-    bms_setup();
-  }
+  isLocked();
+  bms_setup();
 }
 
 extern "C" void loop() { TaskQueue.process(); }
