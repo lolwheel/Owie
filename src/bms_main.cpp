@@ -30,8 +30,10 @@ void bms_setup() {
   Serial.begin(115200);
 
   // The B line idle is 0
-  digitalWrite(TX_INVERSE_OUT_PIN, 0);
-  pinMode(TX_INVERSE_OUT_PIN, OUTPUT);
+  if (!Settings->board_locked) { // prevent it from sending packets along?
+    digitalWrite(TX_INVERSE_OUT_PIN, 0);
+    pinMode(TX_INVERSE_OUT_PIN, OUTPUT);
+  }
   pinMode(TX_INPUT_PIN, INPUT);
   pinMode(LED_BUILTIN, OUTPUT);
 
@@ -40,14 +42,12 @@ void bms_setup() {
   attachInterrupt(digitalPinToInterrupt(TX_INPUT_PIN), txPinFallInterrupt,
                   FALLING);
 
-  if (!Settings->board_locked) { // prevent it from sending packets along?
-    relay->addReceivedPacketCallback([](BmsRelay *, Packet *packet) {
-      static uint8_t ledState = 0;
-      digitalWrite(LED_BUILTIN, ledState);
-      ledState = 1 - ledState;
-      streamBMSPacket(packet->start(), packet->len());
-    });
-  }
+  relay->addReceivedPacketCallback([](BmsRelay *, Packet *packet) {
+    static uint8_t ledState = 0;
+    digitalWrite(LED_BUILTIN, ledState);
+    ledState = 1 - ledState;
+    streamBMSPacket(packet->start(), packet->len());
+  });
   relay->setUnknownDataCallback([](uint8_t b) {
     static std::vector<uint8_t> unknownData = {0};
     if (unknownData.size() > 128) {
@@ -56,6 +56,7 @@ void bms_setup() {
     unknownData.push_back(b);
     streamBMSPacket(&unknownData[0], unknownData.size());
   });
+
   relay->setPowerOffCallback([]() {
     Settings->graceful_shutdown_count++;
     saveSettings();
