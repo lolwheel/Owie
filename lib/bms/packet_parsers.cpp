@@ -59,7 +59,7 @@ void BmsRelay::currentParser(Packet& p) {
     last_current_message_millis_ = now;
     return;
   }
-  const unsigned long millisElapsed = now - last_current_message_millis_;
+  const int32_t millisElapsed = (int32_t)(now - last_current_message_millis_);
   last_current_message_millis_ = now;
   const int32_t current_times_milliseconds =
       (last_current_ + current_) * millisElapsed / 2;
