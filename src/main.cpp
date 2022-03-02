@@ -29,10 +29,14 @@ bool isInRecoveryMode() {
   return recovery;
 }
 
-bool isLocked() {
-  bool locked = Settings->board_locked;
+void isLocked() {
+  if (strcmp(Settings->ap_self_password, "") == 0 ||
+      !Settings->board_lock_armed) {
+    // making sure the board can't go into a locked state
+    Settings->board_locked = false;
+    return;
+  }
   if (Settings->quick_power_cycle_count > 0) {
-    locked = true;
     Settings->quick_power_cycle_count = 0;
     Settings->board_locked = true;
   } else {
@@ -42,7 +46,7 @@ bool isLocked() {
     TaskQueue.postOneShotTask(resetQuickPowerCycleCount, 10000L);
   }
   saveSettings();
-  return locked;
+  return;
 }
 
 extern "C" void setup() {

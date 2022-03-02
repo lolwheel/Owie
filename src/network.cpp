@@ -68,6 +68,10 @@ String templateProcessor(const String &var) {
     return uptimeString();
   } else if (var == "LOCK_STATUS") {
     return Settings->board_locked ? "locked" : "unlocked";
+  } else if (var == "BOARD_LOCK_ARMED") {
+    return Settings->board_lock_armed ? "arm" : "disarm";
+  } else if (var == "BOARD_LOCK_ARMED_INV") {
+    return Settings->board_lock_armed ? "Disarm" : "Arm";
   } else if (var == "CELL_VOLTAGE_TABLE") {
     const uint16_t *cellMillivolts = relay->getCellMillivolts();
     String out;
@@ -205,6 +209,13 @@ void setupWebServer(BmsRelay *bmsRelay) {
     Settings->board_locked = false; // unlock the board
     saveSettingsAndRestartSoon();
     request->send(200, "text/html", "Board unlocked, restarting...");
+    return;
+  });
+  webServer.on("/toggleArming", HTTP_GET, [](AsyncWebServerRequest *request) {
+    Settings->board_lock_armed = !Settings->board_lock_armed;
+    String retval = Settings->board_lock_armed ? "Disarm" : "Arm";
+    saveSettingsAndRestartSoon();
+    request->send(200, "text/html", retval);
     return;
   });
 

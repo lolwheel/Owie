@@ -8,4 +8,5 @@ message SettingsMsg {
   int32 bms_serial = 5;
   string ap_self_password = 6;
   bool board_locked = 7;
+  bool board_lock_armed = 8;
 }
