@@ -19,7 +19,7 @@ inline int16_t int16FromNetworkOrder(const void* const p) {
 
 int openCircuitSocFromVoltage(float voltageVolts) {
   // kindly provided by biell@ in https://github.com/lolwheel/Owie/issues/1
-  return clamp((int)(99.9 / (0.8 + pow(1.29, (54 - voltageVolts))) - 10), 1,
+  return clamp((int)(99.9 / (0.8 + pow(1.29, (54 - voltageVolts))) - 10), 0,
                100);
 }
 
@@ -36,10 +36,9 @@ void BmsRelay::batteryPercentageParser(Packet& p) {
     p.setShouldForward(false);
     return;
   }
-  overridden_soc_percent_ = std::max(
-      5,
-      openCircuitSocFromVoltage(filtered_total_voltage_millivolts_ / 1000.0));
-  p.data()[0] = std::max(5, (int)overridden_soc_percent_);
+  overridden_soc_percent_ =
+      openCircuitSocFromVoltage(filtered_total_voltage_millivolts_ / 1000.0);
+  p.data()[0] = overridden_soc_percent_;
 }
 
 void BmsRelay::currentParser(Packet& p) {
