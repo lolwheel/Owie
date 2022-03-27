@@ -58,8 +58,6 @@ void bms_setup() {
     Settings->graceful_shutdown_count++;
     saveSettings();
   });
-  // An example serial override which defeats BMS pairing:
-  // relay.setBMSSerialOverride(123456);
 
   if (Settings->bms_serial != 0) {
     relay->setBMSSerialOverride(Settings->bms_serial);
