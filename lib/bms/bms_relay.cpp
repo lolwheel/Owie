@@ -67,7 +67,7 @@ void BmsRelay::processNextByte() {
   for (auto& callback : receivedPacketCallbacks_) {
     callback(this, &p);
   };
-  chargingStatusParser(p);
+  bmsStatusParser(p);
   bmsSerialParser(p);
   currentParser(p);
   batteryPercentageParser(p);

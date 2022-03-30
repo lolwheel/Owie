@@ -107,6 +107,9 @@ class BmsRelay {
     return current_times_milliseconds_regenerated_ * CURRENT_SCALER / 3600;
   }
 
+  bool isCharging() { return last_status_byte_ & 0x20; }
+  bool isBatteryEmpty() { return last_status_byte_ & 0x4; }
+
  private:
   static constexpr float CURRENT_SCALER = 0.055;
   void processNextByte();
@@ -136,11 +139,12 @@ class BmsRelay {
   int16_t last_current_ = 0;
   int32_t current_times_milliseconds_used_ = 0;
   int32_t current_times_milliseconds_regenerated_ = 0;
+  uint8_t last_status_byte_ = 0;
   const Source source_;
   const Sink sink_;
   const Millis millis_;
 
-  void chargingStatusParser(Packet& p);
+  void bmsStatusParser(Packet& p);
   void bmsSerialParser(Packet& p);
   void currentParser(Packet& p);
   void batteryPercentageParser(Packet& p);
