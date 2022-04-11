@@ -7,6 +7,7 @@
 
 #include <cstring>
 
+#include "ArduinoJson.h"
 #include "bms_relay.h"
 #include "data.h"
 #include "settings.h"
@@ -20,6 +21,8 @@ AsyncWebSocket ws("/rawdata");
 
 const String defaultPass("****");
 BmsRelay *relay;
+
+const String owie_version = "0.1.1_RM";
 
 inline String uptimeString() {
   const unsigned long nowSecs = millis() / 1000;
@@ -38,6 +41,36 @@ inline String uptimeString() {
   return ret;
 }
 
+DynamicJsonDocument parseOwieStatusData() {
+  DynamicJsonDocument status(1024);
+
+  const uint16_t *cellMillivolts = relay->getCellMillivolts();
+  String out;
+  out.reserve(256);
+  for (int i = 0; i < 3; i++) {
+    out.concat("<tr>");
+    for (int j = 0; j < 5; j++) {
+      out.concat("<td>");
+      out.concat(cellMillivolts[i * 5 + j] / 1000.0);
+      out.concat("</td>");
+    }
+    out.concat("<tr>");
+  }
+
+  status["TOTAL_VOLTAGE"] =
+      String(relay->getTotalVoltageMillivolts() / 1000.0, 2) + "v";
+  status["CURRENT_AMPS"] = String(relay->getCurrentInAmps(), 1) + " Amps";
+  status["BMS_SOC"] = String(relay->getBmsReportedSOC()) + "%";
+  status["OVERRIDDEN_SOC"] = String(relay->getOverriddenSOC()) + "%";
+  status["USED_CHARGE_MAH"] = String(relay->getUsedChargeMah()) + " mAh";
+  status["REGENERATED_CHARGE_MAH"] =
+      String(relay->getRegeneratedChargeMah()) + " mAh";
+  status["OWIE_version"] = owie_version;
+  status["UPTIME"] = uptimeString();
+  status["CELL_VOLTAGE_TABLE"] = out;
+  return status;
+}
+
 String templateProcessor(const String &var) {
   if (var == "TOTAL_VOLTAGE") {
     return String(relay->getTotalVoltageMillivolts() / 1000.0,
@@ -54,7 +87,7 @@ String templateProcessor(const String &var) {
   } else if (var == "REGENERATED_CHARGE_MAH") {
     return String(relay->getRegeneratedChargeMah());
   } else if (var == "OWIE_version") {
-    return "0.0.3_RM";
+    return owie_version;
   } else if (var == "SSID") {
     return Settings->ap_name;
   } else if (var == "PASS") {
@@ -137,6 +170,12 @@ void setupWebServer(BmsRelay *bmsRelay) {
     }
     request->redirect("http://" + WiFi.softAPIP().toString() + "/");
   });
+  webServer.on("/autoupdate", HTTP_GET, [](AsyncWebServerRequest *request) {
+    String buf;
+    serializeJson(parseOwieStatusData(), buf);
+    request->send(200, "application/json", buf);
+  });
+
   webServer.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send_P(200, "text/html", INDEX_HTML_PROGMEM_ARRAY, INDEX_HTML_SIZE,
                     templateProcessor);
