@@ -126,6 +126,15 @@ String templateProcessor(const String &var) {
     return String(relay->getCapturedBMSSerial());
   } else if (var == "AP_SELF_NAME") {
     return Settings->ap_self_name;
+  } else if (var == "DISPLAY_AP_NAME") {
+    char apDisplayName[64];
+    if (strlen(Settings->ap_self_name) > 0) {
+      snprintf(apDisplayName, sizeof(apDisplayName), Settings->ap_self_name);
+    } else {
+      snprintf(apDisplayName, sizeof(apDisplayName), "Owie-%04X",
+               ESP.getChipId() & 0xFFFF);
+    }
+    return String(apDisplayName);
   }
   return "<script>alert('UNKNOWN PLACEHOLDER')</script>";
 }
