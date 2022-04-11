@@ -22,7 +22,7 @@ AsyncWebSocket ws("/rawdata");
 const String defaultPass("****");
 BmsRelay *relay;
 
-const String owie_version = "0.1.1_RM";
+const String owie_version = "0.1.2_RM";
 
 inline String uptimeString() {
   const unsigned long nowSecs = millis() / 1000;
