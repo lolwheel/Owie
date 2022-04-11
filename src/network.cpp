@@ -22,7 +22,7 @@ AsyncWebSocket ws("/rawdata");
 const String defaultPass("****");
 BmsRelay *relay;
 
-const String owie_version = "0.1.2_RM";
+const String owie_version = "0.1.3_RM";
 
 inline String uptimeString() {
   const unsigned long nowSecs = millis() / 1000;
@@ -65,7 +65,6 @@ DynamicJsonDocument parseOwieStatusData() {
   status["USED_CHARGE_MAH"] = String(relay->getUsedChargeMah()) + " mAh";
   status["REGENERATED_CHARGE_MAH"] =
       String(relay->getRegeneratedChargeMah()) + " mAh";
-  status["OWIE_version"] = owie_version;
   status["UPTIME"] = uptimeString();
   status["CELL_VOLTAGE_TABLE"] = out;
   return status;
