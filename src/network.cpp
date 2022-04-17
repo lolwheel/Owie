@@ -22,7 +22,7 @@ AsyncWebSocket ws("/rawdata");
 const String defaultPass("****");
 BmsRelay *relay;
 
-const String owie_version = "0.1.3_RM";
+const String owie_version = "0.1.4_RM";
 
 inline String uptimeString() {
   const unsigned long nowSecs = millis() / 1000;
@@ -134,6 +134,23 @@ String templateProcessor(const String &var) {
                ESP.getChipId() & 0xFFFF);
     }
     return String(apDisplayName);
+  } else if (var == "WIFI_POWER") {
+    return String(Settings->wifi_power);
+  } else if (var == "WIFI_POWER_OPTIONS") {
+    String opts;
+    opts.reserve(256);
+    for (int i = 9; i < 13; i++) {
+      opts.concat("<option value='");
+      opts.concat(String(i));
+      opts.concat("'");
+      if (i == Settings->wifi_power) {
+        opts.concat(" selected ");
+      }
+      opts.concat(">");
+      opts.concat(String(i));
+      opts.concat("</option>");
+    }
+    return opts;
   }
   return "<script>alert('UNKNOWN PLACEHOLDER')</script>";
 }
@@ -141,7 +158,7 @@ String templateProcessor(const String &var) {
 }  // namespace
 
 void setupWifi() {
-  WiFi.setOutputPower(9);
+  WiFi.setOutputPower(Settings->wifi_power);
   bool stationMode = (strlen(Settings->ap_name) > 0);
   WiFi.mode(stationMode ? WIFI_AP_STA : WIFI_AP);
   char apName[64];
@@ -227,6 +244,7 @@ void setupWebServer(BmsRelay *bmsRelay) {
         const auto bmsSerialParam = request->getParam("bs", true);
         const auto apSelfPassword = request->getParam("pw", true);
         const auto apSelfName = request->getParam("apselfname", true);
+        const auto wifiPower = request->getParam("wifipower", true);
         if (bmsSerialParam == nullptr) {
           request->send(400, "text/html", "Invalid BMS Serial number.");
           return;
@@ -255,6 +273,9 @@ void setupWebServer(BmsRelay *bmsRelay) {
         } else {
           Settings->bms_serial = bmsSerialParam->value().toInt();
         }
+
+        // Set wifi power
+        Settings->wifi_power = wifiPower->value().toInt();
         std::strncpy(Settings->ap_self_password,
                      apSelfPassword->value().c_str(),
                      sizeof(Settings->ap_self_password));
