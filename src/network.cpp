@@ -275,6 +275,12 @@ void setupWebServer(BmsRelay *bmsRelay) {
         }
 
         // Set wifi power
+        // add aditional sanity checks, so that the power range is between 9 and
+        // 12 only!
+        if (wifiPower == nullptr || wifiPower->value().toInt() < 9 || wifiPower->value().toInt() > 12) {
+          request->send(400, "text/html", "Wifi Power range MUST be between 9 and 12.");
+          return;
+        }
         Settings->wifi_power = wifiPower->value().toInt();
         std::strncpy(Settings->ap_self_password,
                      apSelfPassword->value().c_str(),

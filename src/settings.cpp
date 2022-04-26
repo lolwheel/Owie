@@ -70,5 +70,7 @@ void disableFlashPageRotation() { getEeprom().rotate(false); }
 
 void nukeSettings() {
   *Settings = DEFAULT_SETTINGS;
+  // set default value of the wifi power output
+  Settings->wifi_power = 9;
   saveSettings();
 }
