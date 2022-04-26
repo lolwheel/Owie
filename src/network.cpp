@@ -41,9 +41,9 @@ inline String uptimeString() {
   return ret;
 }
 
-DynamicJsonDocument parseOwieStatusData() {
+String generateOwieStatusJson() {
   DynamicJsonDocument status(1024);
-
+  String jsonOutput;
   const uint16_t *cellMillivolts = relay->getCellMillivolts();
   String out;
   out.reserve(256);
@@ -67,7 +67,9 @@ DynamicJsonDocument parseOwieStatusData() {
       String(relay->getRegeneratedChargeMah()) + " mAh";
   status["UPTIME"] = uptimeString();
   status["CELL_VOLTAGE_TABLE"] = out;
-  return status;
+  
+  serializeJson(status, jsonOutput);
+  return jsonOutput;
 }
 
 String templateProcessor(const String &var) {
@@ -196,9 +198,7 @@ void setupWebServer(BmsRelay *bmsRelay) {
     request->redirect("http://" + WiFi.softAPIP().toString() + "/");
   });
   webServer.on("/autoupdate", HTTP_GET, [](AsyncWebServerRequest *request) {
-    String buf;
-    serializeJson(parseOwieStatusData(), buf);
-    request->send(200, "application/json", buf);
+    request->send(200, "application/json", generateOwieStatusJson());
   });
 
   webServer.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {

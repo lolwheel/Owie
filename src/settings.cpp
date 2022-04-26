@@ -70,7 +70,8 @@ void disableFlashPageRotation() { getEeprom().rotate(false); }
 
 void nukeSettings() {
   *Settings = DEFAULT_SETTINGS;
-  // set default value of the wifi power output
+  // set default value of the wifi power output,
+  // otherwise it would be resetted to 0, leaving the WLAN Module unuseable.
   Settings->wifi_power = 9;
   saveSettings();
 }
