@@ -275,10 +275,9 @@ void setupWebServer(BmsRelay *bmsRelay) {
         }
 
         // Set wifi power
-        // add aditional sanity checks, so that the power range is between 9 and
-        // 12 only!
-        if (wifiPower == nullptr || wifiPower->value().toInt() < 9 || wifiPower->value().toInt() > 12) {
-          request->send(400, "text/html", "Wifi Power range MUST be between 9 and 12.");
+        // add aditional sanity checks, so that the power range is between 8 and 17 only!
+        if (wifiPower == nullptr || wifiPower->value().toInt() < 8 || wifiPower->value().toInt() > 17) {
+          request->send(400, "text/html", "Wifi Power range MUST be between 8 (dBm) and 17 (dBm).");
           return;
         }
         Settings->wifi_power = wifiPower->value().toInt();
