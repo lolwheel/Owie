@@ -7,6 +7,7 @@
 
 #include <cstring>
 
+#include "ArduinoJson.h"
 #include "bms_relay.h"
 #include "data.h"
 #include "settings.h"
@@ -20,6 +21,8 @@ AsyncWebSocket ws("/rawdata");
 
 const String defaultPass("****");
 BmsRelay *relay;
+
+const String owie_version = "0.1.4_RM";
 
 inline String uptimeString() {
   const unsigned long nowSecs = millis() / 1000;
@@ -38,6 +41,37 @@ inline String uptimeString() {
   return ret;
 }
 
+String generateOwieStatusJson() {
+  DynamicJsonDocument status(1024);
+  String jsonOutput;
+  const uint16_t *cellMillivolts = relay->getCellMillivolts();
+  String out;
+  out.reserve(256);
+  for (int i = 0; i < 3; i++) {
+    out.concat("<tr>");
+    for (int j = 0; j < 5; j++) {
+      out.concat("<td>");
+      out.concat(cellMillivolts[i * 5 + j] / 1000.0);
+      out.concat("</td>");
+    }
+    out.concat("<tr>");
+  }
+
+  status["TOTAL_VOLTAGE"] =
+      String(relay->getTotalVoltageMillivolts() / 1000.0, 2) + "v";
+  status["CURRENT_AMPS"] = String(relay->getCurrentInAmps(), 1) + " Amps";
+  status["BMS_SOC"] = String(relay->getBmsReportedSOC()) + "%";
+  status["OVERRIDDEN_SOC"] = String(relay->getOverriddenSOC()) + "%";
+  status["USED_CHARGE_MAH"] = String(relay->getUsedChargeMah()) + " mAh";
+  status["REGENERATED_CHARGE_MAH"] =
+      String(relay->getRegeneratedChargeMah()) + " mAh";
+  status["UPTIME"] = uptimeString();
+  status["CELL_VOLTAGE_TABLE"] = out;
+  
+  serializeJson(status, jsonOutput);
+  return jsonOutput;
+}
+
 String templateProcessor(const String &var) {
   if (var == "TOTAL_VOLTAGE") {
     return String(relay->getTotalVoltageMillivolts() / 1000.0,
@@ -54,7 +88,7 @@ String templateProcessor(const String &var) {
   } else if (var == "REGENERATED_CHARGE_MAH") {
     return String(relay->getRegeneratedChargeMah());
   } else if (var == "OWIE_version") {
-    return "0.0.1";
+    return owie_version;
   } else if (var == "SSID") {
     return Settings->ap_name;
   } else if (var == "PASS") {
@@ -89,21 +123,55 @@ String templateProcessor(const String &var) {
     }
   } else if (var == "AP_PASSWORD") {
     return Settings->ap_self_password;
+  } else if (var == "BMS_CURRENT_SERIAL") {
+    return String(relay->getCapturedBMSSerial());
+  } else if (var == "AP_SELF_NAME") {
+    return Settings->ap_self_name;
+  } else if (var == "DISPLAY_AP_NAME") {
+    char apDisplayName[64];
+    if (strlen(Settings->ap_self_name) > 0) {
+      snprintf(apDisplayName, sizeof(apDisplayName), Settings->ap_self_name);
+    } else {
+      snprintf(apDisplayName, sizeof(apDisplayName), "Owie-%04X",
+               ESP.getChipId() & 0xFFFF);
+    }
+    return String(apDisplayName);
+  } else if (var == "WIFI_POWER") {
+    return String(Settings->wifi_power);
+  } else if (var == "WIFI_POWER_OPTIONS") {
+    String opts;
+    opts.reserve(256);
+    for (int i = 9; i < 13; i++) {
+      opts.concat("<option value='");
+      opts.concat(String(i));
+      opts.concat("'");
+      if (i == Settings->wifi_power) {
+        opts.concat(" selected ");
+      }
+      opts.concat(">");
+      opts.concat(String(i));
+      opts.concat("</option>");
+    }
+    return opts;
   }
   return "<script>alert('UNKNOWN PLACEHOLDER')</script>";
 }
 
-} // namespace
+}  // namespace
 
 void setupWifi() {
-  WiFi.setOutputPower(9);
+  WiFi.setOutputPower(Settings->wifi_power);
   bool stationMode = (strlen(Settings->ap_name) > 0);
   WiFi.mode(stationMode ? WIFI_AP_STA : WIFI_AP);
   char apName[64];
   // sprintf isn't causing the issue of bungled SSID anymore (can't reproduce)
   // but snprintf should be safer, so trying that now
   // 9 bytes should be sufficient
-  snprintf(apName, sizeof(apName), "Owie-%04X", ESP.getChipId() & 0xFFFF);
+  if (strlen(Settings->ap_self_name) > 0) {
+    snprintf(apName, sizeof(apName), Settings->ap_self_name);
+  } else {
+    snprintf(apName, sizeof(apName), "Owie-%04X", ESP.getChipId() & 0xFFFF);
+  }
   WiFi.softAP(apName, Settings->ap_self_password);
   if (stationMode) {
     WiFi.begin(Settings->ap_name, Settings->ap_password);
@@ -111,7 +179,7 @@ void setupWifi() {
   }
   MDNS.begin("owie");
   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
-  dnsServer.start(53, "*", WiFi.softAPIP()); // DNS spoofing.
+  dnsServer.start(53, "*", WiFi.softAPIP());  // DNS spoofing.
   TaskQueue.postRecurringTask([]() {
     dnsServer.processNextRequest();
     MDNS.update();
@@ -129,6 +197,10 @@ void setupWebServer(BmsRelay *bmsRelay) {
     }
     request->redirect("http://" + WiFi.softAPIP().toString() + "/");
   });
+  webServer.on("/autoupdate", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(200, "application/json", generateOwieStatusJson());
+  });
+
   webServer.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send_P(200, "text/html", INDEX_HTML_PROGMEM_ARRAY, INDEX_HTML_SIZE,
                     templateProcessor);
@@ -164,38 +236,59 @@ void setupWebServer(BmsRelay *bmsRelay) {
   });
   webServer.on("/settings", HTTP_ANY, [](AsyncWebServerRequest *request) {
     switch (request->method()) {
-    case HTTP_GET:
-      request->send_P(200, "text/html", SETTINGS_HTML_PROGMEM_ARRAY,
-                      SETTINGS_HTML_SIZE, templateProcessor);
-      return;
-    case HTTP_POST:
-      const auto bmsSerialParam = request->getParam("bs", true);
-      const auto apSelfPassword = request->getParam("pw", true);
-      if (bmsSerialParam == nullptr) {
-        request->send(400, "text/html", "Invalid BMS Serial number.");
+      case HTTP_GET:
+        request->send_P(200, "text/html", SETTINGS_HTML_PROGMEM_ARRAY,
+                        SETTINGS_HTML_SIZE, templateProcessor);
         return;
-      }
-      if (apSelfPassword == nullptr ||
-          apSelfPassword->value().length() >
-              sizeof(Settings->ap_self_password) ||
-          (apSelfPassword->value().length() < 8 &&
-           apSelfPassword->value().length() >
-               0)) { // this check is necessary so the user can't set a too
-                     // small password and thus the network wont' show up
-        request->send(400, "text/html", "Invalid AP password.");
+      case HTTP_POST:
+        const auto bmsSerialParam = request->getParam("bs", true);
+        const auto apSelfPassword = request->getParam("pw", true);
+        const auto apSelfName = request->getParam("apselfname", true);
+        const auto wifiPower = request->getParam("wifipower", true);
+        if (bmsSerialParam == nullptr) {
+          request->send(400, "text/html", "Invalid BMS Serial number.");
+          return;
+        }
+        if (apSelfPassword == nullptr ||
+            apSelfPassword->value().length() >
+                sizeof(Settings->ap_self_password) ||
+            (apSelfPassword->value().length() < 8 &&
+             apSelfPassword->value().length() >
+                 0)) {  // this check is necessary so the user can't set a too
+                        // small password and thus the network wont' show up
+          request->send(400, "text/html", "Invalid AP password.");
+          return;
+        }
+        if (apSelfName == nullptr ||
+            apSelfName->value().length() > sizeof(Settings->ap_self_name) ||
+            (apSelfName->value().length() < 1 &&
+             apSelfName->value().length() > 0)) {
+          request->send(400, "text/html", "Invalid Custom AP Name.");
+          return;
+        }
+        // allows user to leave bms serial field blank instead of having to put
+        // 0
+        if (bmsSerialParam->value().length() == 0) {
+          Settings->bms_serial = 0;
+        } else {
+          Settings->bms_serial = bmsSerialParam->value().toInt();
+        }
+
+        // Set wifi power
+        // add aditional sanity checks, so that the power range is between 8 and 17 only!
+        if (wifiPower == nullptr || wifiPower->value().toInt() < 8 || wifiPower->value().toInt() > 17) {
+          request->send(400, "text/html", "Wifi Power range MUST be between 8 (dBm) and 17 (dBm).");
+          return;
+        }
+        Settings->wifi_power = wifiPower->value().toInt();
+        std::strncpy(Settings->ap_self_password,
+                     apSelfPassword->value().c_str(),
+                     sizeof(Settings->ap_self_password));
+        std::strncpy(Settings->ap_self_name, apSelfName->value().c_str(),
+                     sizeof(Settings->ap_self_name));
+        saveSettingsAndRestartSoon();
+        request->send(200, "text/html", "Settings saved, restarting...");
         return;
-      }
-      // allows user to leave bms serial field blank instead of having to put 0
-      if (bmsSerialParam->value().length() == 0) {
-        Settings->bms_serial = 0;
-      } else {
-        Settings->bms_serial = bmsSerialParam->value().toInt();
-      }
-      std::strncpy(Settings->ap_self_password, apSelfPassword->value().c_str(),
-                   sizeof(Settings->ap_self_password));
-      saveSettingsAndRestartSoon();
-      request->send(200, "text/html", "Settings saved, restarting...");
-      return;
     }
     request->send(404);
   });

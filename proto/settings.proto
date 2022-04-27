@@ -7,4 +7,6 @@ message SettingsMsg {
   int32 graceful_shutdown_count = 4;
   int32 bms_serial = 5;
   string ap_self_password = 6;
+  string ap_self_name = 7;
+  int32 wifi_power = 8;
 }

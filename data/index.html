@@ -125,6 +125,11 @@
             border: 0px;
             border-radius: 0.2rem;
         }
+
+        h2 {
+            margin: 0;
+            padding: 0;
+        }
     </style>
     <script>
         function getXhr() {
@@ -143,9 +148,13 @@
             event.preventDefault();
             const xhr = getXhr();
             const form = event.target;
+            // clear autoupdate intervall to prevent errors
+            clearInterval(window.statusIntervall);
+            window.statusIntervall = null;
             xhr.open(form.getAttribute('method') || 'GET', form.getAttribute('action'));
             const formData = new FormData(form);
             xhr.send(formData);
+            goHome(event);
         }
 
         function handleLinkClick(event) {
@@ -175,49 +184,86 @@
                     s.parentElement.replaceChild(clone, s);
                 });
         }
+
+        function goHome(event) {
+            const form = event.target;
+            const homeButton = document.getElementById("homeButton");
+            if (form.action == null) {
+                homeButton.style.display = "none";
+                // enable autoreload when we are in home again
+                autoreload();
+            } else {
+                homeButton.style.display = "block";
+            }
+        }
+
+        function autoreload() {
+            if (!window.statusIntervall) {
+                window.statusIntervall = setInterval(function () {
+                    const xhr = new XMLHttpRequest();
+                    xhr.addEventListener("load", function (evt) {
+                        var parsed = JSON.parse(evt.target.responseText);
+                        for (const key in parsed) {
+                            var el = document.getElementById(key);
+                            if (el) {
+                                el.innerHTML = parsed[key];
+                            }
+                        }
+                        rescanContent();
+                    });
+                    xhr.open("GET", "/autoupdate");
+                    xhr.send();
+                }, 1000);
+            }
+        }
+
         window.addEventListener('DOMContentLoaded', rescanContent);
+        window.addEventListener('load', goHome);
+        window.onload = function () { autoreload(); }
+
     </script>
 </head>
 
 <body>
     <div style="text-align:left;display:inline-block;color:#eaeaea;min-width:340px;">
-        <div style="text-align:center;color:#eaeaea;">
+        <div id="statusHeader" style="text-align:center;color:#eaeaea;margin-bottom:10px;">
             <h2>Owie Status</h2>
+            (%DISPLAY_AP_NAME%)
         </div>
         <div id="content">
             <table>
                 <tr>
                     <th>Battery Voltage</th>
-                    <td>%TOTAL_VOLTAGE%v</td>
+                    <td id="TOTAL_VOLTAGE">%TOTAL_VOLTAGE%v</td>
                 </tr>
                 <tr>
                     <th>Current</th>
-                    <td>%CURRENT_AMPS% Amps</td>
+                    <td id="CURRENT_AMPS">%CURRENT_AMPS% Amps</td>
                 </tr>
                 <tr>
                     <th>BMS reported SOC:</th>
-                    <td>%BMS_SOC%%%</td>
+                    <td id="BMS_SOC">%BMS_SOC%%%</td>
                 </tr>
                 <tr>
                     <th>Overridden SOC:</th>
-                    <td>%OVERRIDDEN_SOC%%%</td>
+                    <td id="OVERRIDDEN_SOC">%OVERRIDDEN_SOC%%%</td>
                 </tr>
                 <tr>
                     <th>Used charge:</th>
-                    <td>%USED_CHARGE_MAH% mAh</td>
+                    <td id="USED_CHARGE_MAH">%USED_CHARGE_MAH% mAh</td>
                 </tr>
                 <tr>
                     <th>Regen:</th>
-                    <td>%REGENERATED_CHARGE_MAH% mAh</td>
+                    <td id="REGENERATED_CHARGE_MAH">%REGENERATED_CHARGE_MAH% mAh</td>
                 </tr>
                 <tr>
                     <th>Uptime:</th>
-                    <td>%UPTIME%</td>
+                    <td id="UPTIME">%UPTIME%</td>
                 </tr>
                 <tr>
                     <th>Cell voltages</th>
                     <td>
-                        <table class="cell-voltages">%CELL_VOLTAGE_TABLE%</table>
+                        <table class="cell-voltages" id="CELL_VOLTAGE_TABLE">%CELL_VOLTAGE_TABLE%</table>
                     </td>
                 </tr>
             </table>
@@ -234,9 +280,14 @@
                 <button>Settings</button>
             </form>
         </div>
-        <div style="text-align:right;font-size:11px;">
+        <div id="homeButton" style="text-align:right;font-size:11px;">
+            <form action="/">
+                <button>Back (Cancel)</button>
+            </form>
+        </div>
+        <div id="version" style="text-align:right;font-size:11px;">
             <hr>
-            <p style="color:#aaa;">Owie %OWIE_version%</p>
+            <p style="color:#aaa;">Owie <span id="OWIE_version">%OWIE_version%</span></p>
         </div>
     </div>
 </body>

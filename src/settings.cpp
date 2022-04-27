@@ -32,6 +32,16 @@ EEPROM_Rotate& getEeprom() {
 
 SettingsMsg *Settings = &__settings;
 
+void sanitizeSettings() {
+  // check the wifi power Setting and write back a sane default if is out of bounds
+  // the defined sane range is between 8dBm and 17dBm. Lower values may prevent the WLAN to show up under the batterybox
+  // and a to high setting may generate signal noise.
+  // defaulting to 9 brings up the WLAN with a decent range of ~1-2 meters on PINTS and ~1 meter on a XR with an acceptable signal strength.
+  if (Settings->wifi_power < 8 || Settings->wifi_power > 17) {
+    Settings->wifi_power = 9;
+  }
+}
+
 void loadSettings() {
   auto& e = getEeprom();
   uint16_t len = *(uint16_t*)e.getConstDataPtr();
@@ -40,6 +50,7 @@ void loadSettings() {
         pb_istream_from_buffer(getEeprom().getConstDataPtr() + 2, len);
     if (pb_decode(&istream, &SettingsMsg_msg, Settings)) {
       DPRINTF("Read and decoded settings, size = %d bytes.", len);
+      sanitizeSettings();
       return;
     }
   }
@@ -70,5 +81,6 @@ void disableFlashPageRotation() { getEeprom().rotate(false); }
 
 void nukeSettings() {
   *Settings = DEFAULT_SETTINGS;
+  sanitizeSettings();
   saveSettings();
 }
