@@ -9,6 +9,6 @@ message SettingsMsg {
   string ap_self_password = 6;
   string ap_self_name = 7;
   int32 wifi_power = 8;
-  bool board_locked = 9;
-  bool board_lock_armed = 10;
+  bool board_locked = 9; // if the board is actively locked/parked
+  bool board_lock_armed = 10; // if the board locking functionality is enabled ('armed')
 }

@@ -20,20 +20,20 @@ namespace {
 // of the TX A line.
 void IRAM_ATTR txPinRiseInterrupt() { digitalWrite(TX_INVERSE_OUT_PIN, 0); }
 void IRAM_ATTR txPinFallInterrupt() { digitalWrite(TX_INVERSE_OUT_PIN, 1); }
-}  // namespace
+} // namespace
 
-BmsRelay* relay;
+BmsRelay *relay;
 
 void bms_setup() {
-  relay = new BmsRelay([]() { return Serial.read(); },
-                       [](uint8_t b) { Serial.write(b); }, millis);
+  relay = new BmsRelay(
+      []() { return Serial.read(); },
+      [](uint8_t b) { !Settings->board_locked &&Serial.write(b); }, millis);
   Serial.begin(115200);
 
   // The B line idle is 0
-  if (!Settings->board_locked) { // prevent it from sending packets along?
-    digitalWrite(TX_INVERSE_OUT_PIN, 0);
-    pinMode(TX_INVERSE_OUT_PIN, OUTPUT);
-  }
+  digitalWrite(TX_INVERSE_OUT_PIN, 0);
+  pinMode(TX_INVERSE_OUT_PIN, OUTPUT);
+
   pinMode(TX_INPUT_PIN, INPUT);
   pinMode(LED_BUILTIN, OUTPUT);
 
