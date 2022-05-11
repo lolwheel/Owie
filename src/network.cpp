@@ -130,7 +130,7 @@ String templateProcessor(const String &var) {
   } else if (var == "DISPLAY_AP_NAME") {
     char apDisplayName[64];
     if (strlen(Settings->ap_self_name) > 0) {
-      snprintf(apDisplayName, sizeof(apDisplayName), Settings->ap_self_name);
+      snprintf(apDisplayName, sizeof(apDisplayName), "%s", Settings->ap_self_name);
     } else {
       snprintf(apDisplayName, sizeof(apDisplayName), "Owie-%04X",
                ESP.getChipId() & 0xFFFF);
@@ -220,10 +220,10 @@ void setupWebServer(BmsRelay *bmsRelay) {
           request->send(200, "text/html", "Invalid SSID or Password.");
           return;
         }
-        std::strncpy(Settings->ap_name, ssidParam->value().c_str(),
-                     sizeof(Settings->ap_name));
-        std::strncpy(Settings->ap_password, passwordParam->value().c_str(),
-                     sizeof(Settings->ap_password));
+        snprintf(Settings->ap_name, sizeof(Settings->ap_name), "%s",
+              ssidParam->value().c_str());
+        snprintf(Settings->ap_password, sizeof(Settings->ap_password), "%s",
+              passwordParam->value().c_str());
         saveSettingsAndRestartSoon();
         request->send(200, "text/html", "WiFi settings saved, restarting...");
         return;
@@ -281,11 +281,11 @@ void setupWebServer(BmsRelay *bmsRelay) {
           return;
         }
         Settings->wifi_power = wifiPower->value().toInt();
-        std::strncpy(Settings->ap_self_password,
-                     apSelfPassword->value().c_str(),
-                     sizeof(Settings->ap_self_password));
-        std::strncpy(Settings->ap_self_name, apSelfName->value().c_str(),
-                     sizeof(Settings->ap_self_name));
+        snprintf(Settings->ap_self_password,
+             sizeof(Settings->ap_self_password), "%s",
+             apSelfPassword->value().c_str());
+        snprintf(Settings->ap_self_name, sizeof(Settings->ap_self_name), "%s",
+             apSelfName->value().c_str());
         saveSettingsAndRestartSoon();
         request->send(200, "text/html", "Settings saved, restarting...");
         return;
