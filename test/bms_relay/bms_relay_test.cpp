@@ -153,8 +153,8 @@ void testTemperatureParsing() {
   TEST_ASSERT_EQUAL(20, relay->getAverageTemperatureCelsius());
 }
 
-void testBlocksStatusPacketsUnlessCharging() {
-  addMockData({0xff, 0x55, 0xaa, 0x0, 0x1, 0x1, 0xFF, 0x1});
+void testBlocksStatusPacketsUnlessWarning() {
+  addMockData({0xff, 0x55, 0xaa, 0x0, 0x0, 0x1, 0xFE, 0x1});
   relay->loop();
   expectDataOut({0x1});
   mockDataOut.clear();
@@ -174,7 +174,7 @@ int main(int argc, char** argv) {
   RUN_TEST(testBatterySocParsing);
   RUN_TEST(testCurrentParsing);
   RUN_TEST(testCellVoltageParsing);
-  RUN_TEST(testBlocksStatusPacketsUnlessCharging);
+  RUN_TEST(testBlocksStatusPacketsUnlessWarning);
   UNITY_END();
 
   return 0;
