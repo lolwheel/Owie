@@ -109,6 +109,12 @@ class BmsRelay {
 
   bool isCharging() { return last_status_byte_ & 0x20; }
   bool isBatteryEmpty() { return last_status_byte_ & 0x4; }
+  bool isBatteryTempOutOfRange() {
+    // Both these bits throw the same error, one is prob hot and the other is
+    // cold.
+    return last_status_byte_ & 3;
+  }
+  bool isBatteryOvercharged() { return last_status_byte_ & 8; }
 
  private:
   static constexpr float CURRENT_SCALER = 0.055;
