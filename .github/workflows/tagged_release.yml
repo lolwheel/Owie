@@ -14,10 +14,13 @@ jobs:
     runs-on: "ubuntu-latest"
     needs: build-and-test
     steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: firmware
+          path: ./firmware.bin
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
           files: |
-            LICENSE
-            .pio/build/d1_mini_lite_clone/firmware.bin
+            ./firmware.bin
