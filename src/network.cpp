@@ -20,7 +20,7 @@ AsyncWebSocket ws("/rawdata");
 const String defaultPass("****");
 BmsRelay *relay;
 
-const String owie_version = "1.0.0";
+const String owie_version = "1.0.1";
 
 inline String uptimeString() {
   const unsigned long nowSecs = millis() / 1000;
@@ -140,7 +140,7 @@ String templateProcessor(const String &var) {
   } else if (var == "WIFI_POWER_OPTIONS") {
     String opts;
     opts.reserve(256);
-    for (int i = 9; i < 13; i++) {
+    for (int i = 8; i < 18; i++) {
       opts.concat("<option value='");
       opts.concat(String(i));
       opts.concat("'");
