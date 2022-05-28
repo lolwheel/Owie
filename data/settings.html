@@ -1,16 +1,21 @@
 <form method="post" action="/settings">
-        <p>Current BMS Serial: %BMS_CURRENT_SERIAL%</p>
-        <p>BMS serial <b>to override</b>.<br><input placeholder="Type your original bms serial number"
-                        value="%BMS_SERIAL_OVERRIDE%" name="bs"></p>
-        <hr>
-        <p>Custom AP Name when using AP Mode. Max. 32 characters.<br> <input placeholder="Type your desired AP Name"
-                        value="%AP_SELF_NAME%" name="apselfname"></p>
-        <p>Password you want to use to secure Owie. Must be more than 8 characters, and less than 32.<br> <input
-                        placeholder="Type your original password" value="%AP_PASSWORD%" name="pw"></p>
-        <p>Powersetting for the WiFi Module.<br>Adjust if you have WiFi connect problems.<br>
-                <select value="%WIFI_POWER%" name="wifipower">
-                        %WIFI_POWER_OPTIONS%
-                </select>
-        <p></p>
+        <fieldset>
+                <legend>BMS pairing:</legend>
+                <p>Serial of the currently hooked up BMS:</p>
+                <p><b>%BMS_CURRENT_SERIAL%</b></p>
+                <hr>
+                <p>Override the BMS serial:<input placeholder="Last 6 digits of the BMS your controller is paried with"
+                                value="%BMS_SERIAL_OVERRIDE%" name="bs"></p>
+        </fieldset>
+        <fieldset>
+                <legend>WiFi options:</legend>
+                <p>Owie WiFi network name:<br><input placeholder="WiFi network name" value="%AP_SELF_NAME%"
+                                name="apselfname"></p>
+                <p>Password:<br><input placeholder="Between 8 and 32 characters" value="%AP_PASSWORD%" name="pw"></p>
+                <p>Power (dBm):<br>
+                        <select value="%WIFI_POWER%" name="wifipower">
+                                %WIFI_POWER_OPTIONS%
+                        </select>
+        </fieldset>
         <button>Save</button>
 </form>
