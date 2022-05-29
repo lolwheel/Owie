@@ -145,5 +145,6 @@ void BmsRelay::bmsStatusParser(Packet& p) {
   // Forwarding the status packet during normal operation seems to drive
   // an event loop in the controller that tallies used Ah and eventually
   // makes the board throw Error 23. Swallowing the packet does the trick.
-  p.setShouldForward(isCharging() || isBatteryEmpty());
+  p.setShouldForward(isCharging() || isBatteryEmpty() ||
+                     isBatteryTempOutOfRange() || isBatteryOvercharged());
 }

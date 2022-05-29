@@ -32,7 +32,7 @@ EEPROM_Rotate& getEeprom() {
 
 SettingsMsg *Settings = &__settings;
 
-void sanitizeSettings() {
+void sanitizeWifiPowerSetting() {
   // check the wifi power Setting and write back a sane default if is out of bounds
   // the defined sane range is between 8dBm and 17dBm. Lower values may prevent the WLAN to show up under the batterybox
   // and a to high setting may generate signal noise.
@@ -50,7 +50,7 @@ void loadSettings() {
         pb_istream_from_buffer(getEeprom().getConstDataPtr() + 2, len);
     if (pb_decode(&istream, &SettingsMsg_msg, Settings)) {
       DPRINTF("Read and decoded settings, size = %d bytes.", len);
-      sanitizeSettings();
+      sanitizeWifiPowerSetting();
       return;
     }
   }
@@ -81,6 +81,6 @@ void disableFlashPageRotation() { getEeprom().rotate(false); }
 
 void nukeSettings() {
   *Settings = DEFAULT_SETTINGS;
-  sanitizeSettings();
+  sanitizeWifiPowerSetting();
   saveSettings();
 }

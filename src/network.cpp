@@ -5,8 +5,6 @@
 #include <ESP8266mDNS.h>
 #include <ESPAsyncWebServer.h>
 
-#include <cstring>
-
 #include "ArduinoJson.h"
 #include "bms_relay.h"
 #include "data.h"
@@ -22,7 +20,7 @@ AsyncWebSocket ws("/rawdata");
 const String defaultPass("****");
 BmsRelay *relay;
 
-const String owie_version = "0.1.4";
+const String owie_version = "1.0.1";
 
 inline String uptimeString() {
   const unsigned long nowSecs = millis() / 1000;
@@ -67,7 +65,7 @@ String generateOwieStatusJson() {
       String(relay->getRegeneratedChargeMah()) + " mAh";
   status["UPTIME"] = uptimeString();
   status["CELL_VOLTAGE_TABLE"] = out;
-  
+
   serializeJson(status, jsonOutput);
   return jsonOutput;
 }
@@ -136,7 +134,8 @@ String templateProcessor(const String &var) {
   } else if (var == "DISPLAY_AP_NAME") {
     char apDisplayName[64];
     if (strlen(Settings->ap_self_name) > 0) {
-      snprintf(apDisplayName, sizeof(apDisplayName), Settings->ap_self_name);
+      snprintf(apDisplayName, sizeof(apDisplayName), "%s",
+               Settings->ap_self_name);
     } else {
       snprintf(apDisplayName, sizeof(apDisplayName), "Owie-%04X",
                ESP.getChipId() & 0xFFFF);
@@ -147,7 +146,7 @@ String templateProcessor(const String &var) {
   } else if (var == "WIFI_POWER_OPTIONS") {
     String opts;
     opts.reserve(256);
-    for (int i = 9; i < 13; i++) {
+    for (int i = 8; i < 18; i++) {
       opts.concat("<option value='");
       opts.concat(String(i));
       opts.concat("'");
@@ -226,10 +225,10 @@ void setupWebServer(BmsRelay *bmsRelay) {
           request->send(200, "text/html", "Invalid SSID or Password.");
           return;
         }
-        std::strncpy(Settings->ap_name, ssidParam->value().c_str(),
-                     sizeof(Settings->ap_name));
-        std::strncpy(Settings->ap_password, passwordParam->value().c_str(),
-                     sizeof(Settings->ap_password));
+        snprintf(Settings->ap_name, sizeof(Settings->ap_name), "%s",
+                 ssidParam->value().c_str());
+        snprintf(Settings->ap_password, sizeof(Settings->ap_password), "%s",
+                 passwordParam->value().c_str());
         saveSettingsAndRestartSoon();
         request->send(200, "text/html", "WiFi settings saved, restarting...");
         return;
@@ -281,17 +280,20 @@ void setupWebServer(BmsRelay *bmsRelay) {
         }
 
         // Set wifi power
-        // add aditional sanity checks, so that the power range is between 8 and 17 only!
-        if (wifiPower == nullptr || wifiPower->value().toInt() < 8 || wifiPower->value().toInt() > 17) {
-          request->send(400, "text/html", "Wifi Power range MUST be between 8 (dBm) and 17 (dBm).");
+        // add aditional sanity checks, so that the power range is between 8 and
+        // 17 only!
+        if (wifiPower == nullptr || wifiPower->value().toInt() < 8 ||
+            wifiPower->value().toInt() > 17) {
+          request->send(
+              400, "text/html",
+              "Wifi Power range MUST be between 8 (dBm) and 17 (dBm).");
           return;
         }
         Settings->wifi_power = wifiPower->value().toInt();
-        std::strncpy(Settings->ap_self_password,
-                     apSelfPassword->value().c_str(),
-                     sizeof(Settings->ap_self_password));
-        std::strncpy(Settings->ap_self_name, apSelfName->value().c_str(),
-                     sizeof(Settings->ap_self_name));
+        snprintf(Settings->ap_self_password, sizeof(Settings->ap_self_password),
+                 "%s", apSelfPassword->value().c_str());
+        snprintf(Settings->ap_self_name, sizeof(Settings->ap_self_name), "%s",
+                 apSelfName->value().c_str());
         saveSettingsAndRestartSoon();
         request->send(200, "text/html", "Settings saved, restarting...");
         return;
