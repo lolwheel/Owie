@@ -2,6 +2,7 @@
 
 #include "arduino_ota.h"
 #include "bms_relay.h"
+#include "global_instances.h"
 #include "network.h"
 #include "packet.h"
 #include "settings.h"
@@ -20,14 +21,14 @@ namespace {
 // of the TX A line.
 void IRAM_ATTR txPinRiseInterrupt() { digitalWrite(TX_INVERSE_OUT_PIN, 0); }
 void IRAM_ATTR txPinFallInterrupt() { digitalWrite(TX_INVERSE_OUT_PIN, 1); }
-} // namespace
+}  // namespace
 
 BmsRelay *relay;
 
 void bms_setup() {
   relay = new BmsRelay(
       []() { return Serial.read(); },
-      [](uint8_t b) { !Settings->board_locked &&Serial.write(b); }, millis);
+      [](uint8_t b) { !Settings->is_locked &&Serial.write(b); }, millis);
   Serial.begin(115200);
 
   // The B line idle is 0

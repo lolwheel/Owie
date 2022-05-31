@@ -89,11 +89,11 @@ How it looks like in my setup:
 
 <img src="docs/img/wemos_d1_installed.jpg" height="180px">
 
-# Using Owie
+# Board Locking functionality
 
-## Parking your board (password protection)
+TL;DR: You can immobilize your board by quickly power cycling the board twice. Once immobilized, you unlock the board by logging into Owie WiFi, tapping a button and power cycling the board. Keep reading for details.
 
-**WARNING:** Arming your board for parking **will** disable the emergency recovery mode (3 restarts), so if you forget your network password, the only way to recover is to reflash via USB.
+**WARNING:** Arming your board for parking **will** disable the emergency recovery mode (2 restarts), so if you forget your network password, the only way to recover is to reflash via USB.
 The normal OTA update mode will still be functional as normal (see below for OTA instructions).
 Disarming the board will restore the emergency recovery mode.
 
@@ -101,9 +101,14 @@ Use these instructions if you want to be able to 'park' your onewheel using the 
 The park functionality comes by interrupting all communication between the BMS and the controller, thus causing an error 16.
 This functionality can be removed quite easily by someone motivated enough and with enough knowledge; all that's required is to open up the board, remove Owie and solder the wires back together, or to reflash it via USB.
 
+## Setup
+
 1. Set an Owie network password in `Settings`.
 1. Tap the `Arm` button in `Settings`. This arms your board so you can put it into 'park'.
-1. When you need to park your board, just restart it. Always start from an on state then turn it off, then back on, then off again; all in under 10 seconds.
+
+## Parking your board
+
+When you need to park your board, turn it on and then off in less than 5 seconds.
 
 ## Un-parking your board
 
@@ -145,7 +150,7 @@ They are the last step you can reasonably take before having to remove the chip 
 
 1. Once you have your hands on a firmware.bin file, copy that binary onto your flashing device of choice (desktop, laptop, phone). Some phones might not let you select the binary, thus you will need to use a computer.
 1. Bring that device close to your board, and ensure that your Onewheel has at least a few percent of battery left in the tank (don't have it plugged in though).
-1. Power cycle the Onewheel 3 times (reboot it) in 10 seconds. Keeping your app connected can be useful here as once Owie makes it into recovery mode, your board will report an error 16 (don't worry, this is supposed to happen).
+1. Power cycle the Onewheel 2 times (reboot it) in less than 5 seconds. Keeping your app connected can be useful here as once Owie makes it into recovery mode, your board will report an error 16 (don't worry, this is supposed to happen).
    1. On XR's your headlights will come on as normal, but after a few seconds they will dim and then totally turn off, followed by your power button light flashing rapidly to indicate that error 16.
 1. Connect to the wifi network named _Owie-Recovery_, and navigate to your normal owie IP (192.168.4.1).
 1. You should see the ElegantOTA selection screen (as shown below) come up.

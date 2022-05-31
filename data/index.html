@@ -280,7 +280,7 @@
                 <button>Settings</button>
             </form>
             <p></p>
-            <button  onclick="unlockBoard(this)" style="display: none" id="unlockButton">
+            <button style="display:none" id="unlockButton" data-locked="%IS_LOCKED%">
                 Unlock Board
             </button>
         </div>
@@ -292,30 +292,31 @@
         <div id="version" style="text-align:right;font-size:11px;">
             <hr>
             <p style="color:#aaa;">Owie <span id="OWIE_version">%OWIE_version%</span></p>
-            <p style="color: #aaa">
-                Board is currently: %LOCK_STATUS% and %BOARD_LOCK_ARMED%ed
-            </p>
         </div>
     </div>
     <script>
-      function unlockBoard(btn) {
-        let xhr = new XMLHttpRequest();
-        xhr.open("GET", "/lock?unlock");
-        xhr.responseType = "text";
-
-        xhr.onload = () => {
-          if (xhr.status === 200) {
-            btn.innerHTML = xhr.responseText;
-          } else {
-            btn.innerHTML = "Error: " + xhr.status;
-          }
-        };
-        xhr.send();
-      }
-
-      if ("%LOCK_STATUS%" === "locked") {
-        document.getElementById("unlockButton").style.display = "block";
-      }
+            (() => {
+                const unlockBtn = document.getElementById("unlockButton");
+                if (!unlockBtn.dataset.locked) {
+                    return;
+                }
+                unlockBtn.onclick = () => {
+                    const xhr = new XMLHttpRequest();
+                    xhr.open("GET", "/lock?unlock");
+                    xhr.responseType = "text";
+                    xhr.onload = () => {
+                        if (xhr.status === 200) {
+                            unlockBtn.innerHTML = "Unlocked! Restart your board to ride it.";
+                        } else {
+                            unlockBtn.innerHTML = "Error: " + xhr.status;
+                        }
+                    };
+                    unlockBtn.setAttribute("disabled", "1");
+                    xhr.send();
+                };
+                unlockBtn.removeAttribute("style");
+            })();
+            //# sourceURL=index.js
     </script>
 </body>
 

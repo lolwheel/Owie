@@ -9,8 +9,9 @@
 #include "settings.h"
 #include "task_queue.h"
 #include "web_ota.h"
+#include "global_instances.h"
 
-#define SSID_NAME "Owie-recovery"
+#define SSID_NAME ("Owie-recovery")
 
 namespace {
 DNSServer dnsServer;
@@ -22,7 +23,7 @@ void recovery_setup() {
   WiFi.mode(WIFI_AP);
   WiFi.softAP(SSID_NAME);
   ArduinoOTA.setHostname("owie");
-  ArduinoOTA.begin(true);
+  ArduinoOTA.begin(false /** useMDNS */);
   ArduinoOTA.onStart([]() {
     disableFlashPageRotation();
     saveSettings();
