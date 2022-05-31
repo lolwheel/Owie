@@ -91,7 +91,7 @@ How it looks like in my setup:
 
 # Board Locking functionality
 
-TL;DR: You can immobilize your board by quickly power cycling the board twice. Once immobilized, you unlock the board by logging into Owie WiFi, tapping a button and power cycling the board. Keep reading for details.
+TL;DR: You can immobilize your board by quickly power cycling the board. Once immobilized, you unlock the board by logging into Owie WiFi, tapping a button and power cycling the board. Keep reading for details.
 
 **WARNING:** Arming your board for parking **will** disable the emergency recovery mode (2 restarts), so if you forget your network password, the only way to recover is to reflash via USB.
 The normal OTA update mode will still be functional as normal (see below for OTA instructions).
