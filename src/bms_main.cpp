@@ -2,6 +2,7 @@
 
 #include "arduino_ota.h"
 #include "bms_relay.h"
+#include "global_instances.h"
 #include "network.h"
 #include "packet.h"
 #include "settings.h"
@@ -22,16 +23,18 @@ void IRAM_ATTR txPinRiseInterrupt() { digitalWrite(TX_INVERSE_OUT_PIN, 0); }
 void IRAM_ATTR txPinFallInterrupt() { digitalWrite(TX_INVERSE_OUT_PIN, 1); }
 }  // namespace
 
-BmsRelay* relay;
+BmsRelay *relay;
 
 void bms_setup() {
-  relay = new BmsRelay([]() { return Serial.read(); },
-                       [](uint8_t b) { Serial.write(b); }, millis);
+  relay = new BmsRelay(
+      []() { return Serial.read(); },
+      [](uint8_t b) { !Settings->is_locked &&Serial.write(b); }, millis);
   Serial.begin(115200);
 
   // The B line idle is 0
   digitalWrite(TX_INVERSE_OUT_PIN, 0);
   pinMode(TX_INVERSE_OUT_PIN, OUTPUT);
+
   pinMode(TX_INPUT_PIN, INPUT);
   pinMode(LED_BUILTIN, OUTPUT);
 
@@ -40,7 +43,7 @@ void bms_setup() {
   attachInterrupt(digitalPinToInterrupt(TX_INPUT_PIN), txPinFallInterrupt,
                   FALLING);
 
-  relay->addReceivedPacketCallback([](BmsRelay*, Packet* packet) {
+  relay->addReceivedPacketCallback([](BmsRelay *, Packet *packet) {
     static uint8_t ledState = 0;
     digitalWrite(LED_BUILTIN, ledState);
     ledState = 1 - ledState;
@@ -54,6 +57,7 @@ void bms_setup() {
     unknownData.push_back(b);
     streamBMSPacket(&unknownData[0], unknownData.size());
   });
+
   relay->setPowerOffCallback([]() {
     Settings->graceful_shutdown_count++;
     saveSettings();

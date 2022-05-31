@@ -1,21 +1,69 @@
 <form method="post" action="/settings">
-        <fieldset>
-                <legend>BMS pairing:</legend>
-                <p>Serial of the currently hooked up BMS:</p>
-                <p><b>%BMS_CURRENT_SERIAL%</b></p>
-                <hr>
-                <p>Override the BMS serial:<input placeholder="Last 6 digits of the BMS your controller is paried with"
-                                value="%BMS_SERIAL_OVERRIDE%" name="bs"></p>
-        </fieldset>
-        <fieldset>
-                <legend>WiFi options:</legend>
-                <p>Owie WiFi network name:<br><input placeholder="WiFi network name" value="%AP_SELF_NAME%"
-                                name="apselfname"></p>
-                <p>Password:<br><input placeholder="Between 8 and 32 characters" value="%AP_PASSWORD%" name="pw"></p>
-                <p>Power (dBm):<br>
-                        <select value="%WIFI_POWER%" name="wifipower">
-                                %WIFI_POWER_OPTIONS%
-                        </select>
-        </fieldset>
-        <button>Save</button>
+  <fieldset>
+    <legend>BMS pairing:</legend>
+    <p>Serial of the currently hooked up BMS:</p>
+    <p><b>%BMS_CURRENT_SERIAL%</b></p>
+    <hr>
+    <p>Override the BMS serial:<input placeholder="Last 6 digits of the BMS serial"
+        value="%BMS_SERIAL_OVERRIDE%" name="bs"></p>
+  </fieldset>
+  <fieldset>
+    <legend>WiFi options:</legend>
+    <p>Owie WiFi network name override:<br><input placeholder="WiFi network name" value="%AP_SELF_NAME%" name="apselfname"></p>
+    <p>Password:<br><input placeholder="Between 8 and 31 characters" value="%AP_PASSWORD%" name="pw"></p>
+    <p>Power (dBm):<br>
+      <select value="%WIFI_POWER%" name="wifipower">
+        %WIFI_POWER_OPTIONS%
+      </select>
+  </fieldset>
+  <fieldset>
+    <legend>Board locking:</legend>
+    <p id="lockingMsg"></p>
+    <button onclick="toggleArming(this)" id="armBtn" style="display:none" data-canenable="%CAN_ENABLE_LOCKING%"
+      data-enabled="%LOCKING_ENABLED%">
+      Disabled
+    </button>
+  </fieldset>
+  <hr>
+  <button>Save</button>
 </form>
+<script>
+  (() => {
+    const cannotLockMsg = "First set WiFi password above and save settings to enable board locking.";
+    const lockingEnabledMsg = "Locking is enabled! To lock the board, turn it on and off in less than 5 seconds.";
+    const lockingDisabledMsg = "Locking is disabled."
+    const btn = document.getElementById("armBtn");
+    const lockingMsg = document.getElementById("lockingMsg");
+    if (!btn.dataset.canenable) {
+      lockingMsg.innerText = cannotLockMsg;
+      return;
+    }
+    btn.removeAttribute('style');
+    
+    function updateButton() {
+      const isEnabled = !!btn.dataset.enabled;
+      btn.removeAttribute("disabled");
+      lockingMsg.innerText = isEnabled ? lockingEnabledMsg : lockingDisabledMsg;
+      btn.innerText = isEnabled ? "Disable locking" : "Enable locking";
+    }
+    updateButton();
+
+    btn.onclick = () => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("GET", "/lock?toggleArm");
+      xhr.resposeType = "text";
+
+      xhr.onload = () => {
+        if (xhr.readyState !== xhr.DONE || xhr.status !== 200) {
+          btn.innerText = "Error: " + xhr.status;
+        } else {
+          btn.dataset.enabled = xhr.responseText;
+          updateButton();
+        }
+      };
+      btn.setAttribute("disabled", "1");
+      xhr.send();
+    }
+  })();
+  //# sourceURL=settings.js
+</script>

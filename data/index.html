@@ -279,6 +279,10 @@
             <form action="/settings">
                 <button>Settings</button>
             </form>
+            <p></p>
+            <button style="display:none" id="unlockButton" data-locked="%IS_LOCKED%">
+                Unlock Board
+            </button>
         </div>
         <div id="homeButton" style="text-align:right;font-size:11px;">
             <form action="/">
@@ -290,6 +294,30 @@
             <p style="color:#aaa;">Owie <span id="OWIE_version">%OWIE_version%</span></p>
         </div>
     </div>
+    <script>
+            (() => {
+                const unlockBtn = document.getElementById("unlockButton");
+                if (!unlockBtn.dataset.locked) {
+                    return;
+                }
+                unlockBtn.onclick = () => {
+                    const xhr = new XMLHttpRequest();
+                    xhr.open("GET", "/lock?unlock");
+                    xhr.responseType = "text";
+                    xhr.onload = () => {
+                        if (xhr.status === 200) {
+                            unlockBtn.innerHTML = "Unlocked! Restart your board to ride it.";
+                        } else {
+                            unlockBtn.innerHTML = "Error: " + xhr.status;
+                        }
+                    };
+                    unlockBtn.setAttribute("disabled", "1");
+                    xhr.send();
+                };
+                unlockBtn.removeAttribute("style");
+            })();
+            //# sourceURL=index.js
+    </script>
 </body>
 
 </html>

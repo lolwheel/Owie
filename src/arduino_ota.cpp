@@ -1,7 +1,6 @@
 #include "arduino_ota.h"
 
-#include <ArduinoOTA.h>
-
+#include "global_instances.h"
 #include "settings.h"
 #include "task_queue.h"
 

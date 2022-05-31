@@ -2,7 +2,6 @@
 
 #include <DNSServer.h>
 #include <ESP8266WiFi.h>
-#include <ESP8266mDNS.h>
 #include <ESPAsyncWebServer.h>
 
 #include "ArduinoJson.h"
@@ -20,9 +19,9 @@ AsyncWebSocket ws("/rawdata");
 const String defaultPass("****");
 BmsRelay *relay;
 
-const String owie_version = "1.0.1";
+const String owie_version = "1.1.0";
 
-inline String uptimeString() {
+String uptimeString() {
   const unsigned long nowSecs = millis() / 1000;
   const int hrs = nowSecs / 3600;
   const int mins = (nowSecs % 3600) / 60;
@@ -70,6 +69,11 @@ String generateOwieStatusJson() {
   return jsonOutput;
 }
 
+bool lockingPreconditionsMet() { return strlen(Settings->ap_self_password) > 0; }
+const char *lockedStatusDataAttrValue() {
+  return Settings->is_locked ? "1" : "";
+};
+
 String templateProcessor(const String &var) {
   if (var == "TOTAL_VOLTAGE") {
     return String(relay->getTotalVoltageMillivolts() / 1000.0,
@@ -98,6 +102,12 @@ String templateProcessor(const String &var) {
     return String(Settings->graceful_shutdown_count);
   } else if (var == "UPTIME") {
     return uptimeString();
+  } else if (var == "IS_LOCKED") {
+    return lockedStatusDataAttrValue();
+  } else if (var == "CAN_ENABLE_LOCKING") {
+    return lockingPreconditionsMet() ? "1" : "";
+  } else if (var == "LOCKING_ENABLED") {
+    return Settings->locking_enabled ? "1" : "";
   } else if (var == "CELL_VOLTAGE_TABLE") {
     const uint16_t *cellMillivolts = relay->getCellMillivolts();
     String out;
@@ -176,13 +186,9 @@ void setupWifi() {
     WiFi.begin(Settings->ap_name, Settings->ap_password);
     WiFi.hostname(apName);
   }
-  MDNS.begin("owie");
   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
   dnsServer.start(53, "*", WiFi.softAPIP());  // DNS spoofing.
-  TaskQueue.postRecurringTask([]() {
-    dnsServer.processNextRequest();
-    MDNS.update();
-  });
+  TaskQueue.postRecurringTask([]() { dnsServer.processNextRequest(); });
 }
 
 void setupWebServer(BmsRelay *bmsRelay) {
@@ -255,7 +261,7 @@ void setupWebServer(BmsRelay *bmsRelay) {
              apSelfPassword->value().length() >
                  0)) {  // this check is necessary so the user can't set a too
                         // small password and thus the network wont' show up
-          request->send(400, "text/html", "Invalid AP password.");
+          request->send(400, "text/html", "AP password must be between 8 and 31 characters");
           return;
         }
         if (apSelfName == nullptr ||
@@ -291,6 +297,26 @@ void setupWebServer(BmsRelay *bmsRelay) {
         saveSettingsAndRestartSoon();
         request->send(200, "text/html", "Settings saved, restarting...");
         return;
+    }
+    request->send(404);
+  });
+  webServer.on("/lock", HTTP_GET, [](AsyncWebServerRequest *request) {
+    if (request->hasParam("unlock")) {
+      Settings->is_locked = false;
+      saveSettings();
+      request->send(200, "text/html", "Board unlocked, restart your board.");
+      return;
+    } else if (request->hasParam("toggleArm")) {
+      if (!lockingPreconditionsMet()) {
+        request->send(500, "text/html",
+                      "Cannot enable locking with empty WiFi password");
+        return;
+      }
+      Settings->locking_enabled = !Settings->locking_enabled;
+      Settings->is_locked = false;
+      saveSettings();
+      request->send(200, "text/html", Settings->locking_enabled ? "1" : "");
+      return;
     }
     request->send(404);
   });
