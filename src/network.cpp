@@ -10,6 +10,9 @@
 #include "settings.h"
 #include "task_queue.h"
 #include "web_ota.h"
+#include "vector"
+
+using std::vector;
 
 namespace {
 DNSServer dnsServer;
@@ -20,6 +23,8 @@ const String defaultPass("****");
 BmsRelay *relay;
 
 const String owie_version = "1.1.0";
+
+vector<String> wifi_array;
 
 String uptimeString() {
   const unsigned long nowSecs = millis() / 1000;
@@ -37,6 +42,22 @@ String uptimeString() {
   ret.concat('s');
   return ret;
 }
+
+void retrieveAvailableWifiNetworks() {
+  // preset WIFI power setting to retrieve as many wifi networks as possible
+  WiFi.setOutputPower(17);
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect();
+  int n = WiFi.scanNetworks(false,false, 0, NULL);
+  for (int i = 0; i < n; i++)
+  {
+    wifi_array.emplace_back(WiFi.SSID(i));
+  }
+  // sort and deduplicate wifi networks
+  sort( wifi_array.begin(), wifi_array.end() );
+  wifi_array.erase( unique( wifi_array.begin(), wifi_array.end() ), wifi_array.end() );
+}
+
 
 String generateOwieStatusJson() {
   DynamicJsonDocument status(1024);
@@ -162,6 +183,23 @@ String templateProcessor(const String &var) {
       opts.concat("</option>");
     }
     return opts;
+  } else if (var == "AVAIL_NETWORK_OPTIONS") {
+    String wifi_network_opts;
+    wifi_network_opts.reserve(65500);
+    for (u_int i = 0; i < wifi_array.size(); i++)
+    {
+      String wifi_name = wifi_array[i];
+      wifi_network_opts.concat("<option value='");
+      wifi_network_opts.concat(wifi_name);
+      wifi_network_opts.concat("'");
+      if (wifi_name == String(Settings->ap_name)) {
+        wifi_network_opts.concat(" selected ");
+      }
+      wifi_network_opts.concat(">");
+      wifi_network_opts.concat(wifi_name);
+      wifi_network_opts.concat("</option>");
+    }
+    return wifi_network_opts;
   }
   return "<script>alert('UNKNOWN PLACEHOLDER')</script>";
 }
@@ -169,8 +207,11 @@ String templateProcessor(const String &var) {
 }  // namespace
 
 void setupWifi() {
-  WiFi.setOutputPower(Settings->wifi_power);
+  // fetch available wireless networks
+  retrieveAvailableWifiNetworks();
+
   bool stationMode = (strlen(Settings->ap_name) > 0);
+  WiFi.setOutputPower(Settings->wifi_power);
   WiFi.mode(stationMode ? WIFI_AP_STA : WIFI_AP);
   char apName[64];
   // sprintf isn't causing the issue of bungled SSID anymore (can't reproduce)

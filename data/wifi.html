@@ -1,7 +1,14 @@
 <form method="post" action="/wifi">
-        <p>WiFi Network <b>to connect to</b><br><input placeholder="Type or Select your WiFi Network" value="%SSID%"
-                        name="s"></p>
-        <p><label><b>WiFi Password</b></label><br><input type="password" placeholder="Enter your WiFi Password"
-                        value="%PASS%" name="p"></p>
-        <button>Save</button>
+  <fieldset>
+    <legend>WiFi Network Configuration:</legend>
+    <p><label>Network Name (SSID)</label><br>
+    <input type="text" autocomplete="off" name="s" placeholder="Type or Select your WiFi Network Name" value="%SSID%" list="wifi_networks"/>
+      <datalist id="wifi_networks">
+        %AVAIL_NETWORK_OPTIONS%
+      </datalist>       
+    </p>        
+    <p><label>Password</label><br><input type="password" placeholder="Enter your WiFi Password" value="%PASS%" name="p"></p>
+  </fieldset>
+  <hr>
+  <button>Save</button>
 </form>
