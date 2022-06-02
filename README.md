@@ -30,14 +30,10 @@ This is a hobby projet for its contributors and comes with absolutely no guarant
   - For the XR+ you will need a 3/32" Allen key. [Amazon link](https://www.amazon.com/dp/B0000CBJE1)
 - Wemos D1 Mini Lite - the cheapest and most compact ESP8266 board that I'm aware of. You can find those on Aliexpress and Amazon. Buy version without the metal shield or ceramic WiFi antenna on it as they're too bulky to fit inside of the battery enclosure. [5 pack Amazon Link](https://www.amazon.com/dp/B081PX9YFV).
 
-## Build and download firmware
+## Flashing Owie for the first time
 
-1. Click `Gitpod Ready-to-Code` button at the top of the readme, and connect with your github account
-1. Once container is up, expand left menu .pio > d1_mini_lite_clone, and right click on firmware.bin -> download
-
-## Flashing Owie
-
-1. Use the ESP WebTools page provided [here](https://ow-breaker.github.io/).
+1. Download the latest [`firmware.bin`](https://github.com/lolwheel/Owie/releases/latest/download/firmware.bin).
+1. Use the ESP WebTools page provided [here](https://ow-breaker.github.io/). \[DEPRECATED instruction, being replaced\]
 1. Follow the instructions on that page to flash the firmware.
 1. Verify the flash success: When the chip is on, you should see
    a WiFi network called `Owie-XXXX`. Connecting to it should send you
