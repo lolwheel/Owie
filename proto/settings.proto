@@ -1,5 +1,12 @@
 syntax = "proto3";
 
+// The int values are increments from the last point in order to take
+// advantage of varing encoding in protobuf.
+message ChargingDataPoint {
+  uint32 voltage_millivolts_from_last_point = 1;
+  uint32 mah_since_last_point = 2;
+}
+
 message SettingsMsg {
   uint32 quick_power_cycle_count = 1;
   string ap_name = 2;
@@ -11,4 +18,7 @@ message SettingsMsg {
   int32 wifi_power = 8;
   bool is_locked = 9; // if the board is actively locked/parked
   bool locking_enabled = 10; // if the board locking functionality is enabled ('armed')
+  // Tracks last charging session, is only overwritten if the new charging sessions
+  // has more data points compared to the stored one.
+  repeated ChargingDataPoint charging_data_points = 11;
 }
