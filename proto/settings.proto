@@ -1,10 +1,11 @@
 syntax = "proto3";
 
-// The int values are increments from the last point in order to take
-// advantage of varing encoding in protobuf.
-message ChargingDataPoint {
-  uint32 voltage_millivolts_from_last_point = 1;
-  uint32 mah_since_last_point = 2;
+// The int values are increments from the last points in order to take
+// advantage of varing encoding of protobuf.
+message ChargingData {
+  // Parallel arrays.
+  repeated uint32 voltage_offsets = 1;
+  repeated uint32 mah_offsets = 2;
 }
 
 message SettingsMsg {
@@ -20,5 +21,5 @@ message SettingsMsg {
   bool locking_enabled = 10; // if the board locking functionality is enabled ('armed')
   // Tracks last charging session, is only overwritten if the new charging sessions
   // has more data points compared to the stored one.
-  repeated ChargingDataPoint charging_data_points = 11;
+  optional ChargingData charging_data = 11;
 }

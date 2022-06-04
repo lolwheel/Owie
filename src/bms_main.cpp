@@ -2,6 +2,7 @@
 
 #include "arduino_ota.h"
 #include "bms_relay.h"
+#include "charging_tracker.h"
 #include "global_instances.h"
 #include "network.h"
 #include "packet.h"
@@ -24,11 +25,14 @@ void IRAM_ATTR txPinFallInterrupt() { digitalWrite(TX_INVERSE_OUT_PIN, 1); }
 }  // namespace
 
 BmsRelay *relay;
+ChargingTracker *chargingTracker;
 
 void bms_setup() {
   relay = new BmsRelay(
       []() { return Serial.read(); },
       [](uint8_t b) { !Settings->is_locked &&Serial.write(b); }, millis);
+  chargingTracker = new ChargingTracker(
+      relay, 50 /** make new datapoint after every 50 mah of charge*/);
   Serial.begin(115200);
 
   // The B line idle is 0

@@ -22,8 +22,9 @@ ChargingTracker::ChargingTracker(BmsRelay* relay, uint32_t makeNewPointAfterMah)
     if (this->chargingPoints_.size() == 0) {
       this->chargingPoints_.reserve(128);
       this->chargingPoints_.push_back(ChargingPoint_t{
-          .millivolts = voltageMillivolts, .mah = totalChargedMah});
+          .millivoltsDelta = voltageMillivolts, .mahDelta = totalChargedMah});
       this->lastInsertedChargingPointTotalMah_ = totalChargedMah;
+      this->lastInsertedChargingPointTotalVoltageMillivolts_ = voltageMillivolts;
       return;
     }
 
@@ -33,9 +34,10 @@ ChargingTracker::ChargingTracker(BmsRelay* relay, uint32_t makeNewPointAfterMah)
     }
 
     this->chargingPoints_.push_back(ChargingPoint_t{
-        .millivolts = voltageMillivolts,
-        .mah = totalChargedMah - this->lastInsertedChargingPointTotalMah_});
+        .millivoltsDelta = voltageMillivolts - this->lastInsertedChargingPointTotalVoltageMillivolts_,
+        .mahDelta = totalChargedMah - this->lastInsertedChargingPointTotalMah_});
 
     this->lastInsertedChargingPointTotalMah_ = totalChargedMah;
+    this->lastInsertedChargingPointTotalVoltageMillivolts_ = voltageMillivolts;
   });
 }

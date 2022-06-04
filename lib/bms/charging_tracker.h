@@ -8,8 +8,8 @@ class ChargingTracker {
   ChargingTracker(BmsRelay* relay, uint32_t makeNewPointAfterMah);
 
   typedef struct {
-      uint32_t millivolts;
-      uint32_t mah;
+      uint32_t millivoltsDelta;
+      uint32_t mahDelta;
   } ChargingPoint_t;
 
   const std::vector<ChargingPoint_t>& getChargingPoints() { return chargingPoints_;}
@@ -18,6 +18,7 @@ class ChargingTracker {
   std::vector<ChargingPoint_t> chargingPoints_;
   const uint32_t makePointAfterMah_;
   uint32_t lastInsertedChargingPointTotalMah_;
+  uint32_t lastInsertedChargingPointTotalVoltageMillivolts_;
   void insertChargingPoint(uint32_t totalVoltageMillivolts, uint32_t totalChargedMah);
 };
 

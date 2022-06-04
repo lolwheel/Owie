@@ -2,4 +2,7 @@ SettingsMsg.ap_name max_size:31
 SettingsMsg.ap_password max_size:31
 SettingsMsg.ap_self_password max_size:31
 SettingsMsg.ap_self_name max_size:31
-SettingsMsg.charging_data_points max_size:400
+// 400 points of 50 mah offset(configurable in main.cc) covers 20Ah battery capacity.
+ChargingData.voltage_offsets max_size:400
+ChargingData.mah_offsets max_size:400
+
