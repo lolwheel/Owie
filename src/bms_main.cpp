@@ -27,10 +27,38 @@ void IRAM_ATTR txPinFallInterrupt() { digitalWrite(TX_INVERSE_OUT_PIN, 1); }
 BmsRelay *relay;
 ChargingTracker *chargingTracker;
 
+void maybeSerializeCharingDataToSettings() {
+  static_assert(sizeof(ChargingDataMsg::voltage_offsets) ==
+                sizeof(ChargingDataMsg::mah_offsets));
+  const auto chargingPoints = chargingTracker->getChargingPoints();
+  ChargingDataMsg &proto = Settings->charging_data;
+  if (proto.voltage_offsets_count < chargingPoints.size() ||
+      chargingPoints.size() < 2) {
+    return;
+  }
+  const uint32_t numPoints = max<uint32_t>(
+      sizeof(ChargingDataMsg::voltage_offsets), chargingPoints.size());
+  proto.mah_offsets_count = proto.voltage_offsets_count = numPoints;
+  proto.mah_offsets[0] = chargingPoints[0].totalMah;
+  proto.voltage_offsets[0] = chargingPoints[0].millivolts;
+  for (unsigned int i = 1; i < numPoints; i++) {
+    proto.mah_offsets[i] =
+        chargingPoints[i].totalMah - chargingPoints[i - 1].totalMah;
+    proto.voltage_offsets[i] =
+        chargingPoints[i].millivolts - chargingPoints[i - 1].millivolts;
+  }
+  proto.tracked_cell_index = chargingTracker->getTrackedCellIndex();
+}
+
 void bms_setup() {
-  relay = new BmsRelay(
-      []() { return Serial.read(); },
-      [](uint8_t b) { !Settings->is_locked &&Serial.write(b); }, millis);
+  relay = new BmsRelay([]() { return Serial.read(); },
+                       [](uint8_t b) {
+                         // This if statement is what implements locking.
+                         if (!Settings->is_locked) {
+                           Serial.write(b);
+                         }
+                       },
+                       millis);
   chargingTracker = new ChargingTracker(
       relay, 50 /** make new datapoint after every 50 mah of charge*/);
   Serial.begin(115200);
@@ -64,6 +92,7 @@ void bms_setup() {
 
   relay->setPowerOffCallback([]() {
     Settings->graceful_shutdown_count++;
+    maybeSerializeCharingDataToSettings();
     saveSettings();
   });
 
@@ -72,7 +101,7 @@ void bms_setup() {
   }
 
   setupWifi();
-  setupWebServer(relay);
+  setupWebServer(relay, maybeSerializeCharingDataToSettings);
   setupArduinoOTA();
   TaskQueue.postRecurringTask([]() { relay->loop(); });
 }

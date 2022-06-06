@@ -2,10 +2,11 @@ syntax = "proto3";
 
 // The int values are increments from the last points in order to take
 // advantage of varing encoding of protobuf.
-message ChargingData {
+message ChargingDataMsg {
+  uint32 tracked_cell_index = 1;
   // Parallel arrays.
-  repeated uint32 voltage_offsets = 1;
-  repeated uint32 mah_offsets = 2;
+  repeated uint32 voltage_offsets = 2;
+  repeated uint32 mah_offsets = 3;
 }
 
 message SettingsMsg {
@@ -19,7 +20,5 @@ message SettingsMsg {
   int32 wifi_power = 8;
   bool is_locked = 9; // if the board is actively locked/parked
   bool locking_enabled = 10; // if the board locking functionality is enabled ('armed')
-  // Tracks last charging session, is only overwritten if the new charging sessions
-  // has more data points compared to the stored one.
-  optional ChargingData charging_data = 11;
+  optional ChargingDataMsg charging_data = 11;
 }

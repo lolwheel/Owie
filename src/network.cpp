@@ -3,9 +3,11 @@
 #include <DNSServer.h>
 #include <ESP8266WiFi.h>
 #include <ESPAsyncWebServer.h>
+#include <functional>
 
 #include "ArduinoJson.h"
 #include "bms_relay.h"
+#include "charging_tracker.h"
 #include "data.h"
 #include "settings.h"
 #include "task_queue.h"
@@ -15,11 +17,28 @@ namespace {
 DNSServer dnsServer;
 AsyncWebServer webServer(80);
 AsyncWebSocket ws("/rawdata");
+std::function<void()> syncChargingDataCallback;
 
 const String defaultPass("****");
 BmsRelay *relay;
 
 const String owie_version = "1.2.0-dev";
+
+String dumpChargingPointsFromSettings() {
+  String val;
+  const ChargingDataMsg& proto = Settings->charging_data;
+  val.reserve(proto.voltage_offsets_count * 10 + 100);
+  val.concat("tracked_cell_index = ");
+  val.concat(proto.tracked_cell_index);
+  val.concat("\nmahDelta, millivolts\n");
+  for (int i = 0; i < proto.voltage_offsets_count; i++) {
+    val.concat(proto.mah_offsets[i]);
+    val.concat(", ");
+    val.concat(proto.voltage_offsets[i]);
+    val.concat("\n");
+  }
+  return val;
+}
 
 String uptimeString() {
   const unsigned long nowSecs = millis() / 1000;
@@ -191,8 +210,9 @@ void setupWifi() {
   TaskQueue.postRecurringTask([]() { dnsServer.processNextRequest(); });
 }
 
-void setupWebServer(BmsRelay *bmsRelay) {
+void setupWebServer(BmsRelay *bmsRelay, const std::function<void()>& callback) {
   relay = bmsRelay;
+  syncChargingDataCallback = callback;
   WebOta::begin(&webServer);
   webServer.addHandler(&ws);
   webServer.onNotFound([](AsyncWebServerRequest *request) {
@@ -202,6 +222,12 @@ void setupWebServer(BmsRelay *bmsRelay) {
     }
     request->redirect("http://" + WiFi.softAPIP().toString() + "/");
   });
+  
+  webServer.on("/charging_status", HTTP_GET, [](AsyncWebServerRequest *request) {
+    syncChargingDataCallback();
+    request->send(200, "text/plain", dumpChargingPointsFromSettings());
+  });
+
   webServer.on("/autoupdate", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(200, "application/json", generateOwieStatusJson());
   });

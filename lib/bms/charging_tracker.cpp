@@ -10,9 +10,8 @@ ChargingTracker::ChargingTracker(BmsRelay* relay, uint32_t makeNewPointAfterMah)
     if (p->getType() != 5) {
       return;
     }
-    const uint32_t voltageMillivolts = relay->getTotalVoltageMillivolts();
     // Can't do anything if we don't have voltage yet.
-    if (voltageMillivolts < 1) {
+    if (relay->getTotalVoltageMillivolts() < 1) {
       return;
     }
     const uint32_t totalChargedMah = relay->getRegeneratedChargeMah();
@@ -20,24 +19,36 @@ ChargingTracker::ChargingTracker(BmsRelay* relay, uint32_t makeNewPointAfterMah)
     // Initialize the first data point to absolute value of the voltage and
     // whatever mah we've recorded already.
     if (this->chargingPoints_.size() == 0) {
+      auto cellMillivoltsArray = relay->getCellMillivolts();
+      uint16_t minCellVoltage = 0xFFFF;
+      for (int i = 0; i < 15; i++) {
+        uint16_t voltage = cellMillivoltsArray[i];
+        if (voltage < minCellVoltage) {
+          minCellVoltage = voltage;
+          this->tracked_cell_index_ = i;
+        }
+      }
       this->chargingPoints_.reserve(128);
-      this->chargingPoints_.push_back(ChargingPoint_t{
-          .millivoltsDelta = voltageMillivolts, .mahDelta = totalChargedMah});
-      this->lastInsertedChargingPointTotalMah_ = totalChargedMah;
-      this->lastInsertedChargingPointTotalVoltageMillivolts_ = voltageMillivolts;
+      ChargingPoint_t initialPoint = {.millivolts = minCellVoltage,
+                                      .totalMah = totalChargedMah};
+      // Two data points inserted initially;
+      this->chargingPoints_.push_back(initialPoint);
+      this->chargingPoints_.push_back(initialPoint);
       return;
     }
 
-    if (totalChargedMah - this->lastInsertedChargingPointTotalMah_ <
+    uint16_t voltageMillivolts =
+        relay->getCellMillivolts()[this->tracked_cell_index_];
+    ChargingPoint_t* lastPoint = &this->chargingPoints_.back();
+    lastPoint->millivolts = voltageMillivolts;
+    lastPoint->totalMah = totalChargedMah;
+
+    // Create a new point if last two points are more than makePointAfterMah_
+    // apart.
+    if ((lastPoint->totalMah -
+         this->chargingPoints_[this->chargingPoints_.size() - 2].totalMah) >=
         this->makePointAfterMah_) {
-      return;
+      this->chargingPoints_.push_back(*lastPoint);
     }
-
-    this->chargingPoints_.push_back(ChargingPoint_t{
-        .millivoltsDelta = voltageMillivolts - this->lastInsertedChargingPointTotalVoltageMillivolts_,
-        .mahDelta = totalChargedMah - this->lastInsertedChargingPointTotalMah_});
-
-    this->lastInsertedChargingPointTotalMah_ = totalChargedMah;
-    this->lastInsertedChargingPointTotalVoltageMillivolts_ = voltageMillivolts;
   });
 }
