@@ -57,6 +57,10 @@ String uptimeString() {
   return ret;
 }
 
+String getBatteryPercentage() {
+  return String((relay->getTotalVoltageMillivolts() - 45000) / 180, 2);
+}
+
 String generateOwieStatusJson() {
   DynamicJsonDocument status(1024);
   String jsonOutput;
@@ -75,6 +79,7 @@ String generateOwieStatusJson() {
 
   status["TOTAL_VOLTAGE"] =
       String(relay->getTotalVoltageMillivolts() / 1000.0, 2) + "v";
+  status["BATTERY_PERCENT"] = getBatteryPercentage() + "%";
   status["CURRENT_AMPS"] = String(relay->getCurrentInAmps(), 1) + " Amps";
   status["BMS_SOC"] = String(relay->getBmsReportedSOC()) + "%";
   status["OVERRIDDEN_SOC"] = String(relay->getOverriddenSOC()) + "%";
@@ -97,6 +102,8 @@ String templateProcessor(const String &var) {
   if (var == "TOTAL_VOLTAGE") {
     return String(relay->getTotalVoltageMillivolts() / 1000.0,
                   /* decimalPlaces = */ 2);
+  } else if (var == "BATTERY_PERCENT") {
+    return getBatteryPercentage();
   } else if (var == "CURRENT_AMPS") {
     return String(relay->getCurrentInAmps(),
                   /* decimalPlaces = */ 1);
