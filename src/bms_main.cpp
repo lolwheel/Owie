@@ -27,17 +27,21 @@ void IRAM_ATTR txPinFallInterrupt() { digitalWrite(TX_INVERSE_OUT_PIN, 1); }
 BmsRelay *relay;
 ChargingTracker *chargingTracker;
 
-void maybeSerializeCharingDataToSettings() {
+void maybeMoveCharingDataToSettings() {
   static_assert(sizeof(ChargingDataMsg::voltage_offsets) ==
                 sizeof(ChargingDataMsg::mah_offsets));
-  const auto chargingPoints = chargingTracker->getChargingPoints();
-  ChargingDataMsg &proto = Settings->charging_data;
-  if (proto.voltage_offsets_count < chargingPoints.size() ||
-      chargingPoints.size() < 2) {
+  const auto &chargingPoints = chargingTracker->getChargingPoints();
+
+  if (chargingPoints.size() < 2 ||
+      (Settings->has_charging_data &&
+       Settings->charging_data.voltage_offsets_count > chargingPoints.size())) {
     return;
   }
-  const uint32_t numPoints = max<uint32_t>(
-      sizeof(ChargingDataMsg::voltage_offsets), chargingPoints.size());
+  ChargingDataMsg &proto = Settings->charging_data;
+  Settings->has_charging_data = true;
+  const uint32_t numPoints = min<uint32_t>(
+      (sizeof(proto.voltage_offsets) / sizeof(*proto.voltage_offsets)),
+      chargingPoints.size());
   proto.mah_offsets_count = proto.voltage_offsets_count = numPoints;
   proto.mah_offsets[0] = chargingPoints[0].totalMah;
   proto.voltage_offsets[0] = chargingPoints[0].millivolts;
@@ -92,7 +96,7 @@ void bms_setup() {
 
   relay->setPowerOffCallback([]() {
     Settings->graceful_shutdown_count++;
-    maybeSerializeCharingDataToSettings();
+    maybeMoveCharingDataToSettings();
     saveSettings();
   });
 
@@ -101,7 +105,7 @@ void bms_setup() {
   }
 
   setupWifi();
-  setupWebServer(relay, maybeSerializeCharingDataToSettings);
+  setupWebServer(relay, maybeMoveCharingDataToSettings);
   setupArduinoOTA();
   TaskQueue.postRecurringTask([]() { relay->loop(); });
 }
