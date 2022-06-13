@@ -2,8 +2,8 @@
 
 #include "packet.h"
 
-ChargingTracker::ChargingTracker(BmsRelay* relay, uint32_t makeNewPointAfterMah)
-    : makePointAfterMah_(makeNewPointAfterMah) {
+ChargingTracker::ChargingTracker(BmsRelay* relay, uint32_t makeNewPointAfterMah, const std::function<void(ChargingTracker*)>& newPointCallback)
+    : makePointAfterMah_(makeNewPointAfterMah), newPointCallback_(newPointCallback) {
   // This takes advantage of the fact that the current packets are forwarded iff
   // the board is charging
   relay->addForwardedPacketCallback([this](BmsRelay* relay, Packet* p) {
@@ -49,6 +49,7 @@ ChargingTracker::ChargingTracker(BmsRelay* relay, uint32_t makeNewPointAfterMah)
          this->chargingPoints_[this->chargingPoints_.size() - 2].totalMah) >=
         this->makePointAfterMah_) {
       this->chargingPoints_.push_back(*lastPoint);
+      this->newPointCallback_(this);
     }
   });
 }

@@ -5,7 +5,7 @@
 
 class ChargingTracker {
  public:
-  ChargingTracker(BmsRelay* relay, uint32_t makeNewPointAfterMah);
+  ChargingTracker(BmsRelay* relay, uint32_t makeNewPointAfterMah, const std::function<void(ChargingTracker*)>& newPointCallback);
 
   typedef struct {
       uint32_t millivolts;
@@ -18,8 +18,8 @@ class ChargingTracker {
  private:
   std::vector<ChargingPoint_t> chargingPoints_;
   const uint32_t makePointAfterMah_;
+  std::function<void(ChargingTracker*)> newPointCallback_;
   uint8_t tracked_cell_index_ = 0;
-  void insertChargingPoint(uint32_t totalVoltageMillivolts, uint32_t totalChargedMah);
 };
 
 #endif  // CHARGING_TRACKER_H

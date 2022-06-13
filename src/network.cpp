@@ -17,7 +17,6 @@ namespace {
 DNSServer dnsServer;
 AsyncWebServer webServer(80);
 AsyncWebSocket ws("/rawdata");
-std::function<void()> syncChargingDataCallback;
 
 const String defaultPass("****");
 BmsRelay *relay;
@@ -210,9 +209,8 @@ void setupWifi() {
   TaskQueue.postRecurringTask([]() { dnsServer.processNextRequest(); });
 }
 
-void setupWebServer(BmsRelay *bmsRelay, const std::function<void()>& callback) {
+void setupWebServer(BmsRelay *bmsRelay) {
   relay = bmsRelay;
-  syncChargingDataCallback = callback;
   WebOta::begin(&webServer);
   webServer.addHandler(&ws);
   webServer.onNotFound([](AsyncWebServerRequest *request) {
@@ -224,7 +222,6 @@ void setupWebServer(BmsRelay *bmsRelay, const std::function<void()>& callback) {
   });
   
   webServer.on("/charging_status", HTTP_GET, [](AsyncWebServerRequest *request) {
-    syncChargingDataCallback();
     request->send(200, "text/plain", dumpChargingPointsFromSettings());
   });
 

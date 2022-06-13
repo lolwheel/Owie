@@ -27,7 +27,7 @@ void IRAM_ATTR txPinFallInterrupt() { digitalWrite(TX_INVERSE_OUT_PIN, 1); }
 BmsRelay *relay;
 ChargingTracker *chargingTracker;
 
-void maybeMoveCharingDataToSettings() {
+void maybeSaveCharingDataToSettings(ChargingTracker *) {
   static_assert(sizeof(ChargingDataMsg::voltage_offsets) ==
                 sizeof(ChargingDataMsg::mah_offsets));
   const auto &chargingPoints = chargingTracker->getChargingPoints();
@@ -52,6 +52,7 @@ void maybeMoveCharingDataToSettings() {
         chargingPoints[i].millivolts - chargingPoints[i - 1].millivolts;
   }
   proto.tracked_cell_index = chargingTracker->getTrackedCellIndex();
+  saveSettings();
 }
 
 void bms_setup() {
@@ -64,7 +65,8 @@ void bms_setup() {
                        },
                        millis);
   chargingTracker = new ChargingTracker(
-      relay, 50 /** make new datapoint after every 50 mah of charge*/);
+      relay, 50, /** make new datapoint after every 50 mah of charge*/
+      maybeSaveCharingDataToSettings);
   Serial.begin(115200);
 
   // The B line idle is 0
@@ -96,7 +98,6 @@ void bms_setup() {
 
   relay->setPowerOffCallback([]() {
     Settings->graceful_shutdown_count++;
-    maybeMoveCharingDataToSettings();
     saveSettings();
   });
 
@@ -105,7 +106,7 @@ void bms_setup() {
   }
 
   setupWifi();
-  setupWebServer(relay, maybeMoveCharingDataToSettings);
+  setupWebServer(relay);
   setupArduinoOTA();
   TaskQueue.postRecurringTask([]() { relay->loop(); });
 }
