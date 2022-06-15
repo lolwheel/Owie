@@ -17,10 +17,18 @@ inline int16_t int16FromNetworkOrder(const void* const p) {
   return ((uint16_t)(*charPointer)) << 8 | *(charPointer + 1);
 }
 
-int openCircuitSocFromVoltage(float voltageVolts) {
-  // kindly provided by biell@ in https://github.com/lolwheel/Owie/issues/1
-  return clamp((int)(99.9 / (0.8 + pow(1.29, (54 - voltageVolts))) - 10), 0,
-               100);
+int openCircuitSocFromCellVoltage(uint16_t cellVoltageMillivolts) {
+  static constexpr uint16_t lookupTableRangeMinMv = 2762;
+  static constexpr uint16_t lookupTableRangeMaxMv = 4172;
+  static uint8_t lookupTable[11] = {0, 0, 0, 2, 4, 11, 26, 44, 61, 78, 100};
+  static constexpr uint16_t range = lookupTableRangeMaxMv - lookupTableRangeMinMv;
+  static constexpr uint16_t stepSize = range / ((sizeof(lookupTable)/sizeof(*lookupTable)) - 1);
+  cellVoltageMillivolts = clamp<uint16_t>(cellVoltageMillivolts - lookupTableRangeMinMv, 0, range);
+  int leftIndex = cellVoltageMillivolts / stepSize;
+  int rightIndex = leftIndex + 1;
+  int leftValue = lookupTable[leftIndex];
+  int rightValue = lookupTable[rightIndex];
+  return leftValue + (rightValue - leftValue) * (cellVoltageMillivolts % stepSize) / stepSize;
 }
 
 }  // namespace
@@ -31,13 +39,13 @@ void BmsRelay::batteryPercentageParser(Packet& p) {
   }
   // 0x3 message is just one byte containing battery percentage.
   bms_soc_percent_ = *(int8_t*)p.data();
-  if (filtered_total_voltage_millivolts_ == 0) {
+  if (filtered_lowest_cell_voltage_millivolts_ == 0) {
     // If we don't have voltage, swallow the packet
     p.setShouldForward(false);
     return;
   }
   overridden_soc_percent_ =
-      openCircuitSocFromVoltage(filtered_total_voltage_millivolts_ / 1000.0);
+      openCircuitSocFromCellVoltage(filtered_lowest_cell_voltage_millivolts_);
   p.data()[0] = overridden_soc_percent_;
 }
 
@@ -99,17 +107,21 @@ void BmsRelay::cellVoltageParser(Packet& p) {
   // individual cell voltages in millivolts. The last value is mysterious.
   const uint8_t* const data = p.data();
   uint16_t total_voltage = 0;
+  uint16_t min_voltage = 0xFFFF;
   for (int i = 0; i < 15; i++) {
     uint16_t cellVoltage = int16FromNetworkOrder(data + (i << 1));
     total_voltage += cellVoltage;
+    if (cellVoltage < min_voltage) {
+      min_voltage = cellVoltage;
+    }
     cell_millivolts_[i] = cellVoltage;
   }
   total_voltage_millivolts_ = total_voltage;
-  if (filtered_total_voltage_millivolts_ == 0) {
-    total_voltage_filter_.setTo(total_voltage);
+  if (filtered_lowest_cell_voltage_millivolts_ == 0) {
+    lowest_cell_voltage_filter_.setTo(min_voltage);
   }
-  filtered_total_voltage_millivolts_ =
-      total_voltage_filter_.step(total_voltage);
+  filtered_lowest_cell_voltage_millivolts_ =
+      lowest_cell_voltage_filter_.step(min_voltage);
 }
 
 void BmsRelay::temperatureParser(Packet& p) {

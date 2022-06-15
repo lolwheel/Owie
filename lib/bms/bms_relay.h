@@ -136,8 +136,8 @@ class BmsRelay {
   int8_t overridden_soc_percent_ = -1;
   uint16_t cell_millivolts_[15] = {0};
   uint16_t total_voltage_millivolts_ = 0;
-  LowPassFilter total_voltage_filter_;
-  uint16_t filtered_total_voltage_millivolts_ = 0;
+  LowPassFilter lowest_cell_voltage_filter_;
+  uint16_t filtered_lowest_cell_voltage_millivolts_ = 0;
 
   int8_t temperatures_celsius_[5] = {0};
   int8_t avg_temperature_celsius_ = 0;
