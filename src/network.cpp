@@ -299,7 +299,7 @@ void setupWebServer(BmsRelay *bmsRelay) {
         if (bmsSerialParam->value().length() == 0) {
           Settings->bms_serial = 0;
         } else {
-          Settings->bms_serial = bmsSerialParam->value().toInt();
+          Settings->bms_serial = (uint32_t)bmsSerialParam->value().toInt();
         }
 
         // Set wifi power
