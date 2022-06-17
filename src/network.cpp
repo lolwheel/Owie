@@ -21,7 +21,7 @@ AsyncWebSocket ws("/rawdata");
 const String defaultPass("****");
 BmsRelay *relay;
 
-const String owie_version = "1.2.0-dev";
+const String owie_version = "1.2.0";
 
 String dumpChargingPointsFromSettings() {
   String val;
