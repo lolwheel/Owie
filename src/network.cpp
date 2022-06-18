@@ -21,7 +21,7 @@ AsyncWebSocket ws("/rawdata");
 const String defaultPass("****");
 BmsRelay *relay;
 
-const String owie_version = "1.2.0";
+const String owie_version = "1.2.1";
 
 String dumpChargingPointsFromSettings() {
   String val;
@@ -299,7 +299,7 @@ void setupWebServer(BmsRelay *bmsRelay) {
         if (bmsSerialParam->value().length() == 0) {
           Settings->bms_serial = 0;
         } else {
-          Settings->bms_serial = (uint32_t)bmsSerialParam->value().toInt();
+          Settings->bms_serial = strtoul(bmsSerialParam->value().c_str(), nullptr, 0);
         }
 
         // Set wifi power
