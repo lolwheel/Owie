@@ -1,15 +1,8 @@
 <form method="post" action="/settings">
   <fieldset>
-    <legend>BMS pairing:</legend>
-    <p>Serial of the currently hooked up BMS:</p>
-    <p><b>%BMS_CURRENT_SERIAL%</b></p>
-    <hr>
-    <p>Override the BMS serial:<input placeholder="Last 6 digits of the BMS serial"
-        value="%BMS_SERIAL_OVERRIDE%" name="bs"></p>
-  </fieldset>
-  <fieldset>
     <legend>WiFi options:</legend>
-    <p>Owie WiFi network name override:<br><input placeholder="WiFi network name" value="%AP_SELF_NAME%" name="apselfname"></p>
+    <p>Owie WiFi network name override:<br><input placeholder="WiFi network name" value="%AP_SELF_NAME%"
+        name="apselfname"></p>
     <p>Password:<br><input placeholder="Between 8 and 31 characters" value="%AP_PASSWORD%" name="pw"></p>
     <p>Power (dBm):<br>
       <select value="%WIFI_POWER%" name="wifipower">
@@ -39,7 +32,7 @@
       return;
     }
     btn.removeAttribute('style');
-    
+
     function updateButton() {
       const isEnabled = !!btn.dataset.enabled;
       btn.removeAttribute("disabled");

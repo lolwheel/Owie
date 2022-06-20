@@ -101,9 +101,7 @@ void bms_setup() {
     saveSettings();
   });
 
-  if (Settings->bms_serial != 0) {
-    relay->setBMSSerialOverride(Settings->bms_serial);
-  }
+  relay->setBMSSerialOverride(0xFFABCDEF);
 
   setupWifi();
   setupWebServer(relay);

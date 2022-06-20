@@ -2,8 +2,8 @@
 
 [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/lolwheel/Owie)
 
-This project is inspired by the JWFFM modchip and unlocks battery expansion possibilities on otherwise
-locked Onewheels.
+This project is unlocks battery expansion possibilities on otherwise
+locked Onewheels, adds WiFi-based monitoring of various battery health signals such as individual cell voltages, current, etc.
 
 # Disclaimer
 
@@ -33,37 +33,37 @@ This is a hobby projet for its contributors and comes with absolutely no guarant
 ## Flashing Owie for the first time
 
 1. Download the latest [`firmware.bin`](https://github.com/lolwheel/Owie/releases/latest/download/firmware.bin).
-1. Use the ESP WebTools page provided [here](https://ow-breaker.github.io/). \[DEPRECATED instruction, being replaced\]
-1. Follow the instructions on that page to flash the firmware.
-1. Verify the flash success: When the chip is on, you should see
+2. Follow the instruction on the ESP WebTools page [here](https://ow-breaker.github.io/). Note that firmware flashed through this website might be older than the latest official release. To make sure that you're running the latest version, follow the instructions in the "Updating Owie" section below after the initial flash.
+3. Verify the flash success: When the chip is on, you should see
    a WiFi network called `Owie-XXXX`. Connecting to it should send you
    straight to the status page of the Owie board. Don't worry about the data because the board isn't hooked up yet.
 
-## Installation:
+## Installation into the board:
 
 NEW: Follow this step-by-step installation video made by one of the community members - https://www.youtube.com/watch?v=HhKdwnYUbA0
 
 Or follow these instructions below:
 
 1. Install Owie fimrware onto your Wemos D1 mini as instructed above.
-1. Disassemble your board and open the battery enclosure.
-1. Disconnect all wires from BMS, strictly in the following order:
+2. NEW: I highly recommend physically removing the reset button from the chip with pliers to exclude possibility of it accidentally getting pressed while inside of your Onewheel.
+3. Disassemble your board and open the battery enclosure.
+4. Disconnect all wires from BMS, strictly in the following order:
    1. Battery balance lead - the leftmost connector (24 wires) on the BMS.
-   1. Battery main lead - an XT60 connector on the rightmost side of the BMS.
-   1. All the other wires to the BMS, the order here doesn't matter.
-1. Prepare your Wemos D1 Mini and BMS:
+   2. Battery main lead - an XT60 connector on the rightmost side of the BMS.
+   3. All the other wires to the BMS, the order here doesn't matter.
+5. Prepare your Wemos D1 Mini and BMS:
    1. Tin 4 consecutive pins on Wemos D1 Mini marked as **TX, RX, D1, D2** as well as **5v, GND** pins.
-   1. Solder a small wire **on the top of the board** connecting the pin marked as **TX** to the pin marked as **D2**
-   1. Solder power pickup wires to the BMS. The JWFFM chip installation video demonstrates this well - [Youtube: Power pickup from BMS](https://youtu.be/kSWicH8hUFo?t=1028)
-   1. Cut the **WHITE** and **GREEN** wires from the three-wire connector around 3/4 of an inch from the connector. Wrap the Green wire **leading to the BMS**(the 3/4 inch stub) in an isolating wire as we won't be needing it. Tin the other three wire endings, you'll be soldering those to the Wemos D1 Mini.
+   2. Solder a small wire **on the top of the board** connecting the pin marked as **TX** to the pin marked as **D2**
+   3. Solder power pickup wires to the BMS. The JWFFM chip installation video demonstrates this well - [Youtube: Power pickup from BMS](https://youtu.be/kSWicH8hUFo?t=1028)
+   4. Cut the **WHITE** and **GREEN** wires from the three-wire connector around 3/4 of an inch from the connector. Wrap the Green wire **leading to the BMS**(the 3/4 inch stub) in an isolating wire as we won't be needing it. Tin the other three wire endings, you'll be soldering those to the Wemos D1 Mini.
       Again, JWFFM install video has a good demonstration of this: [Youtube: Cutting GREEN and WHITE wires](https://youtu.be/kSWicH8hUFo?t=453)
-1. Connecting wires to your Wemos D1 Mini. I found it much easier to solder these to the bottom of the board:
+6. Connecting wires to your Wemos D1 Mini. I found it much easier to solder these to the bottom of the board:
    1. Connect the **GROUND** wire from the **BMS**, the middle wire out of the BMS 5 pin connector to **GND** on Wemos D1.
-   1. Connect the **5v** wire, the other one from BMS to the **5v** on the board.
-   1. Connect the **WHITE** wire **RUNNING TO THE MAIN BOARD** to the **TX** pin on the board.
-   1. Connect the **GREEN** wire **RUNNING TO THE MAIN BOARD** to the **D1** pin on the board.
-   1. Connect the **WHITE** stubby wire running to the **BMS** to the **RX** pin on the board.
-   1. Cover the bottom of the Wemos D1 mini with either fish tape or isolating tape so that non of the exposed soldering joints have any chance of contacting anything on the BMS. I also put a bunch of tape on the top of the board, just in case.
+   2. Connect the **5v** wire, the other one from BMS to the **5v** on the board.
+   3. Connect the **WHITE** wire **RUNNING TO THE MAIN BOARD** to the **TX** pin on the board.
+   4. Connect the **GREEN** wire **RUNNING TO THE MAIN BOARD** to the **D1** pin on the board.
+   5. Connect the **WHITE** stubby wire running to the **BMS** to the **RX** pin on the board.
+   6. Cover the bottom of the Wemos D1 mini with either fish tape or isolating tape so that non of the exposed soldering joints have any chance of contacting anything on the BMS. I also put a bunch of tape on the top of the board, just in case.
 
 DONE!
 

@@ -2,7 +2,7 @@
 
 #include "packet.h"
 
-ChargingTracker::ChargingTracker(BmsRelay* relay, uint32_t makeNewPointAfterMah, const std::function<void(ChargingTracker*)>& newPointCallback)
+ChargingTracker::ChargingTracker(BmsRelay* relay, int32_t makeNewPointAfterMah, const std::function<void(ChargingTracker*)>& newPointCallback)
     : makePointAfterMah_(makeNewPointAfterMah), newPointCallback_(newPointCallback) {
   // This takes advantage of the fact that the current packets are forwarded iff
   // the board is charging
@@ -14,7 +14,7 @@ ChargingTracker::ChargingTracker(BmsRelay* relay, uint32_t makeNewPointAfterMah,
     if (relay->getTotalVoltageMillivolts() < 1) {
       return;
     }
-    const uint32_t totalChargedMah = relay->getRegeneratedChargeMah();
+    const int32_t totalChargedMah = relay->getRegeneratedChargeMah();
 
     // Initialize the first data point to absolute value of the voltage and
     // whatever mah we've recorded already.

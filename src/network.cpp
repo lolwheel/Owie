@@ -21,7 +21,7 @@ AsyncWebSocket ws("/rawdata");
 const String defaultPass("****");
 BmsRelay *relay;
 
-const String owie_version = "1.2.1";
+const String owie_version = "1.3.0";
 
 String dumpChargingPointsFromSettings() {
   String val;
@@ -140,17 +140,8 @@ String templateProcessor(const String &var) {
       out.concat("<tr>");
     }
     return out;
-  } else if (var == "BMS_SERIAL_OVERRIDE") {
-    // so it doesn't return 0 when no override is set
-    if (Settings->bms_serial == 0) {
-      return "";
-    } else {
-      return String(Settings->bms_serial);
-    }
   } else if (var == "AP_PASSWORD") {
     return Settings->ap_self_password;
-  } else if (var == "BMS_CURRENT_SERIAL") {
-    return String(relay->getCapturedBMSSerial());
   } else if (var == "AP_SELF_NAME") {
     return Settings->ap_self_name;
   } else if (var == "DISPLAY_AP_NAME") {
@@ -269,14 +260,9 @@ void setupWebServer(BmsRelay *bmsRelay) {
                         SETTINGS_HTML_SIZE, templateProcessor);
         return;
       case HTTP_POST:
-        const auto bmsSerialParam = request->getParam("bs", true);
         const auto apSelfPassword = request->getParam("pw", true);
         const auto apSelfName = request->getParam("apselfname", true);
         const auto wifiPower = request->getParam("wifipower", true);
-        if (bmsSerialParam == nullptr) {
-          request->send(400, "text/html", "Invalid BMS Serial number.");
-          return;
-        }
         if (apSelfPassword == nullptr ||
             apSelfPassword->value().length() >
                 sizeof(Settings->ap_self_password) ||
@@ -293,13 +279,6 @@ void setupWebServer(BmsRelay *bmsRelay) {
              apSelfName->value().length() > 0)) {
           request->send(400, "text/html", "Invalid Custom AP Name.");
           return;
-        }
-        // allows user to leave bms serial field blank instead of having to put
-        // 0
-        if (bmsSerialParam->value().length() == 0) {
-          Settings->bms_serial = 0;
-        } else {
-          Settings->bms_serial = strtoul(bmsSerialParam->value().c_str(), nullptr, 0);
         }
 
         // Set wifi power
