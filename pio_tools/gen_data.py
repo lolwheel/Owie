@@ -9,7 +9,8 @@ if "idedata" in COMMAND_LINE_TARGETS:
 
 
 def ReadAndMaybeMinifyFiles(fullPath):
-    if not fullPath.endswith('.html'):
+    _, extension = os.path.splitext(fullPath)
+    if not extension in ['.html', '.js', '.css']:
         with open(fullPath, "rb") as f:
             return f.read()
     originalSize = os.stat(fullPath).st_size
@@ -28,9 +29,9 @@ def ReadAndMaybeMinifyFiles(fullPath):
 
 def GenData():
     dataDir = os.path.join(env["PROJECT_DIR"], "data")
-    print("dataDir = %s\n" % dataDir)
+    print("dataDir = %s" % dataDir)
     genDir = os.path.join(env.subst("$BUILD_DIR"), 'inline_data')
-    print("genDir = %s\n" % genDir)
+    print("genDir = %s" % genDir)
     if not os.path.exists(dataDir):
         return
     if not os.path.exists(genDir):

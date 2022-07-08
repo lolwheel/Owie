@@ -6,221 +6,46 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
     <title>Owie - Status</title>
-    <style>
-        div,
-        fieldset,
-        input,
-        select {
-            padding: 5px;
-            font-size: 1em;
-        }
-
-        fieldset {
-            background: #4f4f4f;
-        }
-
-        p {
-            margin: 0.5em 0;
-        }
-
-        input {
-            width: 100%%;
-            box-sizing: border-box;
-            -webkit-box-sizing: border-box;
-            -moz-box-sizing: border-box;
-            background: #dddddd;
-            color: #000000;
-        }
-
-        input[type=checkbox],
-        input[type=radio] {
-            width: 1em;
-            margin-right: 6px;
-            vertical-align: -1px;
-        }
-
-        input[type=range] {
-            width: 99%%;
-        }
-
-        select {
-            width: 100%%;
-            background: #dddddd;
-            color: #000000;
-        }
-
-        textarea {
-            resize: vertical;
-            width: 98%%;
-            height: 318px;
-            padding: 5px;
-            overflow: auto;
-            background: #1f1f1f;
-            color: #65c115;
-        }
-
-        body {
-            text-align: center;
-            font-family: verdana, sans-serif;
-            background: #252525;
-        }
-
-        td {
-            padding: 0px;
-        }
-
-        button {
-            border: 0;
-            border-radius: 0.3rem;
-            background: #1fa3ec;
-            color: #faffff;
-            line-height: 2.4rem;
-            font-size: 1.2rem;
-            width: 100%%;
-            -webkit-transition-duration: 0.4s;
-            transition-duration: 0.4s;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background: #0e70a4;
-        }
-
-        .bgrn {
-            background: #47c266;
-        }
-
-        .bgrn:hover {
-            background: #5aaf6f;
-        }
-
-        a {
-            color: #1fa3ec;
-            text-decoration: none;
-        }
-
-        .p {
-            float: left;
-            text-align: left;
-        }
-
-        .q {
-            float: right;
-            text-align: right;
-        }
-
-        .r {
-            border-radius: 0.3em;
-            padding: 2px;
-            margin: 6px 2px;
-        }
-
-        .hf {
-            display: none;
-        }
-
-        .cell-voltages td {
-            padding: 2px;
-            background: #354b4d;
-            border: 0px;
-            border-radius: 0.2rem;
-        }
-
-        h2 {
-            margin: 0;
-            padding: 0;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
     <script>
-        function getXhr() {
-            const content = document.getElementById("content");
-            const xhr = new XMLHttpRequest();
-            xhr.addEventListener("load", function (event) {
-                content.innerHTML = event.target.responseText;
-                rescanContent();
-            });
-            xhr.addEventListener("error", function (event) {
-                content.innerHTML = 'Oops! Something went wrong.';
-            });
-            return xhr;
-        }
-        function handleFormSubmit(event) {
-            event.preventDefault();
-            const xhr = getXhr();
-            const form = event.target;
-            // clear autoupdate intervall to prevent errors
-            clearInterval(window.statusIntervall);
-            window.statusIntervall = null;
-            xhr.open(form.getAttribute('method') || 'GET', form.getAttribute('action'));
-            const formData = new FormData(form);
-            xhr.send(formData);
-            goHome(event);
-        }
-
-        function handleLinkClick(event) {
-            event.preventDefault();
-            const xhr = getXhr();
-            xhr.open("GET", event.target.getAttribute('href'));
-            xhr.send();
-        }
-
-        function rescanContent() {
-            const content = document.getElementById('content');
-            Array.from(content.getElementsByTagName('form')).
-                filter(f => !f.hasAttribute('owie_procesed')).forEach((f) => {
-                    f.setAttribute('owie_procesed', '1');
-                    f.addEventListener("submit", handleFormSubmit);
-                });
-            Array.from(content.getElementsByTagName('a')).
-                filter((a) => !a.hasAttribute('owie_procesed')).forEach((a) => {
-                    a.setAttribute('owie_procesed', '1');
-                    a.addEventListener("click", handleLinkClick);
-                });
-            Array.from(content.getElementsByTagName('script')).
-                filter((s) => !s.hasAttribute('owie_procesed')).forEach((s) => {
-                    s.setAttribute('owie_procesed', '1');
-                    const clone = document.createElement('script');
-                    clone.text = s.innerHTML;
-                    s.parentElement.replaceChild(clone, s);
-                });
-        }
-
-        function goHome(event) {
-            const form = event.target;
-            const homeButton = document.getElementById("homeButton");
-            if (form.action == null) {
-                homeButton.style.display = "none";
-                // enable autoreload when we are in home again
-                autoreload();
-            } else {
-                homeButton.style.display = "block";
-            }
-        }
-
-        function autoreload() {
-            if (!window.statusIntervall) {
-                window.statusIntervall = setInterval(function () {
-                    const xhr = new XMLHttpRequest();
-                    xhr.addEventListener("load", function (evt) {
-                        var parsed = JSON.parse(evt.target.responseText);
-                        for (const key in parsed) {
-                            var el = document.getElementById(key);
-                            if (el) {
-                                el.innerHTML = parsed[key];
-                            }
+        window.addEventListener('DOMContentLoaded', () => {
+            function reloadData() {
+                const xhr = new XMLHttpRequest();
+                xhr.addEventListener("load", function (evt) {
+                    var parsed = JSON.parse(evt.target.responseText);
+                    for (const key in parsed) {
+                        var el = document.getElementById(key);
+                        if (el) {
+                            el.innerHTML = parsed[key];
                         }
-                        rescanContent();
-                    });
-                    xhr.open("GET", "/autoupdate");
-                    xhr.send();
-                }, 1000);
+                    }
+                    setTimeout(reloadData, 100);
+                });
+                xhr.open("GET", "/autoupdate");
+                xhr.send();
             }
-        }
-
-        window.addEventListener('DOMContentLoaded', rescanContent);
-        window.addEventListener('load', goHome);
-        window.onload = function () { autoreload(); }
-
+            reloadData();
+            const unlockBtn = document.getElementById("unlockButton");
+            if (!unlockBtn.dataset.locked) {
+                return;
+            }
+            unlockBtn.onclick = () => {
+                const xhr = new XMLHttpRequest();
+                xhr.open("GET", "/lock?unlock");
+                xhr.responseType = "text";
+                xhr.onload = () => {
+                    if (xhr.status === 200) {
+                        unlockBtn.innerHTML = "Unlocked! Restart your board to ride it.";
+                    } else {
+                        unlockBtn.innerHTML = "Error: " + xhr.status;
+                    }
+                };
+                unlockBtn.setAttribute("disabled", "1");
+                xhr.send();
+            };
+            unlockBtn.removeAttribute("style");
+        });
+    //# sourceURL=index.js
     </script>
 </head>
 
@@ -288,40 +113,11 @@
                 Unlock Board
             </button>
         </div>
-        <div id="homeButton" style="text-align:right;font-size:11px;">
-            <form action="/">
-                <button>Back (Cancel)</button>
-            </form>
-        </div>
         <div id="version" style="text-align:right;font-size:11px;">
             <hr>
             <p style="color:#aaa;">Owie <span id="OWIE_version">%OWIE_version%</span></p>
         </div>
     </div>
-    <script>
-            (() => {
-                const unlockBtn = document.getElementById("unlockButton");
-                if (!unlockBtn.dataset.locked) {
-                    return;
-                }
-                unlockBtn.onclick = () => {
-                    const xhr = new XMLHttpRequest();
-                    xhr.open("GET", "/lock?unlock");
-                    xhr.responseType = "text";
-                    xhr.onload = () => {
-                        if (xhr.status === 200) {
-                            unlockBtn.innerHTML = "Unlocked! Restart your board to ride it.";
-                        } else {
-                            unlockBtn.innerHTML = "Error: " + xhr.status;
-                        }
-                    };
-                    unlockBtn.setAttribute("disabled", "1");
-                    xhr.send();
-                };
-                unlockBtn.removeAttribute("style");
-            })();
-            //# sourceURL=index.js
-    </script>
 </body>
 
 </html>

@@ -1,9 +1,7 @@
 #include <Arduino.h>
 
-#include "arduino_ota.h"
 #include "bms_relay.h"
 #include "charging_tracker.h"
-#include "global_instances.h"
 #include "network.h"
 #include "packet.h"
 #include "settings.h"
@@ -22,6 +20,8 @@ namespace {
 // of the TX A line.
 void IRAM_ATTR txPinRiseInterrupt() { digitalWrite(TX_INVERSE_OUT_PIN, 0); }
 void IRAM_ATTR txPinFallInterrupt() { digitalWrite(TX_INVERSE_OUT_PIN, 1); }
+
+HardwareSerial Serial(0);
 }  // namespace
 
 BmsRelay *relay;
@@ -105,6 +105,5 @@ void bms_setup() {
 
   setupWifi();
   setupWebServer(relay);
-  setupArduinoOTA();
   TaskQueue.postRecurringTask([]() { relay->loop(); });
 }

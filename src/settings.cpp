@@ -73,7 +73,7 @@ int32_t saveSettings() {
 
 int32_t saveSettingsAndRestartSoon() {
   int32_t code = saveSettings();
-  TaskQueue.postOneShotTask([]() { ESP.restart(); }, 2000L);
+  TaskQueue.postOneShotTask([]() { ESP.restart(); }, 1000L);
   return code;
 }
 

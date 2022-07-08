@@ -3,6 +3,7 @@
 #include <DNSServer.h>
 #include <ESP8266WiFi.h>
 #include <ESPAsyncWebServer.h>
+
 #include <functional>
 
 #include "ArduinoJson.h"
@@ -11,7 +12,7 @@
 #include "data.h"
 #include "settings.h"
 #include "task_queue.h"
-#include "web_ota.h"
+#include "async_ota.h"
 
 namespace {
 DNSServer dnsServer;
@@ -21,11 +22,11 @@ AsyncWebSocket ws("/rawdata");
 const String defaultPass("****");
 BmsRelay *relay;
 
-const String owie_version = "1.3.0";
+const String owie_version = "1.3.1";
 
 String dumpChargingPointsFromSettings() {
   String val;
-  const ChargingDataMsg& proto = Settings->charging_data;
+  const ChargingDataMsg &proto = Settings->charging_data;
   val.reserve(proto.voltage_offsets_count * 10 + 100);
   val.concat("tracked_cell_index = ");
   val.concat(proto.tracked_cell_index);
@@ -87,7 +88,9 @@ String generateOwieStatusJson() {
   return jsonOutput;
 }
 
-bool lockingPreconditionsMet() { return strlen(Settings->ap_self_password) > 0; }
+bool lockingPreconditionsMet() {
+  return strlen(Settings->ap_self_password) > 0;
+}
 const char *lockedStatusDataAttrValue() {
   return Settings->is_locked ? "1" : "";
 };
@@ -202,19 +205,17 @@ void setupWifi() {
 
 void setupWebServer(BmsRelay *bmsRelay) {
   relay = bmsRelay;
-  WebOta::begin(&webServer);
+  AsyncOta.listen(&webServer);
   webServer.addHandler(&ws);
   webServer.onNotFound([](AsyncWebServerRequest *request) {
-    if (request->host().indexOf("owie.local") >= 0) {
-      request->send(404);
-      return;
-    }
-    request->redirect("http://" + WiFi.softAPIP().toString() + "/");
+    request->redirect("http://" + request->client()->localIP().toString() + "/");
   });
-  
-  webServer.on("/charging_status", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(200, "text/plain", dumpChargingPointsFromSettings());
-  });
+  webServer.on("/favicon.ico", HTTP_GET,
+               [](AsyncWebServerRequest *request) { request->send(404); });
+  webServer.on(
+      "/charging_status", HTTP_GET, [](AsyncWebServerRequest *request) {
+        request->send(200, "text/plain", dumpChargingPointsFromSettings());
+      });
 
   webServer.on("/autoupdate", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(200, "application/json", generateOwieStatusJson());
@@ -223,6 +224,12 @@ void setupWebServer(BmsRelay *bmsRelay) {
   webServer.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send_P(200, "text/html", INDEX_HTML_PROGMEM_ARRAY, INDEX_HTML_SIZE,
                     templateProcessor);
+  });
+  webServer.on("/styles.css", HTTP_GET, [](AsyncWebServerRequest *request) {
+    AsyncWebServerResponse *response = request->beginResponse_P(
+        200, "text/css", STYLES_CSS_PROGMEM_ARRAY, STYLES_CSS_SIZE);
+    response->addHeader("Cache-Control", "max-age=3600");
+    request->send(response);
   });
   webServer.on("/wifi", HTTP_ANY, [](AsyncWebServerRequest *request) {
     switch (request->method()) {
@@ -270,7 +277,8 @@ void setupWebServer(BmsRelay *bmsRelay) {
              apSelfPassword->value().length() >
                  0)) {  // this check is necessary so the user can't set a too
                         // small password and thus the network wont' show up
-          request->send(400, "text/html", "AP password must be between 8 and 31 characters");
+          request->send(400, "text/html",
+                        "AP password must be between 8 and 31 characters");
           return;
         }
         if (apSelfName == nullptr ||
