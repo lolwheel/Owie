@@ -73,15 +73,14 @@ String generateOwieStatusJson() {
     out.concat("<tr>");
   }
 
-  const uint16_t *thermTemps = relay->getTemperaturesCelsius();
+  const int8_t *thermTemps = relay->getTemperaturesCelsius();
   String temps;
   temps.reserve(256);
   temps.concat("<tr>");
   for (int i = 0; i < 5; i++) {
-      out.concat("<td>");
-      out.concat(thermTemps[i]);
-      out.concat("</td>");
-    }
+    temps.concat("<td>");
+    temps.concat(thermTemps[i]);
+    temps.concat("</td>");
   }
   temps.concat("<tr>");
 
@@ -156,6 +155,18 @@ String templateProcessor(const String &var) {
       out.concat("<tr>");
     }
     return out;
+  } else if (var == "TEMPERATURE_TABLE") {
+    const int8_t *thermTemps = relay->getTemperaturesCelsius();
+    String temps;
+    temps.reserve(256);
+    temps.concat("<tr>");
+    for (int i = 0; i < 5; i++) {
+      temps.concat("<td>");
+      temps.concat(thermTemps[i]);
+      temps.concat("</td>");
+    }
+    temps.concat("<tr>");
+    return temps;
   } else if (var == "AP_PASSWORD") {
     return Settings->ap_self_password;
   } else if (var == "AP_SELF_NAME") {
