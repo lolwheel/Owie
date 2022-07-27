@@ -73,6 +73,18 @@ String generateOwieStatusJson() {
     out.concat("<tr>");
   }
 
+  const uint16_t *thermTemps = relay->getTemperaturesCelsius();
+  String temps;
+  temps.reserve(256);
+  temps.concat("<tr>");
+  for (int i = 0; i < 5; i++) {
+      out.concat("<td>");
+      out.concat(thermTemps[i]);
+      out.concat("</td>");
+    }
+  }
+  temps.concat("<tr>");
+
   status["TOTAL_VOLTAGE"] =
       String(relay->getTotalVoltageMillivolts() / 1000.0, 2) + "v";
   status["CURRENT_AMPS"] = String(relay->getCurrentInAmps(), 1) + " Amps";
@@ -83,6 +95,7 @@ String generateOwieStatusJson() {
       String(relay->getRegeneratedChargeMah()) + " mAh";
   status["UPTIME"] = uptimeString();
   status["CELL_VOLTAGE_TABLE"] = out;
+  status["TEMPERATURE_TABLE"] = temps;
 
   serializeJson(status, jsonOutput);
   return jsonOutput;
