@@ -19,7 +19,7 @@ inline int16_t int16FromNetworkOrder(const void* const p) {
 
 int openCircuitSocFromCellVoltage(uint16_t cellVoltageMillivolts) {
   static constexpr uint16_t lookupTableRangeMinMv = 2762;
-  static constexpr uint16_t lookupTableRangeMaxMv = 4172;
+  static constexpr uint16_t lookupTableRangeMaxMv = 4140;
   static uint8_t lookupTable[11] = {0, 0, 0, 2, 4, 11, 26, 44, 61, 78, 100};
   static constexpr uint16_t range = lookupTableRangeMaxMv - lookupTableRangeMinMv;
   static constexpr uint16_t stepSize = range / ((sizeof(lookupTable)/sizeof(*lookupTable)) - 1);
