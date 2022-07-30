@@ -7,12 +7,12 @@
 #include <functional>
 
 #include "ArduinoJson.h"
+#include "async_ota.h"
 #include "bms_relay.h"
 #include "charging_tracker.h"
 #include "data.h"
 #include "settings.h"
 #include "task_queue.h"
-#include "async_ota.h"
 
 namespace {
 DNSServer dnsServer;
@@ -208,7 +208,8 @@ void setupWebServer(BmsRelay *bmsRelay) {
   AsyncOta.listen(&webServer);
   webServer.addHandler(&ws);
   webServer.onNotFound([](AsyncWebServerRequest *request) {
-    request->redirect("http://" + request->client()->localIP().toString() + "/");
+    request->redirect("http://" + request->client()->localIP().toString() +
+                      "/");
   });
   webServer.on("/favicon.ico", HTTP_GET,
                [](AsyncWebServerRequest *request) { request->send(404); });
@@ -228,6 +229,13 @@ void setupWebServer(BmsRelay *bmsRelay) {
   webServer.on("/styles.css", HTTP_GET, [](AsyncWebServerRequest *request) {
     AsyncWebServerResponse *response = request->beginResponse_P(
         200, "text/css", STYLES_CSS_PROGMEM_ARRAY, STYLES_CSS_SIZE);
+    response->addHeader("Cache-Control", "max-age=3600");
+    request->send(response);
+  });
+  webServer.on("/dev_settings", HTTP_GET, [](AsyncWebServerRequest *request) {
+    AsyncWebServerResponse *response = request->beginResponse_P(
+        200, "text/html", DEV_SETTINGS_HTML_PROGMEM_ARRAY,
+        DEV_SETTINGS_HTML_SIZE, templateProcessor);
     response->addHeader("Cache-Control", "max-age=3600");
     request->send(response);
   });
