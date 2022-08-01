@@ -6,13 +6,10 @@
 
 namespace {
 const uint8_t PREAMBLE[] = {0xFF, 0x55, 0xAA};
-
-const int8_t packetLengths[] = {7, -1, 38, 7, 11, 8,  10, 13, 7,
-                                7, -1, 8,  8, 9,  -1, 11, 16, 10};
 }  // namespace
 
 BmsRelay::BmsRelay(const Source& source, const Sink& sink, const Millis& millis)
-    : source_(source), sink_(sink), millis_(millis) {
+    : source_(source), sink_(sink), millis_(millis), packet_tracker_(millis) {
   sourceBuffer_.reserve(64);
 }
 
@@ -36,6 +33,7 @@ void BmsRelay::purgeUnknownData() {
       unknownDataCallback_(b);
     }
   }
+  packet_tracker_.unknownBytes(sourceBuffer_.size());
   sourceBuffer_.clear();
 }
 
@@ -55,15 +53,17 @@ void BmsRelay::processNextByte() {
     return;
   }
   uint8_t type = sourceBuffer_[3];
-  if (type >= sizeof(packetLengths) || packetLengths[type] < 0) {
+  if (type >= sizeof(PACKET_LENGTHS_BY_TYPE) ||
+      PACKET_LENGTHS_BY_TYPE[type] < 0) {
     purgeUnknownData();
     return;
   }
-  uint8_t len = packetLengths[type];
+  uint8_t len = PACKET_LENGTHS_BY_TYPE[type];
   if (sourceBuffer_.size() < len) {
     return;
   }
   Packet p(sourceBuffer_.data(), len);
+  packet_tracker_.processPacket(p);
   for (auto& callback : receivedPacketCallbacks_) {
     callback(this, &p);
   };

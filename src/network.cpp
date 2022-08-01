@@ -9,7 +9,6 @@
 #include "ArduinoJson.h"
 #include "async_ota.h"
 #include "bms_relay.h"
-#include "charging_tracker.h"
 #include "data.h"
 #include "settings.h"
 #include "task_queue.h"
@@ -24,20 +23,40 @@ BmsRelay *relay;
 
 const String owie_version = "1.3.1";
 
-String dumpChargingPointsFromSettings() {
-  String val;
-  const ChargingDataMsg &proto = Settings->charging_data;
-  val.reserve(proto.voltage_offsets_count * 10 + 100);
-  val.concat("tracked_cell_index = ");
-  val.concat(proto.tracked_cell_index);
-  val.concat("\nmahDelta, millivolts\n");
-  for (int i = 0; i < proto.voltage_offsets_count; i++) {
-    val.concat(proto.mah_offsets[i]);
-    val.concat(", ");
-    val.concat(proto.voltage_offsets[i]);
-    val.concat("\n");
+String renderPacketStatsTable() {
+  String result(
+      PSTR("<table><tr><th>ID</th><th>Period</th><th>Deviation</th><th>Count</"
+           "th></tr>"));
+  for (const IndividualPacketStat &stat :
+       relay->getPacketTracker().getIndividualPacketStats()) {
+    if (stat.id < 0) {
+      continue;
+    }
+    result.concat(PSTR("<tr><td>"));
+
+    char buffer[16];
+    snprintf_P(buffer, sizeof(buffer), PSTR("%X"), stat.id);
+    result.concat(buffer);
+
+    result.concat(PSTR("</td><td>"));
+    result.concat(stat.mean_period_millis());
+    result.concat(PSTR("</td><td>"));
+    result.concat(stat.deviation_millis());
+    result.concat(PSTR("</td><td>"));
+    result.concat(stat.total_num);
+    result.concat(PSTR("</td></tr>"));
   }
-  return val;
+
+  result.concat(PSTR(
+      "<tr><th>Unknown Bytes</th><th>Checksum Mismatches</th></tr><tr><td>"));
+  result.concat(
+      relay->getPacketTracker().getGlobalStats().total_unknown_bytes_received);
+  result.concat(PSTR("</td><td>"));
+  result.concat(relay->getPacketTracker()
+                    .getGlobalStats()
+                    .total_packet_checksum_mismatches);
+  result.concat(PSTR("</td></tr></table>"));
+  return result;
 }
 
 String uptimeString() {
@@ -129,6 +148,8 @@ String templateProcessor(const String &var) {
     return lockingPreconditionsMet() ? "1" : "";
   } else if (var == "LOCKING_ENABLED") {
     return Settings->locking_enabled ? "1" : "";
+  } else if (var == "PACKET_STATS_TABLE") {
+    return renderPacketStatsTable();
   } else if (var == "CELL_VOLTAGE_TABLE") {
     const uint16_t *cellMillivolts = relay->getCellMillivolts();
     String out;
@@ -213,10 +234,6 @@ void setupWebServer(BmsRelay *bmsRelay) {
   });
   webServer.on("/favicon.ico", HTTP_GET,
                [](AsyncWebServerRequest *request) { request->send(404); });
-  webServer.on(
-      "/charging_status", HTTP_GET, [](AsyncWebServerRequest *request) {
-        request->send(200, "text/plain", dumpChargingPointsFromSettings());
-      });
 
   webServer.on("/autoupdate", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(200, "application/json", generateOwieStatusJson());

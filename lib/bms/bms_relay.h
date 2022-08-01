@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "filter.h"
+#include "packet_tracker.h"
 
 class Packet;
 
@@ -116,6 +117,8 @@ class BmsRelay {
   }
   bool isBatteryOvercharged() { return last_status_byte_ & 8; }
 
+  const PacketTracker& getPacketTracker() const { return packet_tracker_;}
+
  private:
   static constexpr float CURRENT_SCALER = 0.055;
   void processNextByte();
@@ -149,6 +152,7 @@ class BmsRelay {
   const Source source_;
   const Sink sink_;
   const Millis millis_;
+  PacketTracker packet_tracker_;
 
   void bmsStatusParser(Packet& p);
   void bmsSerialParser(Packet& p);

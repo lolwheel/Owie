@@ -20,14 +20,15 @@ inline int16_t int16FromNetworkOrder(const void* const p) {
 int openCircuitSocFromCellVoltage(uint16_t cellVoltageMillivolts) {
   static constexpr uint16_t lookupTableRangeMinMv = 2762;
   static constexpr uint16_t lookupTableRangeMaxMv = 4140;
-  static uint8_t lookupTable[11] = {0, 0, 0, 2, 4, 11, 26, 44, 61, 78, 100};
+  static uint8_t LOOKUP_TABLE[11] = {0, 0, 0, 2, 4, 11, 26, 44, 61, 78, 100};
+  static constexpr int LOOKUP_TABLE_SIZE = (sizeof(LOOKUP_TABLE)/sizeof(*LOOKUP_TABLE));
   static constexpr uint16_t range = lookupTableRangeMaxMv - lookupTableRangeMinMv;
-  static constexpr uint16_t stepSize = range / ((sizeof(lookupTable)/sizeof(*lookupTable)) - 1);
+  static constexpr uint16_t stepSize = range / (LOOKUP_TABLE_SIZE - 1);
   cellVoltageMillivolts = clamp<uint16_t>(cellVoltageMillivolts - lookupTableRangeMinMv, 0, range);
-  int leftIndex = cellVoltageMillivolts / stepSize;
+  int leftIndex = clamp<int>(cellVoltageMillivolts / stepSize, 0, LOOKUP_TABLE_SIZE - 1);
   int rightIndex = leftIndex + 1;
-  int leftValue = lookupTable[leftIndex];
-  int rightValue = lookupTable[rightIndex];
+  int leftValue = LOOKUP_TABLE[leftIndex];
+  int rightValue = LOOKUP_TABLE[rightIndex];
   return leftValue + (rightValue - leftValue) * (cellVoltageMillivolts % stepSize) / stepSize;
 }
 

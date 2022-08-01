@@ -1,7 +1,6 @@
 #include <Arduino.h>
 
-#include "bms_relay.h"
-#include "charging_tracker.h"
+#include "bms_relay.h" -
 #include "network.h"
 #include "packet.h"
 #include "settings.h"
@@ -25,35 +24,6 @@ HardwareSerial Serial(0);
 }  // namespace
 
 BmsRelay *relay;
-ChargingTracker *chargingTracker;
-
-void maybeSaveCharingDataToSettings(ChargingTracker *) {
-  static_assert(sizeof(ChargingDataMsg::voltage_offsets) ==
-                sizeof(ChargingDataMsg::mah_offsets));
-  const auto &chargingPoints = chargingTracker->getChargingPoints();
-
-  if (chargingPoints.size() < 2 ||
-      (Settings->has_charging_data &&
-       Settings->charging_data.voltage_offsets_count > chargingPoints.size())) {
-    return;
-  }
-  ChargingDataMsg &proto = Settings->charging_data;
-  Settings->has_charging_data = true;
-  const uint32_t numPoints = min<uint32_t>(
-      (sizeof(proto.voltage_offsets) / sizeof(*proto.voltage_offsets)),
-      chargingPoints.size());
-  proto.mah_offsets_count = proto.voltage_offsets_count = numPoints;
-  proto.mah_offsets[0] = chargingPoints[0].totalMah;
-  proto.voltage_offsets[0] = chargingPoints[0].millivolts;
-  for (unsigned int i = 1; i < numPoints; i++) {
-    proto.mah_offsets[i] =
-        chargingPoints[i].totalMah - chargingPoints[i - 1].totalMah;
-    proto.voltage_offsets[i] =
-        chargingPoints[i].millivolts - chargingPoints[i - 1].millivolts;
-  }
-  proto.tracked_cell_index = chargingTracker->getTrackedCellIndex();
-  saveSettings();
-}
 
 void bms_setup() {
   relay = new BmsRelay([]() { return Serial.read(); },
@@ -64,9 +34,6 @@ void bms_setup() {
                          }
                        },
                        millis);
-  chargingTracker = new ChargingTracker(
-      relay, 50, /** make new datapoint after every 50 mah of charge*/
-      maybeSaveCharingDataToSettings);
   Serial.begin(115200);
 
   // The B line idle is 0
