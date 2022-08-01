@@ -6,6 +6,14 @@
 
 namespace {
 const uint8_t PREAMBLE[] = {0xFF, 0x55, 0xAA};
+
+unsigned long packetTypeTimeout(int type) {
+  if (type == 0 || type == 5) {
+    return 500;
+  }
+  return 3000;
+}
+
 }  // namespace
 
 BmsRelay::BmsRelay(const Source& source, const Sink& sink, const Millis& millis)
@@ -17,10 +25,26 @@ void BmsRelay::loop() {
   while (true) {
     int byte = source_();
     if (byte < 0) {
+      maybeReplayPackets();
       return;
     }
     sourceBuffer_.push_back(byte);
     processNextByte();
+  }
+}
+
+void BmsRelay::maybeReplayPackets() {
+  const unsigned long now_millis = millis_();
+  for(const IndividualPacketStat& stat : packet_tracker_.getIndividualPacketStats()) {
+    if (stat.total_num < 1) {
+      continue;
+    }
+    if ((now_millis - stat.last_packet_millis) < packetTypeTimeout(stat.id)) {
+      continue;
+    }
+    std::vector<uint8_t> data_copy(stat.last_seen_valid_packet);
+    Packet p(&data_copy[0], data_copy.size());
+    ingestPacket(p);
   }
 }
 
@@ -63,6 +87,11 @@ void BmsRelay::processNextByte() {
     return;
   }
   Packet p(sourceBuffer_.data(), len);
+  ingestPacket(p);
+  sourceBuffer_.clear();
+}
+
+void BmsRelay::ingestPacket(Packet& p) {
   packet_tracker_.processPacket(p);
   for (auto& callback : receivedPacketCallbacks_) {
     callback(this, &p);
@@ -87,5 +116,4 @@ void BmsRelay::processNextByte() {
       sink_(p.start()[i]);
     }
   }
-  sourceBuffer_.clear();
 }

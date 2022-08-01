@@ -123,6 +123,8 @@ class BmsRelay {
   static constexpr float CURRENT_SCALER = 0.055;
   void processNextByte();
   void purgeUnknownData();
+  void maybeReplayPackets();
+  void ingestPacket(Packet& p);
 
   std::vector<PacketCallback> receivedPacketCallbacks_;
   std::vector<PacketCallback> forwardedPacketCallbacks_;

@@ -30,11 +30,11 @@ void PacketTracker::processPacket(const Packet& packet) {
 
   if (stat->total_num++ == 0) {
     stat->id = type;
-    stat->last_packet_millis_ = now;
+    stat->last_packet_millis = now;
     return;
   }
   // Shouldn't happen but let's guard against.
-  if (now < stat->last_packet_millis_) {
+  if (now < stat->last_packet_millis) {
     return;
   }
   // DO_NOT_SUBMIT
@@ -43,9 +43,8 @@ void PacketTracker::processPacket(const Packet& packet) {
 //     return;
 //   }
   // END DO NOT SUBMIT
-  int32_t newPeriod = float(now - stat->last_packet_millis_);
-  stat->mean_and_dev_.add_value(newPeriod);
-  stat->last_packet_millis_ = now;
+  stat->mean_and_dev_.add_value(float(now - stat->last_packet_millis));
+  stat->last_packet_millis = now;
 }
 
 void PacketTracker::unknownBytes(int num) {

@@ -37,7 +37,12 @@ void addMockData(const std::vector<uint8_t>& data) {
 }
 
 void expectDataOut(const std::vector<uint8_t>& expected) {
-  TEST_ASSERT_TRUE(expected == mockDataOut);
+  TEST_ASSERT_EQUAL(expected.size(), mockDataOut.size());
+  if (expected.size() == 0) {
+    return;
+  }
+  TEST_ASSERT_EQUAL_UINT8_ARRAY(&expected[0], &mockDataOut[0], expected.size());
+  mockDataOut.clear();
 }
 
 void testUnknownBytesGetsForwardedImmediately(void) {
@@ -157,11 +162,40 @@ void testBlocksStatusPacketsUnlessWarning() {
   addMockData({0xff, 0x55, 0xaa, 0x0, 0x0, 0x1, 0xFE, 0x1});
   relay->loop();
   expectDataOut({0x1});
-  mockDataOut.clear();
   // Charging bit is present, expect all data to go through.
   addMockData({0xff, 0x55, 0xaa, 0x0, 0x21, 0x2, 0x1F, 0x1});
   relay->loop();
   expectDataOut({0xff, 0x55, 0xaa, 0x0, 0x21, 0x2, 0x1F, 0x1});
+}
+
+void testPacketReplay() {
+  addMockData({0xff, 0x55, 0xaa, 0x0, 0x21, 0x2, 0x1F, 0x1});
+  addMockData({0xff, 0x55, 0xaa, 0x08, 0x06, 0x02, 0x0c});
+  timeMillis = 0;
+  relay->loop();
+  expectDataOut({0xff, 0x55, 0xaa, 0x0, 0x21, 0x2, 0x1F, 0x1, 0xff, 0x55, 0xaa,
+                 0x08, 0x06, 0x02, 0x0c});
+  // Under the status packet timeout limit
+  timeMillis = 499;
+  relay->loop();
+  expectDataOut({});
+  // Over the timeout, trigger replay
+  timeMillis = 501;
+  relay->loop();
+
+  // Make sure that replayed packet reset the stats so we don't
+  // end up spamming the controller
+  expectDataOut({0xff, 0x55, 0xaa, 0x0, 0x21, 0x2, 0x1F});
+  timeMillis = 601;
+  relay->loop();
+  expectDataOut({});
+
+  // Rewind time to far future to trigger both slow and fast packet
+  // replay.
+  timeMillis = 10000;
+  relay->loop();
+  expectDataOut({0xff, 0x55, 0xaa, 0x0, 0x21, 0x2, 0x1F, 0xff, 0x55, 0xaa, 0x08,
+                 0x06, 0x02, 0x0c});
 }
 
 int main(int argc, char** argv) {
@@ -175,6 +209,7 @@ int main(int argc, char** argv) {
   RUN_TEST(testCurrentParsing);
   RUN_TEST(testCellVoltageParsing);
   RUN_TEST(testBlocksStatusPacketsUnlessWarning);
+  RUN_TEST(testPacketReplay);
   UNITY_END();
 
   return 0;
