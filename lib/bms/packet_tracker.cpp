@@ -28,7 +28,7 @@ void PacketTracker::processPacket(const Packet& packet) {
   stat->last_seen_valid_packet.resize(packet.len());
   memcpy(&stat->last_seen_valid_packet[0], packet.start(), packet.len());
 
-  if (stat->total_num++ == 1) {
+  if (stat->total_num++ == 0) {
     stat->id = type;
     stat->last_packet_millis_ = now;
     return;
