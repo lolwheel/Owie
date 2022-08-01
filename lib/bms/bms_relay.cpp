@@ -44,6 +44,10 @@ void BmsRelay::maybeReplayPackets() {
     }
     std::vector<uint8_t> data_copy(stat.last_seen_valid_packet);
     Packet p(&data_copy[0], data_copy.size());
+    // Temporary workaround not to re-broadcast shutdown packet.
+    if (p.getType() == 11) {
+      return;
+    }
     ingestPacket(p);
   }
 }
