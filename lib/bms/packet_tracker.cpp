@@ -37,12 +37,6 @@ void PacketTracker::processPacket(const Packet& packet) {
   if (now < stat->last_packet_millis) {
     return;
   }
-  // DO_NOT_SUBMIT
-//   if (now - stat->last_packet_millis_ < 4000) {
-//     const_cast<Packet*>(&packet)->setShouldForward(false);
-//     return;
-//   }
-  // END DO NOT SUBMIT
   stat->mean_and_dev_.add_value(float(now - stat->last_packet_millis));
   stat->last_packet_millis = now;
 }
