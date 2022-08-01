@@ -64,7 +64,7 @@ void testindividualStatsCalculation() {
 
 int main(int argc, char** argv) {
   UNITY_BEGIN();
-  //RUN_TEST(testGlobalTracking);
+  RUN_TEST(testGlobalTracking);
   RUN_TEST(testindividualStatsCalculation);
   UNITY_END();
 
