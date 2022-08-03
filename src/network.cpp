@@ -57,6 +57,20 @@ String uptimeString() {
   return ret;
 }
 
+String getTempString() {
+  const int8_t *thermTemps = relay->getTemperaturesCelsius();
+  String temps;
+  temps.reserve(256);
+  temps.concat("<tr>");
+  for (int i = 0; i < 5; i++) {
+    temps.concat("<td>");
+    temps.concat(thermTemps[i]);
+    temps.concat("</td>");
+  }
+  temps.concat("<tr>");
+  return temps;
+}
+
 String generateOwieStatusJson() {
   DynamicJsonDocument status(1024);
   String jsonOutput;
@@ -73,17 +87,6 @@ String generateOwieStatusJson() {
     out.concat("<tr>");
   }
 
-  const int8_t *thermTemps = relay->getTemperaturesCelsius();
-  String temps;
-  temps.reserve(256);
-  temps.concat("<tr>");
-  for (int i = 0; i < 5; i++) {
-    temps.concat("<td>");
-    temps.concat(thermTemps[i]);
-    temps.concat("</td>");
-  }
-  temps.concat("<tr>");
-
   status["TOTAL_VOLTAGE"] =
       String(relay->getTotalVoltageMillivolts() / 1000.0, 2) + "v";
   status["CURRENT_AMPS"] = String(relay->getCurrentInAmps(), 1) + " Amps";
@@ -94,7 +97,7 @@ String generateOwieStatusJson() {
       String(relay->getRegeneratedChargeMah()) + " mAh";
   status["UPTIME"] = uptimeString();
   status["CELL_VOLTAGE_TABLE"] = out;
-  status["TEMPERATURE_TABLE"] = temps;
+  status["TEMPERATURE_TABLE"] = getTempString();
 
   serializeJson(status, jsonOutput);
   return jsonOutput;
@@ -156,17 +159,7 @@ String templateProcessor(const String &var) {
     }
     return out;
   } else if (var == "TEMPERATURE_TABLE") {
-    const int8_t *thermTemps = relay->getTemperaturesCelsius();
-    String temps;
-    temps.reserve(256);
-    temps.concat("<tr>");
-    for (int i = 0; i < 5; i++) {
-      temps.concat("<td>");
-      temps.concat(thermTemps[i]);
-      temps.concat("</td>");
-    }
-    temps.concat("<tr>");
-    return temps;
+    return getTempString();
   } else if (var == "AP_PASSWORD") {
     return Settings->ap_self_password;
   } else if (var == "AP_SELF_NAME") {
