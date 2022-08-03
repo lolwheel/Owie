@@ -18,18 +18,21 @@ inline int16_t int16FromNetworkOrder(const void* const p) {
 }
 
 int openCircuitSocFromCellVoltage(uint16_t cellVoltageMillivolts) {
-  static constexpr uint16_t lookupTableRangeMinMv = 2762;
-  static constexpr uint16_t lookupTableRangeMaxMv = 4140;
-  static uint8_t LOOKUP_TABLE[11] = {0, 0, 0, 2, 4, 11, 26, 44, 61, 78, 100};
-  static constexpr int LOOKUP_TABLE_SIZE = (sizeof(LOOKUP_TABLE)/sizeof(*LOOKUP_TABLE));
-  static constexpr uint16_t range = lookupTableRangeMaxMv - lookupTableRangeMinMv;
-  static constexpr uint16_t stepSize = range / (LOOKUP_TABLE_SIZE - 1);
-  cellVoltageMillivolts = clamp<uint16_t>(cellVoltageMillivolts - lookupTableRangeMinMv, 0, range);
-  int leftIndex = clamp<int>(cellVoltageMillivolts / stepSize, 0, LOOKUP_TABLE_SIZE - 1);
-  int rightIndex = leftIndex + 1;
-  int leftValue = LOOKUP_TABLE[leftIndex];
-  int rightValue = LOOKUP_TABLE[rightIndex];
-  return leftValue + (rightValue - leftValue) * (cellVoltageMillivolts % stepSize) / stepSize;
+  // Formula to go from cell voltage to % battery, if V > 2.95: 427 - 304x + 54x^2
+  // This comes from fitting a curve manually to the energy vs voltage graph for a VTC6 found at the link below. 
+  // 0.2A curve used since this is closest to an open circuit.
+  // https://lygte-info.dk/pic/Batteries2012/Sony%20US18650VTC6%203000mAh%20(Green)/Sony%20US18650VTC6%203000mAh%20(Green)-Energy.png
+  float_t cellVoltage = static_cast< float_t >(cellVoltageMillivolts) / 1000;
+  if (cellVoltage < 2.95) {
+    return 0;
+  }
+  if (cellVoltage > 4.185) {
+    return 100;
+  }
+  else {
+    float battery_percentage = 427 - (304 * cellVoltage) + (54 * cellVoltage * cellVoltage);
+    return floor(battery_percentage);
+  }
 }
 
 }  // namespace
