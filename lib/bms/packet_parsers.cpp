@@ -26,7 +26,7 @@ int openCircuitSocFromCellVoltage(uint16_t cellVoltageMillivolts) {
   static constexpr uint16_t range = lookupTableRangeMaxMv - lookupTableRangeMinMv;
   static constexpr uint16_t LOOKUP_TABLE_STEPS = 30;
   static constexpr uint16_t stepSize = range / LOOKUP_TABLE_STEPS; // 50
-  static uint8_t LOOKUP_TABLE[LOOKUP_TABLE_STEPS + 2] = {0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 7, 8, 11, 14, 16, 18, 19, 25, 30, 33, 37, 43, 48, 53, 60, 67, 71, 76, 82, 92, 97, 100};
+  static uint8_t LOOKUP_TABLE[LOOKUP_TABLE_STEPS + 2] = {0, 0, 0, 0, 1, 2, 3, 4, 5, 7, 8, 11, 14, 16, 18, 19, 25, 30, 33, 37, 43, 48, 53, 60, 67, 71, 76, 82, 92, 97, 100, 100};
   int voltage_scalar = clamp<uint16_t>(cellVoltageMillivolts - lookupTableRangeMinMv, 0, range);
   int leftIndex = clamp<int>(voltage_scalar / stepSize, 0, LOOKUP_TABLE_STEPS);
   int rightIndex = leftIndex + 1;
