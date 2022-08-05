@@ -18,18 +18,21 @@ inline int16_t int16FromNetworkOrder(const void* const p) {
 }
 
 int openCircuitSocFromCellVoltage(uint16_t cellVoltageMillivolts) {
-  static constexpr uint16_t lookupTableRangeMinMv = 2762;
-  static constexpr uint16_t lookupTableRangeMaxMv = 4140;
-  static uint8_t LOOKUP_TABLE[11] = {0, 0, 0, 2, 4, 11, 26, 44, 61, 78, 100};
-  static constexpr int LOOKUP_TABLE_SIZE = (sizeof(LOOKUP_TABLE)/sizeof(*LOOKUP_TABLE));
+  if (cellVoltageMillivolts < 2700) {
+    return 0;
+  }
+  static constexpr uint16_t lookupTableRangeMinMv = 2700;
+  static constexpr uint16_t lookupTableRangeMaxMv = 4200;
   static constexpr uint16_t range = lookupTableRangeMaxMv - lookupTableRangeMinMv;
-  static constexpr uint16_t stepSize = range / (LOOKUP_TABLE_SIZE - 1);
-  cellVoltageMillivolts = clamp<uint16_t>(cellVoltageMillivolts - lookupTableRangeMinMv, 0, range);
-  int leftIndex = clamp<int>(cellVoltageMillivolts / stepSize, 0, LOOKUP_TABLE_SIZE - 1);
+  static constexpr uint16_t LOOKUP_TABLE_STEPS = 30;
+  static constexpr uint16_t stepSize = range / LOOKUP_TABLE_STEPS; // 50
+  static uint8_t LOOKUP_TABLE[LOOKUP_TABLE_STEPS + 2] = {0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 7, 8, 11, 14, 16, 18, 19, 25, 30, 33, 37, 43, 48, 53, 60, 67, 71, 76, 82, 92, 97, 100};
+  int voltage_scalar = clamp<uint16_t>(cellVoltageMillivolts - lookupTableRangeMinMv, 0, range);
+  int leftIndex = clamp<int>(voltage_scalar / stepSize, 0, LOOKUP_TABLE_STEPS);
   int rightIndex = leftIndex + 1;
   int leftValue = LOOKUP_TABLE[leftIndex];
   int rightValue = LOOKUP_TABLE[rightIndex];
-  return leftValue + (rightValue - leftValue) * (cellVoltageMillivolts % stepSize) / stepSize;
+  return leftValue + (rightValue - leftValue) * (voltage_scalar % stepSize) / stepSize;
 }
 
 }  // namespace
