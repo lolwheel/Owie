@@ -17,19 +17,21 @@ inline int16_t int16FromNetworkOrder(const void* const p) {
   return ((uint16_t)(*charPointer)) << 8 | *(charPointer + 1);
 }
 
-int openCircuitSocFromCellVoltage(uint16_t cellVoltageMillivolts) {
-  static constexpr uint16_t lookupTableRangeMinMv = 2762;
-  static constexpr uint16_t lookupTableRangeMaxMv = 4140;
+int openCircuitSocFromCellVoltage(int cellVoltageMillivolts) {
+  static constexpr int LOOKUP_TABLE_RANGE_MIN_MV = 2762;
+  static constexpr int LOOKUP_TABLE_RANGE_MAX_MV = 4140;
   static uint8_t LOOKUP_TABLE[11] = {0, 0, 0, 2, 4, 11, 26, 44, 61, 78, 100};
   static constexpr int LOOKUP_TABLE_SIZE = (sizeof(LOOKUP_TABLE)/sizeof(*LOOKUP_TABLE));
-  static constexpr uint16_t range = lookupTableRangeMaxMv - lookupTableRangeMinMv;
-  static constexpr uint16_t stepSize = range / (LOOKUP_TABLE_SIZE - 1);
-  cellVoltageMillivolts = clamp<uint16_t>(cellVoltageMillivolts - lookupTableRangeMinMv, 0, range);
-  int leftIndex = clamp<int>(cellVoltageMillivolts / stepSize, 0, LOOKUP_TABLE_SIZE - 1);
-  int rightIndex = leftIndex + 1;
-  int leftValue = LOOKUP_TABLE[leftIndex];
-  int rightValue = LOOKUP_TABLE[rightIndex];
-  return leftValue + (rightValue - leftValue) * (cellVoltageMillivolts % stepSize) / stepSize;
+  static constexpr int RANGE = LOOKUP_TABLE_RANGE_MAX_MV - LOOKUP_TABLE_RANGE_MIN_MV;
+  // (RANGE - 1) upper limit effectively clamps the leftIndex below to (LOOKUP_TABLE_SIZE - 2)
+  cellVoltageMillivolts = clamp(cellVoltageMillivolts - LOOKUP_TABLE_RANGE_MIN_MV, 0, RANGE - 1);
+  float floatIndex = float(cellVoltageMillivolts) * (LOOKUP_TABLE_SIZE - 1) / RANGE;
+  const int leftIndex = int(floatIndex);
+  const float fractional = floatIndex - leftIndex;
+  const int rightIndex = leftIndex + 1;
+  const int leftValue = LOOKUP_TABLE[leftIndex];
+  const int rightValue = LOOKUP_TABLE[rightIndex];
+  return leftValue + round((rightValue - leftValue) * fractional);
 }
 
 }  // namespace
