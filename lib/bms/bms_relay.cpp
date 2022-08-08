@@ -1,15 +1,20 @@
 #include "bms_relay.h"
 
 #include <cstring>
+#include <limits>
 
 #include "packet.h"
 
 namespace {
 const uint8_t PREAMBLE[] = {0xFF, 0x55, 0xAA};
 
-unsigned long packetTypeTimeout(int type) {
+unsigned long packetTypeRebroadcastTimeout(int type) {
   if (type == 0 || type == 5) {
     return 500;
+  }
+  // Never rebroadcast the shutdown packet.
+  if (type == 11) {
+    return std::numeric_limits<unsigned long>::max();
   }
   return 3000;
 }
@@ -39,15 +44,11 @@ void BmsRelay::maybeReplayPackets() {
     if (stat.total_num < 1) {
       continue;
     }
-    if ((now_millis - stat.last_packet_millis) < packetTypeTimeout(stat.id)) {
+    if ((now_millis - stat.last_packet_millis) < packetTypeRebroadcastTimeout(stat.id)) {
       continue;
     }
     std::vector<uint8_t> data_copy(stat.last_seen_valid_packet);
     Packet p(&data_copy[0], data_copy.size());
-    // Temporary workaround not to re-broadcast shutdown packet.
-    if (p.getType() == 11) {
-      return;
-    }
     ingestPacket(p);
   }
 }
