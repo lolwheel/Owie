@@ -21,7 +21,7 @@ AsyncWebSocket ws("/rawdata");
 const String defaultPass("****");
 BmsRelay *relay;
 
-const String owie_version = "1.4.2";
+const String owie_version = "1.4.3";
 
 String renderPacketStatsTable() {
   String result(
