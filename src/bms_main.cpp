@@ -26,6 +26,20 @@ HardwareSerial Serial(0);
 BmsRelay *relay;
 
 void bms_setup() {
+
+//If monitoring-only is enabled the Source function reads from serial and writes the byte straight out before returning it for OWIE to process it.
+//The Sink source does nothing since data has already been written.
+if (Settings->monitoring_only_enabled) {
+  relay = new BmsRelay([]() { 
+                            int byte = Serial.read(); 
+                            Serial.write(byte);
+                            return byte;
+                          },
+                      [](uint8_t b) {
+                        //DO NOTHING, WE DO NOT WANT TO CHANGE THE BMS DATA FOR PINTX.
+                      },
+                      millis);
+} else {
   relay = new BmsRelay([]() { return Serial.read(); },
                        [](uint8_t b) {
                          // This if statement is what implements locking.
@@ -34,6 +48,9 @@ void bms_setup() {
                          }
                        },
                        millis);
+}
+  
+ 
   Serial.begin(115200);
 
   // The B line idle is 0
