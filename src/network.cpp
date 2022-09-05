@@ -111,13 +111,17 @@ String generateOwieStatusJson() {
   status["CURRENT_AMPS"] = String(relay->getCurrentInAmps(), 1) + " Amps";
   status["BMS_SOC"] = String(relay->getBmsReportedSOC()) + "%";
   status["OVERRIDDEN_SOC"] = String(relay->getOverriddenSOC()) + "%";
-  status["CHARGE_STATE_MAH"] = String(Settings->mah_max + relay->getChargeStateMah()) + " mAh";
+  status["REMAINING_CHARGE"] = String(Settings->mah_max + relay->getChargeStateMah()) + " mAh";
+  status["CHARGE_STATE_MAH"] = String(relay->getChargeStateMah()) + " mAh";
+  status["BATTERY_MAH"] = String(Settings->mah_max) + " mAh";
   status["USED_CHARGE_MAH"] = String(relay->getUsedChargeMah()) + " mAh";
   status["REGENERATED_CHARGE_MAH"] =
       String(relay->getRegeneratedChargeMah()) + " mAh";
   status["UPTIME"] = uptimeString();
   status["CELL_VOLTAGE_TABLE"] = out;
   status["TEMPERATURE_TABLE"] = getTempString();
+
+
 
   serializeJson(status, jsonOutput);
   return jsonOutput;
@@ -144,6 +148,10 @@ String templateProcessor(const String &var) {
   } else if (var == "USED_CHARGE_MAH") {
     return String(relay->getUsedChargeMah());
   } else if (var == "CHARGE_STATE_MAH") {
+    return String(relay->getChargeStateMah());
+  } else if (var == "BATTERY_MAH") {
+    return String(Settings->mah_max);
+  } else if (var == "REMAINING_CHARGE") {
     return String(Settings->mah_max + relay->getChargeStateMah());
   } else if (var == "REGENERATED_CHARGE_MAH") {
     return String(relay->getRegeneratedChargeMah());
@@ -215,9 +223,8 @@ String templateProcessor(const String &var) {
       opts.concat("</option>");
     }
     return opts;
-  } else if (var == "BATTERY_MAH") {
-    return String(Settings->mah_max);
   }
+
   return "<script>alert('UNKNOWN PLACEHOLDER')</script>";
 }
 
@@ -263,6 +270,10 @@ void setupWebServer(BmsRelay *bmsRelay) {
 
   webServer.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send_P(200, "text/html", INDEX_HTML_PROGMEM_ARRAY, INDEX_HTML_SIZE,
+                    templateProcessor);
+  });
+  webServer.on("/diagnostics", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send_P(200, "text/html", DIAGNOSTICS_HTML_PROGMEM_ARRAY, DIAGNOSTICS_HTML_SIZE,
                     templateProcessor);
   });
   webServer.on("/styles.css", HTTP_GET, [](AsyncWebServerRequest *request) {
