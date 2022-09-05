@@ -5,6 +5,7 @@
 #include <functional>
 #include <limits>
 #include <vector>
+#include <cmath>
 
 #include "filter.h"
 #include "packet_tracker.h"
@@ -107,6 +108,50 @@ class BmsRelay {
   int32_t getRegeneratedChargeMah() {
     return current_times_milliseconds_regenerated_ * CURRENT_SCALER / 3600;
   }
+  // Regen pushes negative, use pushes positive
+  int32_t getNetUsedChargeMah() {
+    return getUsedChargeMah() - getRegeneratedChargeMah();
+  }
+  // Regen pushes positive, use pushes negative.  mah_state_ of 0 should be full battery.
+  int32_t getChargeStateMah() {
+    return mah_state_ - getNetUsedChargeMah();
+  }
+  void setChargeStateMah(int32_t mah) {
+    mah_state_ = mah;
+  }
+  void setMaxMah(int32_t mah) {
+    mah_max_ = mah;
+  }
+
+  int32_t clamp(int32_t x, int32_t lower, int32_t upper) {
+    return std::min(upper, std::max(x, lower));
+  }
+
+  int32_t openCircuitSocFromCellVoltage(int cellVoltageMillivolts) {
+    static constexpr int LOOKUP_TABLE_RANGE_MIN_MV = 2700;
+    static constexpr int LOOKUP_TABLE_RANGE_MAX_MV = 4200;
+    static uint8_t LOOKUP_TABLE[31] = {0, 0, 0, 0, 1, 2, 3, 4, 5, 7, 8, 11, 14, 16, 18, 19, 25, 30, 33, 37, 43, 48, 53, 60, 67, 71, 76, 82, 92, 97, 100};
+    static constexpr int LOOKUP_TABLE_SIZE = (sizeof(LOOKUP_TABLE)/sizeof(*LOOKUP_TABLE));
+    static constexpr int RANGE = LOOKUP_TABLE_RANGE_MAX_MV - LOOKUP_TABLE_RANGE_MIN_MV;
+    // (RANGE - 1) upper limit effectively clamps the leftIndex below to (LOOKUP_TABLE_SIZE - 2)
+    cellVoltageMillivolts = clamp(cellVoltageMillivolts - LOOKUP_TABLE_RANGE_MIN_MV, 0, RANGE - 1);
+    float floatIndex = float(cellVoltageMillivolts) * (LOOKUP_TABLE_SIZE - 1) / RANGE;
+    const int leftIndex = int(floatIndex);
+    const float fractional = floatIndex - leftIndex;
+    const int rightIndex = leftIndex + 1;
+    const int leftValue = LOOKUP_TABLE[leftIndex];
+    const int rightValue = LOOKUP_TABLE[rightIndex];
+    return leftValue + round((rightValue - leftValue) * fractional);
+  }
+
+  int32_t batteryStateEstimate() {
+    return (1 - (float(openCircuitSocFromCellVoltage(filtered_lowest_cell_voltage_millivolts_)) / 100)) * mah_max_ * -1; // -1 because 0 is full charge
+  }
+
+  int32_t batteryCapacityEstimate() {
+    // Only call this on a shutdown event, battery load must be ~0 (no current used)
+    return round(float(abs(getChargeStateMah())) / (float(100 - openCircuitSocFromCellVoltage(filtered_lowest_cell_voltage_millivolts_)) / 100));
+  }
 
   bool isCharging() { return last_status_byte_ & 0x20; }
   bool isBatteryEmpty() { return last_status_byte_ & 0x4; }
@@ -151,6 +196,8 @@ class BmsRelay {
   int32_t current_times_milliseconds_used_ = 0;
   int32_t current_times_milliseconds_regenerated_ = 0;
   uint8_t last_status_byte_ = 0;
+  int32_t mah_state_ = 0;
+  int32_t mah_max_ = 0;
   const Source source_;
   const Sink sink_;
   const Millis millis_;
@@ -163,6 +210,8 @@ class BmsRelay {
   void cellVoltageParser(Packet& p);
   void temperatureParser(Packet& p);
   void powerOffParser(Packet& p);
+  int socFromMahUsed(int maxMah);
+  int consumedSoc(int maxMah);
 };
 
 #endif  // BMS_RELAY_H

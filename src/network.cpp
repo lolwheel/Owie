@@ -111,6 +111,7 @@ String generateOwieStatusJson() {
   status["CURRENT_AMPS"] = String(relay->getCurrentInAmps(), 1) + " Amps";
   status["BMS_SOC"] = String(relay->getBmsReportedSOC()) + "%";
   status["OVERRIDDEN_SOC"] = String(relay->getOverriddenSOC()) + "%";
+  status["CHARGE_STATE_MAH"] = String(Settings->mah_max + relay->getChargeStateMah()) + " mAh";
   status["USED_CHARGE_MAH"] = String(relay->getUsedChargeMah()) + " mAh";
   status["REGENERATED_CHARGE_MAH"] =
       String(relay->getRegeneratedChargeMah()) + " mAh";
@@ -142,6 +143,8 @@ String templateProcessor(const String &var) {
     return String(relay->getOverriddenSOC());
   } else if (var == "USED_CHARGE_MAH") {
     return String(relay->getUsedChargeMah());
+  } else if (var == "CHARGE_STATE_MAH") {
+    return String(Settings->mah_max + relay->getChargeStateMah());
   } else if (var == "REGENERATED_CHARGE_MAH") {
     return String(relay->getRegeneratedChargeMah());
   } else if (var == "OWIE_version") {
@@ -212,6 +215,8 @@ String templateProcessor(const String &var) {
       opts.concat("</option>");
     }
     return opts;
+  } else if (var == "BATTERY_MAH") {
+    return String(Settings->mah_max);
   }
   return "<script>alert('UNKNOWN PLACEHOLDER')</script>";
 }
@@ -312,6 +317,7 @@ void setupWebServer(BmsRelay *bmsRelay) {
         const auto apSelfPassword = request->getParam("pw", true);
         const auto apSelfName = request->getParam("apselfname", true);
         const auto wifiPower = request->getParam("wifipower", true);
+        const auto batteryMah = request->getParam("battery_mah", true);
         if (apSelfPassword == nullptr ||
             apSelfPassword->value().length() >
                 sizeof(Settings->ap_self_password) ||
@@ -342,6 +348,14 @@ void setupWebServer(BmsRelay *bmsRelay) {
           return;
         }
         Settings->wifi_power = wifiPower->value().toInt();
+        // Set the battery capacity
+        if (batteryMah == nullptr || batteryMah->value().toInt() < 0) {
+          request->send(
+              400, "text/html",
+              "Battery capacity must be a positive number in mAh");
+              return;
+        }
+        Settings->mah_max = batteryMah->value().toInt();
         snprintf(Settings->ap_self_password, sizeof(Settings->ap_self_password),
                  "%s", apSelfPassword->value().c_str());
         snprintf(Settings->ap_self_name, sizeof(Settings->ap_self_name), "%s",

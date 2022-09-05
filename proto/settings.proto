@@ -13,4 +13,6 @@ message SettingsMsg {
   bool is_locked = 9; // if the board is actively locked/parked
   bool locking_enabled = 10; // if the board locking functionality is enabled ('armed')
   reserved 11;
+  int32 mah_state = 12;
+  int32 mah_max = 13;
 }
