@@ -210,8 +210,8 @@ class BmsRelay {
   void cellVoltageParser(Packet& p);
   void temperatureParser(Packet& p);
   void powerOffParser(Packet& p);
-  int socFromMahUsed(int maxMah);
-  int consumedSoc(int maxMah);
+  int socFromMahUsed();
+  float consumedMahPct();
 };
 
 #endif  // BMS_RELAY_H

@@ -19,12 +19,13 @@ inline int16_t int16FromNetworkOrder(const void* const p) {
 
 }  // namespace
 
-int BmsRelay::consumedSoc(int maxMah) {
-  return round((float(-getChargeStateMah()) / float(maxMah)) * 100);
+float BmsRelay::consumedMahPct() {
+  return std::max(((float(-getChargeStateMah()) / float(mah_max_)) * 100.0), 0.0);
 }
 
-int BmsRelay::socFromMahUsed(int maxMah) {
-    return std::min(100 - consumedSoc(maxMah), 100);
+int BmsRelay::socFromMahUsed() {
+  float pct = 100 - consumedMahPct();
+  return round(0.8 * pct + 0.00202 * pct * pct); // Magic formula to go from Ah % to Wh %
 }
 
 
@@ -41,8 +42,15 @@ void BmsRelay::batteryPercentageParser(Packet& p) {
   }
   overridden_soc_percent_ =
       openCircuitSocFromCellVoltage(filtered_lowest_cell_voltage_millivolts_);
-  if (mah_max_ != 0 && overridden_soc_percent_ > 15) { // For the last 15%, switch over to voltage tracking
-    overridden_soc_percent_ = socFromMahUsed(mah_max_);
+  /* 
+   * If the user has a battery capacity set, consider tracking that way.
+   * For the last 15%, use voltage tracking.
+   *  - This prevents captain mogan at low voltage without having the SOC reach 0 first.
+   * For the first few %, track based off voltage
+   * - This prevents captain morgan due to overcharge without app warning.
+  */
+  if (mah_max_ != 0 && overridden_soc_percent_ > 15 && overridden_soc_percent_ <= 97) {
+    overridden_soc_percent_ = socFromMahUsed();
   }
   p.data()[0] = overridden_soc_percent_;
 }
