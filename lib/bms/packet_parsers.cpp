@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <cstdbool>
 
 #include "bms_relay.h"
 #include "packet.h"
@@ -133,12 +134,13 @@ void BmsRelay::cellVoltageParser(Packet& p) {
 
 
   // Correct the battery state if we dont have a full battery but think we do.
-  if (mah_state_ >= 0 && filtered_lowest_cell_voltage_millivolts_ < 4180) {
-    mah_state_ = batteryStateEstimate();
-  } 
+  bool not_full_correction = mah_state_ >= 0 && filtered_lowest_cell_voltage_millivolts_ < 4180;
   // If the battery is full, and we are not moving or charging, reset state.
-  if(filtered_lowest_cell_voltage_millivolts_ >= 4180 && getCurrentInAmps() >= -0.3 && mah_state_ != 0) {
-    setChargeStateMah(0);
+  bool notMovingOrCharging = getCurrentInAmps() >= -0.3 && getCurrentInAmps() <= 0.1;
+  bool full_batt_correction = filtered_lowest_cell_voltage_millivolts_ >= 4180 && notMovingOrCharging && mah_state_ != 0;
+
+  if (full_batt_correction || not_full_correction) {
+    setChargeStateMah(batteryStateEstimate());
   }
 }
 
