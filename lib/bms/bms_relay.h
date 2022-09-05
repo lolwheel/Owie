@@ -82,6 +82,14 @@ class BmsRelay {
    */
   int8_t getOverriddenSOC() { return overridden_soc_percent_; }
   /**
+   * @brief Battery percentage derived from voltage.
+   */
+  int8_t getVoltageSOC() { return voltage_soc_percent_; }
+  /**
+   * @brief Battery percentage derived from amperage.
+   */
+  int8_t getAmperageSOC() { return amperage_soc_percent_; }
+  /**
    * @brief Cell voltages in millivolts.
    * @return pointer to a 15 element array.
    */
@@ -184,6 +192,8 @@ class BmsRelay {
 
   int8_t bms_soc_percent_ = -1;
   int8_t overridden_soc_percent_ = -1;
+  int8_t voltage_soc_percent_ = -1;
+  int8_t amperage_soc_percent_ = -1;
   uint16_t cell_millivolts_[15] = {0};
   uint16_t total_voltage_millivolts_ = 0;
   LowPassFilter lowest_cell_voltage_filter_;

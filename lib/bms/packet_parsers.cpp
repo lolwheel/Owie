@@ -42,15 +42,17 @@ void BmsRelay::batteryPercentageParser(Packet& p) {
   }
   overridden_soc_percent_ =
       openCircuitSocFromCellVoltage(filtered_lowest_cell_voltage_millivolts_);
+  voltage_soc_percent_ = overridden_soc_percent_;
+  amperage_soc_percent_ = socFromMahUsed();
   /* 
-   * If the user has a battery capacity set, consider tracking that way.
+   * If the user has a battery capacity set, consider tracking with mAh.
    * For the last 15%, use voltage tracking.
    *  - This prevents captain mogan at low voltage without having the SOC reach 0 first.
    * For the first few %, track based off voltage
    * - This prevents captain morgan due to overcharge without app warning.
   */
   if (mah_max_ != 0 && overridden_soc_percent_ > 15 && overridden_soc_percent_ <= 97) {
-    overridden_soc_percent_ = socFromMahUsed();
+    overridden_soc_percent_ = amperage_soc_percent_;
   }
   p.data()[0] = overridden_soc_percent_;
 }

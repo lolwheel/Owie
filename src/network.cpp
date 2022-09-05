@@ -111,6 +111,8 @@ String generateOwieStatusJson() {
   status["CURRENT_AMPS"] = String(relay->getCurrentInAmps(), 1) + " Amps";
   status["BMS_SOC"] = String(relay->getBmsReportedSOC()) + "%";
   status["OVERRIDDEN_SOC"] = String(relay->getOverriddenSOC()) + "%";
+  status["VOLTAGE_SOC"] = String(relay->getVoltageSOC()) + "%";
+  status["AMPERAGE_SOC"] = String(relay->getAmperageSOC()) + "%";
   status["REMAINING_CHARGE"] = String(Settings->mah_max + relay->getChargeStateMah()) + " mAh";
   status["CHARGE_STATE_MAH"] = String(relay->getChargeStateMah()) + " mAh";
   status["BATTERY_MAH"] = String(Settings->mah_max) + " mAh";
@@ -145,6 +147,10 @@ String templateProcessor(const String &var) {
     return String(relay->getBmsReportedSOC());
   } else if (var == "OVERRIDDEN_SOC") {
     return String(relay->getOverriddenSOC());
+  } else if (var == "VOLTAGE_SOC") {
+    return String(relay->getVoltageSOC());
+  } else if (var == "AMPERAGE_SOC") {
+    return String(relay->getAmperageSOC());
   } else if (var == "USED_CHARGE_MAH") {
     return String(relay->getUsedChargeMah());
   } else if (var == "CHARGE_STATE_MAH") {
