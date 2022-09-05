@@ -123,11 +123,11 @@ void BmsRelay::cellVoltageParser(Packet& p) {
 
 
   // Correct the battery state if we dont have a full battery but think we do.
-  if (mah_state_ >= 0 && filtered_lowest_cell_voltage_millivolts_ < 4190) {
+  if (mah_state_ >= 0 && filtered_lowest_cell_voltage_millivolts_ < 4180) {
     mah_state_ = batteryStateEstimate();
   } 
   // If the battery is full, and we are not moving or charging, reset state.
-  if(filtered_lowest_cell_voltage_millivolts_ >= 4190 && getCurrentInAmps() > -0.2 && mah_state_ != 0) {
+  if(filtered_lowest_cell_voltage_millivolts_ >= 4180 && getCurrentInAmps() >= -0.3 && mah_state_ != 0) {
     setChargeStateMah(0);
   }
 }
