@@ -25,25 +25,6 @@
                 xhr.send();
             }
             reloadData();
-            const unlockBtn = document.getElementById("unlockButton");
-            if (!unlockBtn.dataset.locked) {
-                return;
-            }
-            unlockBtn.onclick = () => {
-                const xhr = new XMLHttpRequest();
-                xhr.open("GET", "/lock?unlock");
-                xhr.responseType = "text";
-                xhr.onload = () => {
-                    if (xhr.status === 200) {
-                        unlockBtn.innerHTML = "Unlocked! Restart your board to ride it.";
-                    } else {
-                        unlockBtn.innerHTML = "Error: " + xhr.status;
-                    }
-                };
-                unlockBtn.setAttribute("disabled", "1");
-                xhr.send();
-            };
-            unlockBtn.removeAttribute("style");
         });
     //# sourceURL=index.js
     </script>
@@ -74,8 +55,24 @@
                     <td id="OVERRIDDEN_SOC">%OVERRIDDEN_SOC%%%</td>
                 </tr>
                 <tr>
+                    <th>Voltage SOC:</th>
+                    <td id="VOLTAGE_SOC">%VOLTAGE_SOC%%%</td>
+                </tr>
+                <tr>
+                    <th>Amperage SOC:</th>
+                    <td id="AMPERAGE_SOC">%AMPERAGE_SOC%%%</td>
+                </tr>
+                <tr>
+                    <th>Battery Capacity:</th>
+                    <td id="BATTERY_MAH">%BATTERY_MAH% mAh</td>
+                </tr>
+                <tr>
                     <th>Est. Charge Remaining:</th>
                     <td id="REMAINING_CHARGE">%REMAINING_CHARGE% mAh</td>
+                </tr>
+                <tr>
+                    <th>Charge State:</th>
+                    <td id="CHARGE_STATE_MAH">%CHARGE_STATE_MAH% mAh</td>
                 </tr>
                 <tr>
                     <th>Used charge:</th>
@@ -107,14 +104,6 @@
                 </tr>
             </table>
             <hr>
-            <p></p>
-            <form action="/settings">
-                <button>Settings</button>
-            </form>
-            <p></p>
-            <button style="display:none" id="unlockButton" data-locked="%IS_LOCKED%">
-                Unlock Board
-            </button>
         </div>
         <div id="version" style="text-align:right;font-size:11px;">
             <hr>

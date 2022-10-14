@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <cstdbool>
 
 #include "bms_relay.h"
 #include "packet.h"
@@ -17,24 +18,17 @@ inline int16_t int16FromNetworkOrder(const void* const p) {
   return ((uint16_t)(*charPointer)) << 8 | *(charPointer + 1);
 }
 
-int openCircuitSocFromCellVoltage(int cellVoltageMillivolts) {
-  static constexpr int LOOKUP_TABLE_RANGE_MIN_MV = 2700;
-  static constexpr int LOOKUP_TABLE_RANGE_MAX_MV = 4200;
-  static uint8_t LOOKUP_TABLE[31] = {0, 0, 0, 0, 1, 2, 3, 4, 5, 7, 8, 11, 14, 16, 18, 19, 25, 30, 33, 37, 43, 48, 53, 60, 67, 71, 76, 82, 92, 97, 100};
-  static constexpr int LOOKUP_TABLE_SIZE = (sizeof(LOOKUP_TABLE)/sizeof(*LOOKUP_TABLE));
-  static constexpr int RANGE = LOOKUP_TABLE_RANGE_MAX_MV - LOOKUP_TABLE_RANGE_MIN_MV;
-  // (RANGE - 1) upper limit effectively clamps the leftIndex below to (LOOKUP_TABLE_SIZE - 2)
-  cellVoltageMillivolts = clamp(cellVoltageMillivolts - LOOKUP_TABLE_RANGE_MIN_MV, 0, RANGE - 1);
-  float floatIndex = float(cellVoltageMillivolts) * (LOOKUP_TABLE_SIZE - 1) / RANGE;
-  const int leftIndex = int(floatIndex);
-  const float fractional = floatIndex - leftIndex;
-  const int rightIndex = leftIndex + 1;
-  const int leftValue = LOOKUP_TABLE[leftIndex];
-  const int rightValue = LOOKUP_TABLE[rightIndex];
-  return leftValue + round((rightValue - leftValue) * fractional);
+}  // namespace
+
+float BmsRelay::consumedMahPct() {
+  return std::max(((float(-getChargeStateMah()) / float(mah_max_)) * 100.0), 0.0);
 }
 
-}  // namespace
+int BmsRelay::socFromMahUsed() {
+  float pct = 100 - consumedMahPct();
+  return round(0.8 * pct + 0.00202 * pct * pct); // Magic formula to go from Ah % to Wh %
+}
+
 
 void BmsRelay::batteryPercentageParser(Packet& p) {
   if (p.getType() != 3) {
@@ -49,6 +43,18 @@ void BmsRelay::batteryPercentageParser(Packet& p) {
   }
   overridden_soc_percent_ =
       openCircuitSocFromCellVoltage(filtered_lowest_cell_voltage_millivolts_);
+  voltage_soc_percent_ = overridden_soc_percent_;
+  amperage_soc_percent_ = socFromMahUsed();
+  /* 
+   * If the user has a battery capacity set, consider tracking with mAh.
+   * For the last 15%, use voltage tracking.
+   *  - This prevents captain mogan at low voltage without having the SOC reach 0 first.
+   * For the first few %, track based off voltage
+   * - This prevents captain morgan due to overcharge without app warning.
+  */
+  if (mah_max_ != 0 && overridden_soc_percent_ > 15 && overridden_soc_percent_ <= 97) {
+    overridden_soc_percent_ = amperage_soc_percent_;
+  }
   p.data()[0] = overridden_soc_percent_;
 }
 
@@ -125,6 +131,17 @@ void BmsRelay::cellVoltageParser(Packet& p) {
   }
   filtered_lowest_cell_voltage_millivolts_ =
       lowest_cell_voltage_filter_.step(min_voltage);
+
+
+  // Correct the battery state if we dont have a full battery but think we do.
+  bool not_full_correction = mah_state_ >= 0 && filtered_lowest_cell_voltage_millivolts_ < 4180;
+  // If the battery is full, and we are not moving or charging, reset state.
+  bool notMovingOrCharging = getCurrentInAmps() >= -0.3 && getCurrentInAmps() <= 0.1;
+  bool full_batt_correction = filtered_lowest_cell_voltage_millivolts_ >= 4180 && notMovingOrCharging && mah_state_ != 0;
+
+  if (full_batt_correction || not_full_correction) {
+    setChargeStateMah(batteryStateEstimate());
+  }
 }
 
 void BmsRelay::temperatureParser(Packet& p) {

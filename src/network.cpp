@@ -111,12 +111,19 @@ String generateOwieStatusJson() {
   status["CURRENT_AMPS"] = String(relay->getCurrentInAmps(), 1) + " Amps";
   status["BMS_SOC"] = String(relay->getBmsReportedSOC()) + "%";
   status["OVERRIDDEN_SOC"] = String(relay->getOverriddenSOC()) + "%";
+  status["VOLTAGE_SOC"] = String(relay->getVoltageSOC()) + "%";
+  status["AMPERAGE_SOC"] = String(relay->getAmperageSOC()) + "%";
+  status["REMAINING_CHARGE"] = String(Settings->mah_max + relay->getChargeStateMah()) + " mAh";
+  status["CHARGE_STATE_MAH"] = String(relay->getChargeStateMah()) + " mAh";
+  status["BATTERY_MAH"] = String(Settings->mah_max) + " mAh";
   status["USED_CHARGE_MAH"] = String(relay->getUsedChargeMah()) + " mAh";
   status["REGENERATED_CHARGE_MAH"] =
       String(relay->getRegeneratedChargeMah()) + " mAh";
   status["UPTIME"] = uptimeString();
   status["CELL_VOLTAGE_TABLE"] = out;
   status["TEMPERATURE_TABLE"] = getTempString();
+
+
 
   serializeJson(status, jsonOutput);
   return jsonOutput;
@@ -140,8 +147,18 @@ String templateProcessor(const String &var) {
     return String(relay->getBmsReportedSOC());
   } else if (var == "OVERRIDDEN_SOC") {
     return String(relay->getOverriddenSOC());
+  } else if (var == "VOLTAGE_SOC") {
+    return String(relay->getVoltageSOC());
+  } else if (var == "AMPERAGE_SOC") {
+    return String(relay->getAmperageSOC());
   } else if (var == "USED_CHARGE_MAH") {
     return String(relay->getUsedChargeMah());
+  } else if (var == "CHARGE_STATE_MAH") {
+    return String(relay->getChargeStateMah());
+  } else if (var == "BATTERY_MAH") {
+    return String(Settings->mah_max);
+  } else if (var == "REMAINING_CHARGE") {
+    return String(Settings->mah_max + relay->getChargeStateMah());
   } else if (var == "REGENERATED_CHARGE_MAH") {
     return String(relay->getRegeneratedChargeMah());
   } else if (var == "OWIE_version") {
@@ -213,6 +230,7 @@ String templateProcessor(const String &var) {
     }
     return opts;
   }
+
   return "<script>alert('UNKNOWN PLACEHOLDER')</script>";
 }
 
@@ -258,6 +276,10 @@ void setupWebServer(BmsRelay *bmsRelay) {
 
   webServer.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send_P(200, "text/html", INDEX_HTML_PROGMEM_ARRAY, INDEX_HTML_SIZE,
+                    templateProcessor);
+  });
+  webServer.on("/diagnostics", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send_P(200, "text/html", DIAGNOSTICS_HTML_PROGMEM_ARRAY, DIAGNOSTICS_HTML_SIZE,
                     templateProcessor);
   });
   webServer.on("/styles.css", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -312,6 +334,7 @@ void setupWebServer(BmsRelay *bmsRelay) {
         const auto apSelfPassword = request->getParam("pw", true);
         const auto apSelfName = request->getParam("apselfname", true);
         const auto wifiPower = request->getParam("wifipower", true);
+        const auto batteryMah = request->getParam("battery_mah", true);
         if (apSelfPassword == nullptr ||
             apSelfPassword->value().length() >
                 sizeof(Settings->ap_self_password) ||
@@ -342,6 +365,14 @@ void setupWebServer(BmsRelay *bmsRelay) {
           return;
         }
         Settings->wifi_power = wifiPower->value().toInt();
+        // Set the battery capacity
+        if (batteryMah == nullptr || batteryMah->value().toInt() < 0) {
+          request->send(
+              400, "text/html",
+              "Battery capacity must be a positive number in mAh");
+              return;
+        }
+        Settings->mah_max = batteryMah->value().toInt();
         snprintf(Settings->ap_self_password, sizeof(Settings->ap_self_password),
                  "%s", apSelfPassword->value().c_str());
         snprintf(Settings->ap_self_name, sizeof(Settings->ap_self_name), "%s",

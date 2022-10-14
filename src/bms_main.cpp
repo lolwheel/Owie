@@ -65,10 +65,16 @@ void bms_setup() {
 
   relay->setPowerOffCallback([]() {
     Settings->graceful_shutdown_count++;
+    Settings->mah_state = relay->getChargeStateMah();
+    //Settings->mah_max = relay->batteryCapacityEstimate();
     saveSettings();
   });
 
   relay->setBMSSerialOverride(0xFFABCDEF);
+
+  relay->setChargeStateMah(Settings->mah_state);
+  relay->setMaxMah(Settings->mah_max);
+
 
   setupWifi();
   setupWebServer(relay);
