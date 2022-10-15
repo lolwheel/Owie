@@ -80,36 +80,24 @@ String getTempString() {
   const int8_t *thermTemps = relay->getTemperaturesCelsius();
   String temps;
   temps.reserve(256);
-  temps.concat("<tr>");
-  for (int i = 0; i < 5; i++) {
-    temps.concat("<td>");
+    temps.concat("[");
+  temps.concat('"');
+  for (int i = 0; i < 4; i++) {
     temps.concat(thermTemps[i]);
-    temps.concat("</td>");
+    temps.concat('"');
+    temps.concat(",");
+    temps.concat('"');
   }
-  temps.concat("<tr>");
+  temps.concat(thermTemps[5]);
+    temps.concat('"');
+    temps.concat("]");
+
+
   return temps;
 }
 
 
-//String getTempStringclean() {
-//  const int8_t *thermTemps = relay->getTemperaturesCelsius();
-//  String temps;
-//  temps.reserve(256);
-//  temps.concat("['");
-//  for (int i = 0; i < 4; i++) {
-//   temps.concat(thermTemps[i]);
-//    temps.concat("','");
-//  }
-//  temps.concat(thermTemps[5]);
-//  temps.concat("']"); 
-
-
-
- // return temps;
-//}
-
-
-String generateOwieStatuscleanJson() {
+String generateOwieStatusJson() {
   DynamicJsonDocument status(1024);
   String jsonOutput;
 
@@ -131,22 +119,6 @@ String generateOwieStatuscleanJson() {
 
     /////////////////////////////////////////////////////////////////////
 
-  const int8_t *thermTemps = relay->getTemperaturesCelsius();
-  String TEMPERATURE_TABLEstring;
-  TEMPERATURE_TABLEstring.reserve(256);
-
-  TEMPERATURE_TABLEstring.reserve(256);
-    TEMPERATURE_TABLEstring.concat("[");
-  TEMPERATURE_TABLEstring.concat('"');
-  for (int i = 0; i < 4; i++) {
-    TEMPERATURE_TABLEstring.concat(thermTemps[i]);
-    TEMPERATURE_TABLEstring.concat('"');
-    TEMPERATURE_TABLEstring.concat(",");
-    TEMPERATURE_TABLEstring.concat('"');
-  }
-  TEMPERATURE_TABLEstring.concat(thermTemps[5]);
-    TEMPERATURE_TABLEstring.concat('"');
-    TEMPERATURE_TABLEstring.concat("]");
 
 
 
@@ -158,44 +130,12 @@ String generateOwieStatuscleanJson() {
   status["REGENERATED_CHARGE_MAH"] = String(relay->getRegeneratedChargeMah()) + " mAh";
   status["UPTIME"] = uptimeString();
   status["CELL_VOLTAGE_TABLE"] = serialized(CELL_VOLTAGE_TABLEstring);
-  status["TEMPERATURE_TABLE"] = serialized(TEMPERATURE_TABLEstring);
+  status["TEMPERATURE_TABLE"] = serialized(getTempString());
 
   serializeJson(status, jsonOutput);
   return jsonOutput;
 } 
 
-
-String generateOwieStatusJson() {
-  DynamicJsonDocument status(1024);
-  String jsonOutput;
-  const uint16_t *cellMillivolts = relay->getCellMillivolts();
-  String out;
-  out.reserve(256);
-  for (int i = 0; i < 3; i++) {
-    out.concat("<tr>");
-    for (int j = 0; j < 5; j++) {
-      out.concat("<td>");
-      out.concat(cellMillivolts[i * 5 + j] / 1000.0);
-      out.concat("</td>");
-    }
-    out.concat("<tr>");
-  }
-
-  status["TOTAL_VOLTAGE"] =
-      String(relay->getTotalVoltageMillivolts() / 1000.0, 2) + "v";
-  status["CURRENT_AMPS"] = String(relay->getCurrentInAmps(), 1) + " Amps";
-  status["BMS_SOC"] = String(relay->getBmsReportedSOC()) + "%";
-  status["OVERRIDDEN_SOC"] = String(relay->getOverriddenSOC()) + "%";
-  status["USED_CHARGE_MAH"] = String(relay->getUsedChargeMah()) + " mAh";
-  status["REGENERATED_CHARGE_MAH"] =
-      String(relay->getRegeneratedChargeMah()) + " mAh";
-  status["UPTIME"] = uptimeString();
-  status["CELL_VOLTAGE_TABLE"] = out;
-  status["TEMPERATURE_TABLE"] = getTempString();
-
-  serializeJson(status, jsonOutput);
-  return jsonOutput;
-}
 
 bool lockingPreconditionsMet() {
   return strlen(Settings->ap_self_password) > 0;
@@ -327,12 +267,9 @@ void setupWebServer(BmsRelay *bmsRelay) {
   webServer.on("/favicon.ico", HTTP_GET,
                [](AsyncWebServerRequest *request) { request->send(404); });
 
-  webServer.on("/autoupdate", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(200, "application/json", generateOwieStatusJson());
-  });
 
     webServer.on("/json", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(200, "application/json", generateOwieStatuscleanJson());
+    request->send(200, "application/json", generateOwieStatusJson());
   });
 
   webServer.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
