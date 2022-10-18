@@ -81,15 +81,15 @@ String getTempString() {
   String temps;
   temps.reserve(256);
     temps.concat("[");
-  temps.concat('"');
+  //temps.concat('"');
   for (int i = 0; i < 4; i++) {
     temps.concat(thermTemps[i]);
-    temps.concat('"');
+   // temps.concat('"');
     temps.concat(",");
-    temps.concat('"');
+   // temps.concat('"');
   }
   temps.concat(thermTemps[5]);
-    temps.concat('"');
+   // temps.concat('"');
     temps.concat("]");
 
 
@@ -106,19 +106,24 @@ String generateOwieStatusJson() {
   CELL_VOLTAGE_TABLEstring.reserve(256);
 
   CELL_VOLTAGE_TABLEstring.concat("[");
-  CELL_VOLTAGE_TABLEstring.concat('"');
   for (int i = 0; i < 13; i++) {
       CELL_VOLTAGE_TABLEstring.concat(cellMillivolts[i] / 1000.0);
-      CELL_VOLTAGE_TABLEstring.concat('"');
       CELL_VOLTAGE_TABLEstring.concat(",");
-      CELL_VOLTAGE_TABLEstring.concat('"');
     }
     CELL_VOLTAGE_TABLEstring.concat(cellMillivolts[14] / 1000.0);
-    CELL_VOLTAGE_TABLEstring.concat('"');
     CELL_VOLTAGE_TABLEstring.concat("]");
 
     /////////////////////////////////////////////////////////////////////
-
+  const int8_t *thermTemps = relay->getTemperaturesCelsius();
+  String temps;
+  temps.reserve(256);
+    temps.concat("[");
+  for (int i = 0; i < 4; i++) {
+    temps.concat(thermTemps[i]);
+    temps.concat(",");
+  }
+  temps.concat(thermTemps[5]);
+    temps.concat("]");
 
 
 
@@ -130,7 +135,7 @@ String generateOwieStatusJson() {
   status["REGENERATED_CHARGE_MAH"] = String(relay->getRegeneratedChargeMah()) + " mAh";
   status["UPTIME"] = uptimeString();
   status["CELL_VOLTAGE_TABLE"] = serialized(CELL_VOLTAGE_TABLEstring);
-  status["TEMPERATURE_TABLE"] = serialized(getTempString());
+  status["TEMPERATURE_TABLE"] = serialized(temps);
 
   serializeJson(status, jsonOutput);
   return jsonOutput;
@@ -195,7 +200,18 @@ String templateProcessor(const String &var) {
     }
     return out;
   } else if (var == "TEMPERATURE_TABLE") {
-    return getTempString();
+
+      const int8_t *thermTemps = relay->getTemperaturesCelsius();
+  String temps;
+  temps.reserve(256);
+  temps.concat("<tr>");
+  for (int i = 0; i < 5; i++) {
+    temps.concat("<td>");
+    temps.concat(thermTemps[i]);
+    temps.concat("</td>");
+  }
+  temps.concat("<tr>");
+    return temps;
   } else if (var == "AP_PASSWORD") {
     return Settings->ap_self_password;
   } else if (var == "AP_SELF_NAME") {
