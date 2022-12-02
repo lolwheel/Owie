@@ -9,18 +9,13 @@ if "idedata" in COMMAND_LINE_TARGETS:
 
 
 def ReadAndMaybeMinifyFiles(fullPath):
+    # TODO: split html, css and js. they must be handled different!
     _, extension = os.path.splitext(fullPath)
     if not extension in ['.html', '.js', '.css']:
         with open(fullPath, "rb") as f:
             return f.read()
     originalSize = os.stat(fullPath).st_size
-    result = subprocess.run(['html-minifier-terser',
-                           '--collapse-whitespace',
-                           '--remove-comments',
-                           '--minify-js',
-                           'true',
-                           '--minify-css',
-                           'true',
+    result = subprocess.run(['minify',
                            fullPath], stdout=subprocess.PIPE)
     minifiedContent = result.stdout
     print("Minified '%s' with from %d to %d bytes" % (fullPath, originalSize, len(minifiedContent)))

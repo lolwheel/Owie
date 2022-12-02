@@ -21,7 +21,15 @@ AsyncWebSocket ws("/rawdata");
 const String defaultPass("****");
 BmsRelay *relay;
 
-const String owie_version = "1.4.3";
+const String owie_version = "1.5.3";
+
+bool lockingPreconditionsMet() {
+  return strlen(Settings->ap_self_password) > 0;
+}
+
+const char *lockedStatusDataAttrValue() {
+  return Settings->is_locked ? "1" : "";
+}
 
 String renderPacketStatsTable() {
   String result(
@@ -76,148 +84,129 @@ String uptimeString() {
   return ret;
 }
 
-String getTempString() {
-  const int8_t *thermTemps = relay->getTemperaturesCelsius();
-  String temps;
-  temps.reserve(256);
-  temps.concat("<tr>");
-  for (int i = 0; i < 5; i++) {
-    temps.concat("<td>");
-    temps.concat(thermTemps[i]);
-    temps.concat("</td>");
+DynamicJsonDocument getPackageStatsJson() {
+  DynamicJsonDocument packageStats(250);
+  JsonObject root = packageStats.to<JsonObject>();
+  JsonArray statsArray = root.createNestedArray("stats");
+  for (const IndividualPacketStat &stat :
+      relay->getPacketTracker().getIndividualPacketStats()) {
+        if (stat.id < 0) {
+          continue;
+        }
+        JsonObject statObj = statsArray.createNestedObject();
+        char buffer[16];
+        snprintf_P(buffer, sizeof(buffer), PSTR("%X"), stat.id);
+        statObj["id"] = buffer;
+        statObj["period"] = stat.mean_period_millis();
+        statObj["deviation"] = stat.deviation_millis();
+        statObj["count"] = stat.total_num;
   }
-  temps.concat("<tr>");
-  return temps;
+  root["unknown_bytes"] = relay->getPacketTracker().getGlobalStats().total_unknown_bytes_received;
+  root["missmatches"] = relay->getPacketTracker()
+                    .getGlobalStats()
+                    .total_packet_checksum_mismatches;
+  return packageStats;
 }
 
-String generateOwieStatusJson() {
-  DynamicJsonDocument status(1024);
-  String jsonOutput;
-  const uint16_t *cellMillivolts = relay->getCellMillivolts();
+DynamicJsonDocument generateMetadataJson() {
+  DynamicJsonDocument metadata(1024);
   String out;
-  out.reserve(256);
-  for (int i = 0; i < 3; i++) {
-    out.concat("<tr>");
-    for (int j = 0; j < 5; j++) {
-      out.concat("<td>");
-      out.concat(cellMillivolts[i * 5 + j] / 1000.0);
-      out.concat("</td>");
-    }
-    out.concat("<tr>");
+  JsonObject root = metadata.to<JsonObject>();
+  root["owie_version"] = owie_version;
+  root["ssid"] = Settings->ap_name;
+  root["pass"] = "";
+  if (strlen(Settings->ap_password) > 0) {
+      root["ap_password"] = defaultPass;
+  }
+  root["graceful_shutdown_count"] = String(Settings->graceful_shutdown_count);
+  root["uptime"] = uptimeString();
+  root["is_locked"] = lockedStatusDataAttrValue();
+  root["can_enable_locking"] = lockingPreconditionsMet() ? "1" : "";
+  root["locking_enabled"] = Settings->locking_enabled ? "1" : "";
+  root["ap_self_name"] = Settings->ap_self_name;
+  root["ap_password"] = Settings->ap_self_password;
+    // generate ap display name
+  char apDisplayName[64];
+  if (strlen(Settings->ap_self_name) > 0) {
+    snprintf(apDisplayName, sizeof(apDisplayName), "%s",
+              Settings->ap_self_name);
+  } else {
+    snprintf(apDisplayName, sizeof(apDisplayName), "Owie-%04X",
+              ESP.getChipId() & 0xFFFF);
+  }
+  root["display_ap_name"] =String(apDisplayName);
+  root["wifi_power"] = Settings->wifi_power;
+  JsonArray wifi_power_options = root.createNestedArray("wifi_power_options");
+  for (int i = 8; i < 18; i++) {
+    JsonObject power_option = wifi_power_options.createNestedObject();
+    power_option["value"] = String(i);
+    power_option["selected"] = (i == Settings->wifi_power) ? true: false;
   }
 
-  status["TOTAL_VOLTAGE"] =
-      String(relay->getTotalVoltageMillivolts() / 1000.0, 2) + "v";
-  status["CURRENT_AMPS"] = String(relay->getCurrentInAmps(), 1) + " Amps";
-  status["BMS_SOC"] = String(relay->getBmsReportedSOC()) + "%";
-  status["OVERRIDDEN_SOC"] = String(relay->getOverriddenSOC()) + "%";
-  status["USED_CHARGE_MAH"] = String(relay->getUsedChargeMah()) + " mAh";
-  status["REGENERATED_CHARGE_MAH"] =
-      String(relay->getRegeneratedChargeMah()) + " mAh";
-  status["UPTIME"] = uptimeString();
-  status["CELL_VOLTAGE_TABLE"] = out;
-  status["TEMPERATURE_TABLE"] = getTempString();
-
-  serializeJson(status, jsonOutput);
-  return jsonOutput;
+  root["package_stats"] = getPackageStatsJson();
+  return metadata;
 }
 
-bool lockingPreconditionsMet() {
-  return strlen(Settings->ap_self_password) > 0;
-}
-const char *lockedStatusDataAttrValue() {
-  return Settings->is_locked ? "1" : "";
-};
+DynamicJsonDocument generateOwieStatusJson() {
+  DynamicJsonDocument statusDoc(1024);
+  JsonObject root = statusDoc.to<JsonObject>();
+  const uint16_t *cellMillivolts = relay->getCellMillivolts();
+  const int8_t *thermTemps = relay->getTemperaturesCelsius();
 
-String templateProcessor(const String &var) {
-  if (var == "TOTAL_VOLTAGE") {
-    return String(relay->getTotalVoltageMillivolts() / 1000.0,
-                  /* decimalPlaces = */ 2);
-  } else if (var == "CURRENT_AMPS") {
-    return String(relay->getCurrentInAmps(),
-                  /* decimalPlaces = */ 1);
-  } else if (var == "BMS_SOC") {
-    return String(relay->getBmsReportedSOC());
-  } else if (var == "OVERRIDDEN_SOC") {
-    return String(relay->getOverriddenSOC());
-  } else if (var == "USED_CHARGE_MAH") {
-    return String(relay->getUsedChargeMah());
-  } else if (var == "REGENERATED_CHARGE_MAH") {
-    return String(relay->getRegeneratedChargeMah());
-  } else if (var == "OWIE_version") {
-    return owie_version;
-  } else if (var == "SSID") {
-    return Settings->ap_name;
-  } else if (var == "PASS") {
-    if (strlen(Settings->ap_password) > 0) {
-      return defaultPass;
-    }
-    return "";
-  } else if (var == "GRACEFUL_SHUTDOWN_COUNT") {
-    return String(Settings->graceful_shutdown_count);
-  } else if (var == "UPTIME") {
-    return uptimeString();
-  } else if (var == "IS_LOCKED") {
-    return lockedStatusDataAttrValue();
-  } else if (var == "CAN_ENABLE_LOCKING") {
-    return lockingPreconditionsMet() ? "1" : "";
-  } else if (var == "LOCKING_ENABLED") {
-    return Settings->locking_enabled ? "1" : "";
-  } else if (var == "PACKET_STATS_TABLE") {
-    return renderPacketStatsTable();
-  } else if (var == "CELL_VOLTAGE_TABLE") {
-    const uint16_t *cellMillivolts = relay->getCellMillivolts();
-    String out;
-    out.reserve(256);
-    for (int i = 0; i < 3; i++) {
-      out.concat("<tr>");
-      for (int j = 0; j < 5; j++) {
-        out.concat("<td>");
-        out.concat(cellMillivolts[i * 5 + j] / 1000.0);
-        out.concat("</td>");
-      }
-      out.concat("<tr>");
-    }
-    return out;
-  } else if (var == "TEMPERATURE_TABLE") {
-    return getTempString();
-  } else if (var == "AP_PASSWORD") {
-    return Settings->ap_self_password;
-  } else if (var == "AP_SELF_NAME") {
-    return Settings->ap_self_name;
-  } else if (var == "DISPLAY_AP_NAME") {
-    char apDisplayName[64];
-    if (strlen(Settings->ap_self_name) > 0) {
-      snprintf(apDisplayName, sizeof(apDisplayName), "%s",
-               Settings->ap_self_name);
-    } else {
-      snprintf(apDisplayName, sizeof(apDisplayName), "Owie-%04X",
-               ESP.getChipId() & 0xFFFF);
-    }
-    return String(apDisplayName);
-  } else if (var == "WIFI_POWER") {
-    return String(Settings->wifi_power);
-  } else if (var == "WIFI_POWER_OPTIONS") {
-    String opts;
-    opts.reserve(256);
-    for (int i = 8; i < 18; i++) {
-      opts.concat("<option value='");
-      opts.concat(String(i));
-      opts.concat("'");
-      if (i == Settings->wifi_power) {
-        opts.concat(" selected ");
-      }
-      opts.concat(">");
-      opts.concat(String(i));
-      opts.concat("</option>");
-    }
-    return opts;
+  // voltage
+  JsonObject voltage = root.createNestedObject("voltage");
+  voltage["value"] = String(relay->getTotalVoltageMillivolts() / 1000.0, 2);
+  voltage["unit"] = "V";
+
+  // current
+  JsonObject current = root.createNestedObject("current");
+  current["value"] = String(relay->getCurrentInAmps(), 1);
+  current["unit"] = "mAh";
+  
+  // owie_percentage
+  JsonObject owie_percentage = root.createNestedObject("owie_percentage");
+  owie_percentage["value"] = String(relay->getOverriddenSOC());
+  owie_percentage["unit"] = "%";
+ 
+  // bms_percentage
+  JsonObject bms_percentage = root.createNestedObject("bms_percentage");
+  bms_percentage["value"] = String(relay->getBmsReportedSOC());
+  bms_percentage["unit"] = "%";
+ 
+  // battery_cells
+  JsonObject battery_cells = root.createNestedObject("battery_cells");
+  JsonArray batteryValues = battery_cells.createNestedArray("value");
+  for (int i = 0; i < 15; i++) {
+    batteryValues.add(String(cellMillivolts[i] / 1000.0));
   }
-  return "<script>alert('UNKNOWN PLACEHOLDER')</script>";
+  battery_cells["unit"] = "V";
+
+  // temperatures
+  JsonObject temperatures = root.createNestedObject("temperatures");
+  JsonArray tempValues = temperatures.createNestedArray("value");
+  for (int i = 0; i < 5; i++) {
+    tempValues.add(thermTemps[i]);
+  }
+  temperatures["unit"] = "&#8451;";
+  
+  // uptime
+  JsonObject uptime = root.createNestedObject("uptime");
+  uptime["value"] = uptimeString();
+  uptime["unit"] = "";
+
+  // usage
+  JsonObject usage = root.createNestedObject("usage");
+  usage["value"] = relay->getUsedChargeMah();
+  usage["unit"] = "mAh";
+
+  // usage
+  JsonObject regen = root.createNestedObject("regen");
+  regen["value"] = relay->getUsedChargeMah();
+  regen["unit"] = "mAh";
+
+  return statusDoc;
 }
-
-}  // namespace
-
+}
 void setupWifi() {
   WiFi.setOutputPower(Settings->wifi_power);
   bool stationMode = (strlen(Settings->ap_name) > 0);
@@ -253,12 +242,27 @@ void setupWebServer(BmsRelay *bmsRelay) {
                [](AsyncWebServerRequest *request) { request->send(404); });
 
   webServer.on("/autoupdate", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(200, "application/json", generateOwieStatusJson());
+    String serializedJson;
+    serializeJson(generateOwieStatusJson(), serializedJson);
+    request->send(200, "application/json", serializedJson);
+  });
+  
+  webServer.on("/metadata", HTTP_GET, [](AsyncWebServerRequest *request) {
+    String serializedJson;
+    serializeJson(generateMetadataJson(), serializedJson);
+    request->send(200, "application/json", serializedJson);
   });
 
   webServer.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send_P(200, "text/html", INDEX_HTML_PROGMEM_ARRAY, INDEX_HTML_SIZE,
-                    templateProcessor);
+    AsyncWebServerResponse *response = request->beginResponse_P(
+      200,"text/html", INDEX_HTML_PROGMEM_ARRAY, INDEX_HTML_SIZE);
+      request->send(response);
+  });
+  webServer.on("/owie.js", HTTP_GET, [](AsyncWebServerRequest *request) {
+    AsyncWebServerResponse *response = request->beginResponse_P(
+        200, "application/javascript", OWIE_JS_PROGMEM_ARRAY, OWIE_JS_SIZE);
+    response->addHeader("Cache-Control", "max-age=3600");
+    request->send(response);
   });
   webServer.on("/styles.css", HTTP_GET, [](AsyncWebServerRequest *request) {
     AsyncWebServerResponse *response = request->beginResponse_P(
@@ -269,7 +273,7 @@ void setupWebServer(BmsRelay *bmsRelay) {
   webServer.on("/dev_settings", HTTP_GET, [](AsyncWebServerRequest *request) {
     AsyncWebServerResponse *response = request->beginResponse_P(
         200, "text/html", DEV_SETTINGS_HTML_PROGMEM_ARRAY,
-        DEV_SETTINGS_HTML_SIZE, templateProcessor);
+        DEV_SETTINGS_HTML_SIZE);
     response->addHeader("Cache-Control", "max-age=3600");
     request->send(response);
   });
@@ -277,7 +281,7 @@ void setupWebServer(BmsRelay *bmsRelay) {
     switch (request->method()) {
       case HTTP_GET:
         request->send_P(200, "text/html", WIFI_HTML_PROGMEM_ARRAY,
-                        WIFI_HTML_SIZE, templateProcessor);
+                        WIFI_HTML_SIZE);
         return;
       case HTTP_POST:
         const auto ssidParam = request->getParam("s", true);
@@ -300,13 +304,13 @@ void setupWebServer(BmsRelay *bmsRelay) {
   });
   webServer.on("/monitor", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send_P(200, "text/html", MONITOR_HTML_PROGMEM_ARRAY,
-                    MONITOR_HTML_SIZE, templateProcessor);
+                    MONITOR_HTML_SIZE);
   });
   webServer.on("/settings", HTTP_ANY, [](AsyncWebServerRequest *request) {
     switch (request->method()) {
       case HTTP_GET:
         request->send_P(200, "text/html", SETTINGS_HTML_PROGMEM_ARRAY,
-                        SETTINGS_HTML_SIZE, templateProcessor);
+                        SETTINGS_HTML_SIZE);
         return;
       case HTTP_POST:
         const auto apSelfPassword = request->getParam("pw", true);
