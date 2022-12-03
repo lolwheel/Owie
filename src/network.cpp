@@ -270,19 +270,9 @@ void setupWebServer(BmsRelay *bmsRelay) {
     response->addHeader("Cache-Control", "max-age=3600");
     request->send(response);
   });
-  webServer.on("/dev_settings", HTTP_GET, [](AsyncWebServerRequest *request) {
-    AsyncWebServerResponse *response = request->beginResponse_P(
-        200, "text/html", DEV_SETTINGS_HTML_PROGMEM_ARRAY,
-        DEV_SETTINGS_HTML_SIZE);
-    response->addHeader("Cache-Control", "max-age=3600");
-    request->send(response);
-  });
+  
   webServer.on("/wifi", HTTP_ANY, [](AsyncWebServerRequest *request) {
     switch (request->method()) {
-      case HTTP_GET:
-        request->send_P(200, "text/html", WIFI_HTML_PROGMEM_ARRAY,
-                        WIFI_HTML_SIZE);
-        return;
       case HTTP_POST:
         const auto ssidParam = request->getParam("s", true);
         const auto passwordParam = request->getParam("p", true);
@@ -302,16 +292,8 @@ void setupWebServer(BmsRelay *bmsRelay) {
     }
     request->send(404);
   });
-  webServer.on("/monitor", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send_P(200, "text/html", MONITOR_HTML_PROGMEM_ARRAY,
-                    MONITOR_HTML_SIZE);
-  });
   webServer.on("/settings", HTTP_ANY, [](AsyncWebServerRequest *request) {
     switch (request->method()) {
-      case HTTP_GET:
-        request->send_P(200, "text/html", SETTINGS_HTML_PROGMEM_ARRAY,
-                        SETTINGS_HTML_SIZE);
-        return;
       case HTTP_POST:
         const auto apSelfPassword = request->getParam("pw", true);
         const auto apSelfName = request->getParam("apselfname", true);
