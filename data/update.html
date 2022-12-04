@@ -1,19 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-<!-- The HTML markup is based on the main page of Tasmota -->
-
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
   <title>Owie - Firmware Update</title>
   <link rel="stylesheet" href="styles.css">
 </head>
-
 <body class="owie-app">
   <div class="main">
-    <div id="settings" class="settings content-container" style="display: block !important;">
+    <div class="settings content-container" style="display: block !important;">
       <div class="wrapper">
-
         <div class="firmware header">
           <svg viewBox="0 0 448 512" class="content-icon">
             <!--! Font Awesome Pro 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2022 Fonticons, Inc. -->
@@ -25,12 +21,12 @@
         <div class="firmware content">
           <div>
             <form method="post" action="/update" enctype="multipart/form-data" style="background-color: inherit; height: 100%;">
-              <input id="fwUpdInput" type="file" name="firmware" accept=".bin,.bin.gz" onchange="this.form.submit()" style="font-size: large; margin-top: 30px;">
+              <input id="fwUpdInput" type="file" name="firmware" accept=".bin,.bin.gz" style="font-size: large; margin-top: 30px; margin-bottom: 16px;">
+              <button type="submit" title="Start firmware update" style="cursor: pointer;">Start firmware update</button>
             </form>
           </div>
         </div>
       </div>
     </div>
 </body>
-
 </html>

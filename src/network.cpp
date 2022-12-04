@@ -108,6 +108,8 @@ DynamicJsonDocument generateMetadataJson() {
   }
 
   root["package_stats"] = getPackageStatsJson();
+  root["charging"] = relay->isCharging();
+
   return metadata;
 }
 
@@ -167,6 +169,11 @@ DynamicJsonDocument generateOwieStatusJson() {
   JsonObject regen = root.createNestedObject("regen");
   regen["value"] = relay->getUsedChargeMah();
   regen["unit"] = "mAh";
+
+  // charging
+  JsonObject charging = root.createNestedObject("charging");
+  charging["value"] = relay->isCharging();
+  charging["unit"] = "";
 
   return statusDoc;
 }

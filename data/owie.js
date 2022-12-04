@@ -5,6 +5,8 @@
 // AUTOUPDATE is now implemented with demo mode.
 // Demo Mode starts polling /autoupdate endpoint every second
 
+let currentChargingState = null;
+
 /**
  * Router Class (used for SPA Navigation)
  * @type {{checkRoute: Router.checkRoute, init: (function(): Router), routes: *[], removeRoute: (function(*): Router), addRoute: (function(*, *, *): Router), scopeDestroyTaskID: number, addRoutes: (function(*): Router), scopeDestroyTasks: *[], listener: null, onScopeDestroy: (function(*): Router)}}
@@ -336,12 +338,12 @@
   }
   
   const toggleWifiPwVisibility = () => {
-    let password = document.querySelector("#wifipw");
+    let password = document.getElementById("wifipw");
     const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
     password.setAttribute('type', type);
   }
   const toggleWifiDevPwVisibility = () => {
-    let password = document.querySelector("#wifi-de-pw");
+    let password = document.getElementById("wifi-dev-pw");
     const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
     password.setAttribute('type', type);
   }
@@ -447,11 +449,31 @@
       batHeader.classList.remove("open");
     }
   }
+
+  const handleChargingIcons = (charging) => {
+    currentChargingState = charging;
+      document.querySelectorAll(".owie-loading-bars .loading-icon.outlet").forEach((el) => {
+        if (charging) {
+          el.classList.remove('hidden');
+        } else {
+          el.classList.add('hidden');
+        }
+      });
+      document.querySelectorAll(".owie-loading-bars .loading-icon.battery").forEach((el) => {
+        if (charging) {
+          el.classList.add('hidden');
+        } else {
+          el.classList.remove('hidden');
+        }
+    })
+  };
   
   const handleMetadata = () => {
     callOwieApi("GET", "metadata", null, (data) => {
       let meta = JSON.parse(data);
       Owie.meta = meta;
+      // handling loading icons
+      handleChargingIcons(meta.charging);
       // set values to dom
       // owie-version
       document.querySelectorAll(".owie-version-meta").forEach(ove => {
@@ -494,16 +516,16 @@
       meta.package_stats.stats.forEach(element => {
         // build table row and add it to dom!
         // Insert a row at the end of table
-        var newRow = tbodyRef.insertRow();
+        var newRow = statsTableBody.insertRow();
         ["id","period", "deviation", "count"].forEach(cellData => {
             // Insert a cell at the end of the row
           var newCell = newRow.insertCell();
           // Append a text node to the cell
-          newCell.appendChild(document.createTextNode(element[cellData]));
+          newCell.appendChild(document.createTextNode(element[cellData] || 0));
         })
       });
-      document.querySelector(".unkown-bytes").innerHTML = meta.package_stats.unknown_bytes;
-      document.querySelector(".checksum-mismatches").innerHTML = meta.package_stats.missmatches;
+      document.querySelector(".unkown-bytes").innerHTML = meta.package_stats.unknown_bytes || 0;
+      document.querySelector(".checksum-mismatches").innerHTML = meta.package_stats.missmatches || 0;
     });
   }
 
@@ -512,7 +534,12 @@
     callOwieApi("GET", "autoupdate", null, (data) => {
       if (data) {
         let jsonData = JSON.parse(data);
-  
+        
+        // handle charging icons only if the status changes..
+        if (jsonData.charging.value !== currentChargingState) {
+          handleChargingIcons(jsonData.charging.value);
+        }
+
         document.getElementsByClassName("uptime")[0].getElementsByClassName("value-text")[0].innerText = jsonData.uptime.value;
         let style = document.getElementsByTagName("body")[0].style
         let props = {
@@ -681,7 +708,7 @@
   
     // start autoupdate timer
     getAutoupdate();
-    // setInterval(getAutoupdate, 1000);
+    setInterval(getAutoupdate, 1000);
   }
   
 

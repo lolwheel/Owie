@@ -9,7 +9,6 @@ if "idedata" in COMMAND_LINE_TARGETS:
 
 
 def ReadAndMaybeMinifyFiles(fullPath):
-    # TODO: split html, css and js. they must be handled different!
     _, extension = os.path.splitext(fullPath)
     if not extension in ['.html', '.js', '.css']:
         with open(fullPath, "rb") as f:
