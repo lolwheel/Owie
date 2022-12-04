@@ -378,9 +378,9 @@ input.required {
 }
 
 .boardlocking-enabled {
+    display: none;
     justify-content: center;
     align-items: center;
-    display: flex;
     flex-flow: column;
 }
 

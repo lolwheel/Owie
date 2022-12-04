@@ -346,6 +346,16 @@
     password.setAttribute('type', type);
   }
   
+  const handleBordArmingVisibility = () => {
+    const lockingContent = document.querySelector(".board-locking.content");
+  
+    if (lockingContent.dataset.canenable) {
+      const inactiveContent = document.querySelector(".board-locking.content .bl-inactive");
+      inactiveContent.classList.add('hidden');
+      updateBoardLockingButtons();
+    }
+  }
+
   /**
    * API Call to update the OWIE WiFi Settings
    * @param e
@@ -438,8 +448,63 @@
     }
   }
   
-  const getMetadata = () => {
+  const handleMetadata = () => {
+    callOwieApi("GET", "metadata", null, (data) => {
+      let meta = JSON.parse(data);
+      Owie.meta = meta;
+      // set values to dom
+      // owie-version
+      document.querySelectorAll(".owie-version-meta").forEach(ove => {
+        ove.innerHTML = `${meta.owie_version}`;
+      })
+    
+      // owie AP name
+      document.querySelector(".loading-name").innerHTML = `${meta.display_ap_name}`;
+      
+      // owie - wifi
+      document.getElementById('wifi-dev-name').value = meta.ssid;
+      document.getElementById('wifi-dev-pw').value = meta.pass;
+      
+      // owie ap settings
+      document.getElementById('apselfname').value = meta.ap_self_name;
+      document.getElementById('wifipw').value = meta.ap_password;
+      let wifiSelect = document.getElementById('wifi-power');
+      wifiSelect.value = meta.wifi_power;
+      // generate wifi power options!
+      meta.wifi_power_options.forEach((element) => {
+        wifiSelect.add(new Option(element.value, element.value,false,(element.selected)));
+      });
 
+      // board arming
+      const lockingContent = document.querySelector(".board-locking.content");
+      lockingContent.dataset.canenable = meta.can_enable_locking;
+      lockingContent.dataset.enabled = meta.locking_enabled;
+      handleBordArmingVisibility();
+
+      // handle locking itself
+      if (meta.is_locked == "1") {
+        document.querySelector(".boardlocking-enabled").style.display = "flex";
+      }
+      
+      // power cycles
+      document.querySelector(".power-cycles-meta").innerHTML = `${meta.graceful_shutdown_count}`;
+      
+      // package stats
+      let statsTableBody = document.querySelector(".package-stats");
+      meta.package_stats.stats.forEach(element => {
+        // build table row and add it to dom!
+        // Insert a row at the end of table
+        var newRow = tbodyRef.insertRow();
+        ["id","period", "deviation", "count"].forEach(cellData => {
+            // Insert a cell at the end of the row
+          var newCell = newRow.insertCell();
+          // Append a text node to the cell
+          newCell.appendChild(document.createTextNode(element[cellData]));
+        })
+      });
+      document.querySelector(".unkown-bytes").innerHTML = meta.package_stats.unknown_bytes;
+      document.querySelector(".checksum-mismatches").innerHTML = meta.package_stats.missmatches;
+    });
   }
 
   let statsDomWritten = false;
@@ -525,7 +590,10 @@
     });
   }
   
-  const onReady = () => {
+  const startup = () => {
+    // pull metadata
+    handleMetadata();
+    
     Router.init();
     const unlockButton = document.querySelector(".unlock-button");
     unlockButton.addEventListener('click', (e) => {
@@ -608,15 +676,8 @@
     }
     // end settings WiFi update
   
-    // start handle board arming visibility
-    const lockingContent = document.querySelector(".board-locking.content");
-  
-    if (lockingContent.dataset.canenable) {
-      const inactiveContent = document.querySelector(".board-locking.content .bl-inactive");
-      inactiveContent.classList.add('hidden');
-      updateBoardLockingButtons();
-    }
-    // end handle board armin visibility
+    // handle board arming visibility
+    handleBordArmingVisibility();
   
     // start autoupdate timer
     setInterval(getAutoupdate, 1000);
@@ -640,7 +701,7 @@
       }
     }()
   );
-  areWeReady(onReady);
+areWeReady(startup);
   
   
   

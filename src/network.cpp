@@ -31,42 +31,6 @@ const char *lockedStatusDataAttrValue() {
   return Settings->is_locked ? "1" : "";
 }
 
-String renderPacketStatsTable() {
-  String result(
-      PSTR("<table><tr><th>ID</th><th>Period</th><th>Deviation</th><th>Count</"
-           "th></tr>"));
-  for (const IndividualPacketStat &stat :
-       relay->getPacketTracker().getIndividualPacketStats()) {
-    if (stat.id < 0) {
-      continue;
-    }
-    result.concat(PSTR("<tr><td>"));
-
-    char buffer[16];
-    snprintf_P(buffer, sizeof(buffer), PSTR("%X"), stat.id);
-    result.concat(buffer);
-
-    result.concat(PSTR("</td><td>"));
-    result.concat(stat.mean_period_millis());
-    result.concat(PSTR("</td><td>"));
-    result.concat(stat.deviation_millis());
-    result.concat(PSTR("</td><td>"));
-    result.concat(stat.total_num);
-    result.concat(PSTR("</td></tr>"));
-  }
-
-  result.concat(PSTR(
-      "<tr><th>Unknown Bytes</th><th>Checksum Mismatches</th></tr><tr><td>"));
-  result.concat(
-      relay->getPacketTracker().getGlobalStats().total_unknown_bytes_received);
-  result.concat(PSTR("</td><td>"));
-  result.concat(relay->getPacketTracker()
-                    .getGlobalStats()
-                    .total_packet_checksum_mismatches);
-  result.concat(PSTR("</td></tr></table>"));
-  return result;
-}
-
 String uptimeString() {
   const unsigned long nowSecs = millis() / 1000;
   const int hrs = nowSecs / 3600;
