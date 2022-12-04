@@ -228,7 +228,7 @@
   
     connect: function () {
       let _self = this;
-      this.socket = new WebSocket(`ws://${window.location.hostname}:3000/rawdata`);
+      this.socket = new WebSocket(`ws://${window.location.hostname}/rawdata`);
       this.socket.binaryType = "arraybuffer";
       this.socket.onopen = function () {
         _self.lastError = 'connected';
@@ -625,7 +625,7 @@
           updateProgress = document.querySelector(".firmware .update-upload-progress"),
           updateText = updateProgress.querySelector(".update-text"),
           updateLoader = updateProgress.querySelector(".lds-spinner");
-      xhr.open("POST", "/upgrade");
+      xhr.open("POST", "/update");
       xhr.upload.addEventListener("progress", ({loaded, total}) => {
         let fileLoaded = Math.floor((loaded / total) * 100);
         updateText.innerHTML = `File upload in progress... (${fileLoaded}%)`;
@@ -651,9 +651,9 @@
           showAlerter("error", "Error!</span><br>" + xhr.status);
         }
       }
-      xhr.setRequestHeader('Content-Type', "application/octet-stream");
-      xhr.setRequestHeader('Content-Disposition', 'attachment; filename="' + fileName + '"');
-      xhr.send(file);
+      var formData = new FormData();
+      formData.append("firmware", file);
+      xhr.send(formData);
       updateProgress.classList.remove('hidden');
     }
     // end firmware update section
@@ -680,7 +680,8 @@
     handleBordArmingVisibility();
   
     // start autoupdate timer
-    setInterval(getAutoupdate, 1000);
+    getAutoupdate();
+    // setInterval(getAutoupdate, 1000);
   }
   
 
