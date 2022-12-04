@@ -483,7 +483,7 @@ let currentChargingState = null;
       // owie AP name
       document.querySelector(".loading-name").innerHTML = `${meta.display_ap_name}`;
       
-      // owie - wifi
+      // owie - wifi to be connected to (dev feature...)
       document.getElementById('wifi-dev-name').value = meta.ssid;
       document.getElementById('wifi-dev-pw').value = meta.pass;
       

@@ -1124,7 +1124,11 @@ input[type=text], input[type=password], select {
 /* WiFi End */
 
 .board-locking.content {
-    margin-bottom: 20px;
+    margin-bottom: 21px;
+}
+
+.wifi-settings.content {
+    margin-bottom: 21px;
 }
 
 .box {

@@ -21,7 +21,7 @@ AsyncWebSocket ws("/rawdata");
 const String defaultPass("****");
 BmsRelay *relay;
 
-const String owie_version = "1.5.3";
+const String owie_version = "1.5.0";
 
 bool lockingPreconditionsMet() {
   return strlen(Settings->ap_self_password) > 0;
@@ -48,7 +48,7 @@ String uptimeString() {
   return ret;
 }
 
-DynamicJsonDocument getPackageStatsJson() {
+DynamicJsonDocument generatePackageStatsJson() {
   DynamicJsonDocument packageStats(250);
   JsonObject root = packageStats.to<JsonObject>();
   JsonArray statsArray = root.createNestedArray("stats");
@@ -74,22 +74,12 @@ DynamicJsonDocument getPackageStatsJson() {
 
 DynamicJsonDocument generateMetadataJson() {
   DynamicJsonDocument metadata(1024);
-  String out;
   JsonObject root = metadata.to<JsonObject>();
+
+  // owie version
   root["owie_version"] = owie_version;
-  root["ssid"] = Settings->ap_name;
-  root["pass"] = "";
-  if (strlen(Settings->ap_password) > 0) {
-      root["ap_password"] = defaultPass;
-  }
-  root["graceful_shutdown_count"] = String(Settings->graceful_shutdown_count);
-  root["uptime"] = uptimeString();
-  root["is_locked"] = lockedStatusDataAttrValue();
-  root["can_enable_locking"] = lockingPreconditionsMet() ? "1" : "";
-  root["locking_enabled"] = Settings->locking_enabled ? "1" : "";
-  root["ap_self_name"] = Settings->ap_self_name;
-  root["ap_password"] = Settings->ap_self_password;
-    // generate ap display name
+  
+  // the current OWIE Wifi Name
   char apDisplayName[64];
   if (strlen(Settings->ap_self_name) > 0) {
     snprintf(apDisplayName, sizeof(apDisplayName), "%s",
@@ -99,6 +89,28 @@ DynamicJsonDocument generateMetadataJson() {
               ESP.getChipId() & 0xFFFF);
   }
   root["display_ap_name"] =String(apDisplayName);
+
+  // current uptime 
+  root["uptime"] = uptimeString();
+
+  // charging
+  root["charging"] = relay->isCharging();
+
+  // shutdown count
+  root["graceful_shutdown_count"] = String(Settings->graceful_shutdown_count);
+
+  // board locking is armed
+  root["can_enable_locking"] = lockingPreconditionsMet() ? "1" : "";
+  
+  // board locking enabled
+  root["locking_enabled"] = Settings->locking_enabled ? "1" : "";
+
+  // board locked
+  root["is_locked"] = lockedStatusDataAttrValue();
+
+  // current AP values (owie wireless)
+  root["ap_self_name"] = Settings->ap_self_name;
+  root["ap_password"] = (strlen(Settings->ap_password) > 0) ? Settings->ap_self_password: defaultPass;
   root["wifi_power"] = Settings->wifi_power;
   JsonArray wifi_power_options = root.createNestedArray("wifi_power_options");
   for (int i = 8; i < 18; i++) {
@@ -107,9 +119,13 @@ DynamicJsonDocument generateMetadataJson() {
     power_option["selected"] = (i == Settings->wifi_power) ? true: false;
   }
 
-  root["package_stats"] = getPackageStatsJson();
-  root["charging"] = relay->isCharging();
+  // WiFi connect (connect to an existing WiFi)
+  root["ssid"] = Settings->ap_name;
+  root["pass"] = "";
 
+  // package stats in monitoring section
+  root["package_stats"] = generatePackageStatsJson();
+  
   return metadata;
 }
 
@@ -119,6 +135,31 @@ DynamicJsonDocument generateOwieStatusJson() {
   const uint16_t *cellMillivolts = relay->getCellMillivolts();
   const int8_t *thermTemps = relay->getTemperaturesCelsius();
 
+  // owie_percentage
+  JsonObject owie_percentage = root.createNestedObject("owie_percentage");
+  owie_percentage["value"] = String(relay->getOverriddenSOC());
+  owie_percentage["unit"] = "%";
+ 
+  // bms_percentage
+  JsonObject bms_percentage = root.createNestedObject("bms_percentage");
+  bms_percentage["value"] = String(relay->getBmsReportedSOC());
+  bms_percentage["unit"] = "%";
+
+  // uptime
+  JsonObject uptime = root.createNestedObject("uptime");
+  uptime["value"] = uptimeString();
+  uptime["unit"] = "";
+
+  // usage
+  JsonObject usage = root.createNestedObject("usage");
+  usage["value"] = relay->getUsedChargeMah();
+  usage["unit"] = "mAh";
+
+  // regen
+  JsonObject regen = root.createNestedObject("regen");
+  regen["value"] = relay->getRegeneratedChargeMah();
+  regen["unit"] = "mAh";
+  
   // voltage
   JsonObject voltage = root.createNestedObject("voltage");
   voltage["value"] = String(relay->getTotalVoltageMillivolts() / 1000.0, 2);
@@ -129,15 +170,10 @@ DynamicJsonDocument generateOwieStatusJson() {
   current["value"] = String(relay->getCurrentInAmps(), 1);
   current["unit"] = "mAh";
   
-  // owie_percentage
-  JsonObject owie_percentage = root.createNestedObject("owie_percentage");
-  owie_percentage["value"] = String(relay->getOverriddenSOC());
-  owie_percentage["unit"] = "%";
- 
-  // bms_percentage
-  JsonObject bms_percentage = root.createNestedObject("bms_percentage");
-  bms_percentage["value"] = String(relay->getBmsReportedSOC());
-  bms_percentage["unit"] = "%";
+  // charging
+  JsonObject charging = root.createNestedObject("charging");
+  charging["value"] = relay->isCharging();
+  charging["unit"] = "";
  
   // battery_cells
   JsonObject battery_cells = root.createNestedObject("battery_cells");
@@ -155,27 +191,8 @@ DynamicJsonDocument generateOwieStatusJson() {
   }
   temperatures["unit"] = "&#8451;";
   
-  // uptime
-  JsonObject uptime = root.createNestedObject("uptime");
-  uptime["value"] = uptimeString();
-  uptime["unit"] = "";
-
-  // usage
-  JsonObject usage = root.createNestedObject("usage");
-  usage["value"] = relay->getUsedChargeMah();
-  usage["unit"] = "mAh";
-
-  // regen
-  JsonObject regen = root.createNestedObject("regen");
-  regen["value"] = relay->getRegeneratedChargeMah();
-  regen["unit"] = "mAh";
-
-  // charging
-  JsonObject charging = root.createNestedObject("charging");
-  charging["value"] = relay->isCharging();
-  charging["unit"] = "";
-
   return statusDoc;
+
 }
 }
 void setupWifi() {
@@ -183,9 +200,6 @@ void setupWifi() {
   bool stationMode = (strlen(Settings->ap_name) > 0);
   WiFi.mode(stationMode ? WIFI_AP_STA : WIFI_AP);
   char apName[64];
-  // sprintf isn't causing the issue of bungled SSID anymore (can't reproduce)
-  // but snprintf should be safer, so trying that now
-  // 9 bytes should be sufficient
   if (strlen(Settings->ap_self_name) > 0) {
     snprintf(apName, sizeof(apName), Settings->ap_self_name);
   } else {
@@ -209,8 +223,12 @@ void setupWebServer(BmsRelay *bmsRelay) {
     request->redirect("http://" + request->client()->localIP().toString() +
                       "/");
   });
-  webServer.on("/favicon.ico", HTTP_GET,
-               [](AsyncWebServerRequest *request) { request->send(404); });
+  webServer.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request) {
+    AsyncWebServerResponse *response = request->beginResponse_P(
+        200, "image/x-icon", FAVICON_ICO_PROGMEM_ARRAY, FAVICON_ICO_SIZE);
+    response->addHeader("Cache-Control", "max-age=3600");
+    request->send(response);
+  });
 
   webServer.on("/autoupdate", HTTP_GET, [](AsyncWebServerRequest *request) {
     String serializedJson;

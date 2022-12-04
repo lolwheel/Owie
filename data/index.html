@@ -6,7 +6,8 @@
     <meta http-equiv='cache-control' content='no-cache'>
     <meta http-equiv='expires' content='0'>
     <meta http-equiv='pragma' content='no-cache'>
-    <title>Owie - Status</title>
+    <title>Owie</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="styles.css">
     <script src="owie.js"></script>
 </head>
@@ -27,7 +28,7 @@
                 </svg>
                 <span class="title">WiFi Settings</span>
             </div>
-            <div>
+            <div class="wifi-settings content">
                 <form action="#" id="wifi-settings">
                     <label for="wifi">Owie WiFi network name override:</label>
                     <input name="apselfname" id="apselfname" placeholder="WiFi Name" value="" type="text">
@@ -47,7 +48,6 @@
                     <button id="wifi-submit" type="submit">Update WiFI Settings</button>
                 </form>
             </div>
-            <br>
             <div style="border: 1px solid #565656; width: 100%; opacity: 0.6;"></div>
             <div class="board-locking header">
                 <svg viewBox="0 0 448 512" class="content-icon">
@@ -272,14 +272,14 @@
                         <div class="loading-name">BMS</div>
                     </div>
                     <div class="box">
-                        <div class="loading-icon hidden">
+                        <div class="loading-icon battery hidden">
                             <svg viewBox="0 0 576 512">
                                 <!--! Font Awesome Pro 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2022 Fonticons, Inc. -->
                                 <path d="M448 320H96V192H448V320zM0 176C0 131.8 35.82 96 80 96H464C508.2 96 544 131.8 544 176V192C561.7 192 576 206.3 576 224V288C576 305.7 561.7 320 544 320V336C544 380.2 508.2 416 464 416H80C35.82 416 0 380.2 0 336V176zM80 160C71.16 160 64 167.2 64 176V336C64 344.8 71.16 352 80 352H464C472.8 352 480 344.8 480 336V176C480 167.2 472.8 160 464 160H80z"/>
                             </svg>
                         </div>
                     </div>
-                    <div class="loading-icon">
+                    <div class="loading-icon outlet hidden">
                         <svg viewBox="0 0 384 512">
                             <!--! Font Awesome Pro 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2022 Fonticons, Inc. -->
                             <path d="M96 0C113.7 0 128 14.33 128 32V128H64V32C64 14.33 78.33 0 96 0zM288 0C305.7 0 320 14.33 320 32V128H256V32C256 14.33 270.3 0 288 0zM352 160C369.7 160 384 174.3 384 192C384 209.7 369.7 224 352 224V256C352 333.4 297 397.1 224 412.8V512H160V412.8C86.97 397.1 32 333.4 32 256V224C14.33 224 0 209.7 0 192C0 174.3 14.33 160 32 160H352z"/>
