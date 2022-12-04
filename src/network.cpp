@@ -165,9 +165,9 @@ DynamicJsonDocument generateOwieStatusJson() {
   usage["value"] = relay->getUsedChargeMah();
   usage["unit"] = "mAh";
 
-  // usage
+  // regen
   JsonObject regen = root.createNestedObject("regen");
-  regen["value"] = relay->getUsedChargeMah();
+  regen["value"] = relay->getRegeneratedChargeMah();
   regen["unit"] = "mAh";
 
   // charging
