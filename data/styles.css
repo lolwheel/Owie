@@ -217,10 +217,6 @@ body.owie-app {
     padding-top: 7px;
 }
 
-.progress > .progress-text > div {
-    /*display: inline-block;*/
-}
-
 .progress > .progress-text .loading-name {
     white-space: nowrap;
 }
