@@ -19,7 +19,6 @@
     <!-- Settings container -->
     <div id="settings" class="settings content-container">
         <div class="wrapper">
-            <!--            <div style="border: 1px solid #565656; width: 100%; opacity: 0.6;"></div>-->
             <div class="wifi-settings header">
                 <svg viewBox="0 0 640 512" class="content-icon">
                     <!--! Font Awesome Pro 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2022 Fonticons, Inc. -->
@@ -80,18 +79,9 @@
                 <div>
                     <div class="update-upload-progress hidden">
                         <div class="lds-spinner">
-                            <div></div>
-                            <div></div>
-                            <div></div>
-                            <div></div>
-                            <div></div>
-                            <div></div>
-                            <div></div>
-                            <div></div>
-                            <div></div>
-                            <div></div>
-                            <div></div>
-                            <div></div>
+                            <div></div><div></div><div></div><div></div>
+                            <div></div><div></div><div></div><div></div>
+                            <div></div><div></div><div></div><div></div>
                         </div>
                         <div class="update-text">File upload in progress... (0%)</div>
                     </div>
@@ -334,83 +324,15 @@
         <div class="battery-content">
             <div class="battery-info-content flex">
                 <div class="battery-pack">
-                    <div class="flex">
+                    <div class="flex table-container">
                         <!-- TODO: maybe this should be refactored to a template -->
-                        <div class="cell">
-                            <div id="cell-1" class="gg-battery-empty">
-                                <div class="battery-voltage-text">0.00</div>
+                        <template id="battery-cell-template">
+                            <div class="cell">
+                                <div class="gg-battery-empty">
+                                    <div class="battery-voltage-text">0.00</div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="cell">
-                            <div id="cell-2" class="gg-battery-empty">
-                                <div class="battery-voltage-text">0.00</div>
-                            </div>
-                        </div>
-                        <div class="cell">
-                            <div id="cell-3" class="gg-battery-empty">
-                                <div class="battery-voltage-text">0.00</div>
-                            </div>
-                        </div>
-                        <div class="cell">
-                            <div id="cell-4" class="gg-battery-empty">
-                                <div class="battery-voltage-text">0.00</div>
-                            </div>
-                        </div>
-                        <div class="cell">
-                            <div id="cell-5" class="gg-battery-empty">
-                                <div class="battery-voltage-text">0.00</div>
-                            </div>
-                        </div>
-                        <div class="cell">
-                            <div id="cell-6" class="gg-battery-empty">
-                                <div class="battery-voltage-text">0.00</div>
-                            </div>
-                        </div>
-                        <div class="cell">
-                            <div id="cell-7" class="gg-battery-empty">
-                                <div class="battery-voltage-text">0.00</div>
-                            </div>
-                        </div>
-                        <div class="cell">
-                            <div id="cell-8" class="gg-battery-empty">
-                                <div class="battery-voltage-text">0.00</div>
-                            </div>
-                        </div>
-                        <div class="cell">
-                            <div id="cell-9" class="gg-battery-empty">
-                                <div class="battery-voltage-text">0.00</div>
-                            </div>
-                        </div>
-                        <div class="cell">
-                            <div id="cell-10" class="gg-battery-empty">
-                                <div class="battery-voltage-text">0.00</div>
-                            </div>
-                        </div>
-                        <div class="cell">
-                            <div id="cell-11" class="gg-battery-empty">
-                                <div class="battery-voltage-text">0.00</div>
-                            </div>
-                        </div>
-                        <div class="cell">
-                            <div id="cell-12" class="gg-battery-empty">
-                                <div class="battery-voltage-text">0.00</div>
-                            </div>
-                        </div>
-                        <div class="cell">
-                            <div id="cell-13" class="gg-battery-empty">
-                                <div class="battery-voltage-text">0.00</div>
-                            </div>
-                        </div>
-                        <div class="cell">
-                            <div id="cell-14" class="gg-battery-empty">
-                                <div class="battery-voltage-text">0.00</div>
-                            </div>
-                        </div>
-                        <div class="cell">
-                            <div id="cell-15" class="gg-battery-empty">
-                                <div class="battery-voltage-text">0.00</div>
-                            </div>
-                        </div>
+                        </template>
                     </div>
                 </div>
                 <div class="temperatures">

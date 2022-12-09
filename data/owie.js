@@ -1,9 +1,11 @@
-// TODO: maybe create the battery and temp html container via template, since the autoupdate will be called anyways...
+// TODO: maybe create the temp html container via template, since the autoupdate will be called anyways...
 //       (as done in the stats...)
 // TODO: trigger relaod on OWIE WiFi Changes after , lets say 5 secs?
 // TODO: make an pre loading overlay, since we moved loading owie js on page end...
 // TODO: code cleanup index.html 
 // TODO: refactor CSS...
+// TODO: add battery severity logic... (Warning or Error if something went out of bounds! -> but what IS out of bounds?....)
+// TODO: automatically extend gauge max and mins depending on retrieved values.
 
 let currentChargingState = null;
 let statsDomWritten = false;
@@ -215,6 +217,17 @@ let toggleResponsiveNav = (forceClose = false) => {
     return;
   }
   nav.classList.contains("responsive") ? nav.classList.remove("responsive") : nav.classList.add("responsive");
+}
+
+// render battery cell table from template html
+let renderBatteryCellTable = () => {
+  let batteryContainer = document.querySelector('.home.content-container .table-container');
+  let template = document.getElementById("battery-cell-template");
+  for (let i = 0; i < 15; i++) {
+    let rowTpl = template.content.cloneNode(true) ;
+    rowTpl.firstElementChild.classList.add(`cell-${i}`);
+    batteryContainer.append(rowTpl);
+  }
 }
 
 // toggles given element visibility used in the generic routing controller
@@ -439,7 +452,7 @@ let toggleBatteryInfo = () => {
 }
 
 // handle the icons shown in the battery gauge bar (toggles battery and outlet icons)
-const handleChargingIcons = (charging) => {
+let handleChargingIcons = (charging) => {
   currentChargingState = charging;
     document.querySelectorAll(".owie-loading-bars .loading-icon.outlet").forEach((el) => {
       el.classList.toggle('hidden', !charging);
@@ -448,6 +461,36 @@ const handleChargingIcons = (charging) => {
       el.classList.toggle('hidden', charging);
   })
 };
+
+// adds logic for the battery severity calculation 
+// and set severity to dom
+let handleBatterySeverityDisplay =(data) => {
+  // TODO: set definition for out of bounds
+  // offset for warning severity when battery cells are going out of bound 
+  let batteryCellOffsetWarning = 0.2;
+  
+  // offset for error severity when battery cells are going out of bound 
+  let batteryCellOffsetError = 0.4;
+  
+  // we take the first cell as reference (since it doesnt matter anyways...)
+  let refCellVal = parseFloat(data.battery_cells.value[0]);
+
+  // now we need to calculate the offset between the ref cell and all oter cells
+  // this will be a basic avarage offset calc!
+  // NOT WORKING!!! AVG must be changed!!
+  const cellAvg = arr => data.battery_cells.value.reduce((a,b) => parseFloat(a) + parseFloat(b), 0) / arr.length;
+  const cellOffset = Math.abs(refCellVal-cellAvg);
+
+  if (cellOffset > batteryCellOffsetWarning) {
+
+  } else {
+
+  }
+  console.log(cellOffset);
+  // TODO: handle output :)
+  
+
+}
 
 // fetch metadata from API and set it to the DOM
 let handleMetadata = async () => {
@@ -509,6 +552,9 @@ let handleMetadata = async () => {
      document.querySelector(".unkown-bytes").innerHTML = meta.package_stats.unknown_bytes || 0;
      document.querySelector(".checksum-mismatches").innerHTML = meta.package_stats.missmatches || 0;
 
+     // handle battery cell table renderning
+     renderBatteryCellTable();
+
   } catch (e) {
     handleError(e);
   }
@@ -517,11 +563,14 @@ let handleMetadata = async () => {
 // Improvment: Maybe it would be better to change the API hammering into a more less invasive WebSocket??
 // fetch updates from API and set it to the DOM 
 // this is currently set to every second and can be configured by setting "updateInterval"
-getAutoupdate = async () => {
+let getAutoupdate = async () => {
   try {
     let data = await callOwieApi("GET", "autoupdate", null);
     let jsonData = JSON.parse(data);
-      
+  
+    // severity handling
+    handleBatterySeverityDisplay(jsonData);
+
     // handle charging icons only if the status changes..
     if (jsonData.charging.value !== currentChargingState) {
       handleChargingIcons(jsonData.charging.value);
