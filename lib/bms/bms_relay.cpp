@@ -40,11 +40,13 @@ void BmsRelay::loop() {
 
 void BmsRelay::maybeReplayPackets() {
   const unsigned long now_millis = millis_();
-  for(const IndividualPacketStat& stat : packet_tracker_.getIndividualPacketStats()) {
+  for (const IndividualPacketStat& stat :
+       packet_tracker_.getIndividualPacketStats()) {
     if (stat.total_num < 1) {
       continue;
     }
-    if ((now_millis - stat.last_packet_millis) < packetTypeRebroadcastTimeout(stat.id)) {
+    if ((now_millis - stat.last_packet_millis) <
+        packetTypeRebroadcastTimeout(stat.id)) {
       continue;
     }
     std::vector<uint8_t> data_copy(stat.last_seen_valid_packet);

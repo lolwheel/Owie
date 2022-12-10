@@ -20,12 +20,19 @@ inline int16_t int16FromNetworkOrder(const void* const p) {
 int openCircuitSocFromCellVoltage(int cellVoltageMillivolts) {
   static constexpr int LOOKUP_TABLE_RANGE_MIN_MV = 2700;
   static constexpr int LOOKUP_TABLE_RANGE_MAX_MV = 4200;
-  static uint8_t LOOKUP_TABLE[31] = {0, 0, 0, 0, 1, 2, 3, 4, 5, 7, 8, 11, 14, 16, 18, 19, 25, 30, 33, 37, 43, 48, 53, 60, 67, 71, 76, 82, 92, 97, 100};
-  static constexpr int LOOKUP_TABLE_SIZE = (sizeof(LOOKUP_TABLE)/sizeof(*LOOKUP_TABLE));
-  static constexpr int RANGE = LOOKUP_TABLE_RANGE_MAX_MV - LOOKUP_TABLE_RANGE_MIN_MV;
-  // (RANGE - 1) upper limit effectively clamps the leftIndex below to (LOOKUP_TABLE_SIZE - 2)
-  cellVoltageMillivolts = clamp(cellVoltageMillivolts - LOOKUP_TABLE_RANGE_MIN_MV, 0, RANGE - 1);
-  float floatIndex = float(cellVoltageMillivolts) * (LOOKUP_TABLE_SIZE - 1) / RANGE;
+  static uint8_t LOOKUP_TABLE[31] = {0,  0,  0,  0,  1,  2,  3,  4,  5,  7,  8,
+                                     11, 14, 16, 18, 19, 25, 30, 33, 37, 43, 48,
+                                     53, 60, 67, 71, 76, 82, 92, 97, 100};
+  static constexpr int LOOKUP_TABLE_SIZE =
+      (sizeof(LOOKUP_TABLE) / sizeof(*LOOKUP_TABLE));
+  static constexpr int RANGE =
+      LOOKUP_TABLE_RANGE_MAX_MV - LOOKUP_TABLE_RANGE_MIN_MV;
+  // (RANGE - 1) upper limit effectively clamps the leftIndex below to
+  // (LOOKUP_TABLE_SIZE - 2)
+  cellVoltageMillivolts =
+      clamp(cellVoltageMillivolts - LOOKUP_TABLE_RANGE_MIN_MV, 0, RANGE - 1);
+  float floatIndex =
+      float(cellVoltageMillivolts) * (LOOKUP_TABLE_SIZE - 1) / RANGE;
   const int leftIndex = int(floatIndex);
   const float fractional = floatIndex - leftIndex;
   const int rightIndex = leftIndex + 1;

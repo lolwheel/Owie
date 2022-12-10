@@ -117,7 +117,7 @@ class BmsRelay {
   }
   bool isBatteryOvercharged() { return last_status_byte_ & 8; }
 
-  const PacketTracker& getPacketTracker() const { return packet_tracker_;}
+  const PacketTracker& getPacketTracker() const { return packet_tracker_; }
 
  private:
   static constexpr float CURRENT_SCALER = 0.055;

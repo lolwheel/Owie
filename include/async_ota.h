@@ -19,7 +19,7 @@ class AsyncOtaClass {
   std::function<void()> startCallback_;
   std::function<void()> endCallback_;
 
-  void respondToOtaPostRequest(AsyncWebServerRequest *request);
+  void respondToOtaPostRequest(AsyncWebServerRequest* request);
 
  public:
   AsyncOtaClass(const uint8_t* landingPage, size_t landingPageLen,
@@ -36,7 +36,7 @@ class AsyncOtaClass {
         updateFailedTemplate_(updateFailedTemplate),
         updateFailedTemplateLen_(updateFailedTemplateLen),
         startCallback_(startCallback),
-        endCallback_(endCallback) {};
+        endCallback_(endCallback){};
 
   void listen(AsyncWebServer* server);
 };
