@@ -1,4 +1,4 @@
-// TODO: maybe create the temp html container via template, since the autoupdate will be called anyways...
+// TODO: maybe create the temp html container via template, since the autoupdate will be called anyways...let
 //       (as done in the stats...)
 // TODO: trigger relaod on OWIE WiFi Changes after , lets say 5 secs?
 // TODO: make an pre loading overlay, since we moved loading owie js on page end...
@@ -7,7 +7,7 @@
 // TODO: add battery severity logic... (Warning or Error if something went out of bounds! -> but what IS out of bounds?....)
 // TODO: automatically extend gauge max and mins depending on retrieved values.
 
-let currentChargingState = null;
+ currentChargingState = null;
 let statsDomWritten = false;
 let updateInterval = 1000; // in ms
 
@@ -478,7 +478,7 @@ let handleBatterySeverityDisplay =(data) => {
   // now we need to calculate the offset between the ref cell and all oter cells
   // this will be a basic avarage offset calc!
   // NOT WORKING!!! AVG must be changed!!
-  const cellAvg = arr => data.battery_cells.value.reduce((a,b) => parseFloat(a) + parseFloat(b), 0) / arr.length;
+  const cellAvg = data.battery_cells.value.reduce((a,b) => parseFloat(a) + parseFloat(b), 0) / data.battery_cells.value.length;
   const cellOffset = Math.abs(refCellVal-cellAvg);
 
   if (cellOffset > batteryCellOffsetWarning) {
@@ -754,6 +754,9 @@ let startup = async () => {
     setTimeout(autoUpdateTimer, updateInterval);
   }
   autoUpdateTimer();
+
+  // hide loading div
+  document.querySelector(".startup").classList.add('hide');
 }
 
 // start app

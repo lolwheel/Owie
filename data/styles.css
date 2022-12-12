@@ -1132,3 +1132,33 @@ input[type=text], input[type=password], select {
     display: flex;
     justify-content: center;
 }
+
+.startup {
+    position: absolute;
+    height: 100%;
+    visibility: visible;
+    background-color: var(--background-color);
+    max-width: 650px;
+    width: 100%;
+    z-index: 10;
+}
+
+.startup .content {
+    text-align: center;
+    margin-top: 50%;
+}
+
+.startup .content .loading-text {
+    font-weight: bold;
+}
+
+.startup.hide {
+    -webkit-animation: fadeOut 0.5s forwards;
+    -moz-animation: fadeOut 0.5s forwards;
+    animation: fadeOut 0.5s forwards;
+}
+
+/* Animations to fadeout the startup div */
+@-webkit-keyframes fadeOut { 0% { opacity: 1; visibility: visible;} 100% {opacity: 0; visibility: hidden;}}
+@-moz-keyframes fadeOut { 0% { opacity: 1; visibility: visible;} 100% {opacity: 0; visibility: hidden;}}
+@keyframes fadeOut { 0% { opacity: 1; visibility: visible;} 100% {opacity: 0; visibility: hidden;}}
