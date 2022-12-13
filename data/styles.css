@@ -47,7 +47,6 @@ body {
     flex-grow: 1;
 }
 
-
 .one > * {
     width: 100%;
 }
@@ -101,9 +100,11 @@ body {
     background-color: lightgrey;
     font-family: Helvetica, sans-serif;
     font-size: 1em;
-    color: #565656;
-    /*font-size: 1.1em;*/
     line-height: 1.5;
+}
+
+body.dark {
+    background-color: black;
 }
 
 body.owie-app {
@@ -120,29 +121,32 @@ body.owie-app {
     --text-color: #565656;
     --bar-color: #68d0f7;
     --background-color: whitesmoke;
+    --progress-background: white;
+}
+
+.owie-app.dark {
+    --text-color: whitesmoke;
+    --bar-color: #68d0f7;
+    --background-color: #565656;
 }
 
 .main {
     margin-left: auto;
     margin-right: auto;
-    background-color: whitesmoke;
+    background-color: var(--background-color);
+    color: var(--text-color);
     min-width: 100px;
     max-width: 650px;
     height: 100%;
     overflow: hidden auto;
     padding-bottom: 60px;
-    /*margin-bottom: 60px;*/
-    /*padding: 5px;*/
 }
 
 .header {
-    /*font-style: italic;*/
     font-size: 1.2em;
     font-weight: bold;
     display: flex;
     width: 100%;
-    /*margin-left: -10px;*/
-    /*margin-top: 5px;*/
     flex: none;
 }
 
@@ -163,7 +167,7 @@ body.owie-app {
     width: 100%;
     height: 50px;
     display: block;
-    background-color: white;
+    background-color: var(--progress-background);
 }
 
 .progress .progress__bar {
@@ -318,7 +322,6 @@ input.required {
 
 .current-gauge {
     display: flex;
-    /*flex-flow: column;*/
     flex-flow: row;
 }
 
@@ -348,7 +351,7 @@ input.required {
 }
 
 .gauge-separator {
-    border: 1px solid #565656;
+    border: 1px solid var(--text-color);
     height: 23px;
     margin-bottom: -12px;
     margin-top: -7px;
@@ -395,7 +398,6 @@ input.required {
     border-radius: 50%;
     text-align: center;
     box-shadow: 0 0 0 rgba(104, 208, 247, 0.6);
-    /*box-shadow: 0 0 0 rgba(255, 255, 255, 0.6);*/
     animation: pulse 2s infinite;
 }
 
@@ -415,23 +417,18 @@ input.required {
     0% {
         -moz-box-shadow: 0 0 0 0 rgba(104, 208, 247, 0.6);
         box-shadow: 0 0 0 0 rgba(104, 208, 247, 0.6);
-        /*box-shadow: 0 0 0 0 rgb(255, 255, 255);*/
     }
     70% {
         -moz-box-shadow: 0 0 0 20px rgba(104, 208, 247, 0);
         box-shadow: 0 0 0 20px rgba(104, 208, 247, 0);
-        /*box-shadow: 0 0 0 20px rgba(255, 255, 255, 0);*/
     }
     100% {
         -moz-box-shadow: 0 0 0 0 rgba(104, 208, 247, 0);
         box-shadow: 0 0 0 0 rgba(104, 208, 247, 0);
-        /*box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);*/
     }
 }
 
 .boardlocking-enabled > .unlock-button > svg {
-    /*margin-top: 10px;*/
-    /*font-size: 4em;*/
     height: 71px;
     margin-top: 5px;
 }
@@ -451,21 +448,18 @@ input.required {
 }
 
 @media screen and (max-width: 280px) {
-    /*.nav {padding-top: 15px;}*/
     .nav a {
         font-size: 15px;
     }
 }
 
 @media screen and (max-width: 215px) {
-    /*.nav {padding-top: 15px;}*/
     .nav a {
         font-size: 12px;
     }
 }
 
 @media screen and (max-width: 170px) {
-    /*.nav {padding-top: 15px;}*/
     .nav a {
         font-size: 18px;
     }
@@ -515,22 +509,17 @@ input.required {
     visibility: hidden;
     padding: 20px;
     color: whitesmoke;
-    /* min-width: 341px; */
     max-width: 650px;
     position: absolute;
     z-index: 999;
-    /* top: 9px; */
     bottom: 0px;
-    /*border-radius: 5px;*/
     width: 100%;
-    /* width: -webkit-fill-available; */
     margin: 0px;
     min-height: 75px;
 }
 
 /* The close button */
 .toaster > .closebtn {
-    /*margin-left: 15px;*/
     color: white;
     font-weight: bold;
     float: right;
@@ -588,7 +577,7 @@ input.required {
 }
 
 .loading-icon svg > path {
-    fill: #565656;
+    fill: var(--text-color);
 }
 
 .battery-statistics.header .content-icon {
@@ -609,12 +598,10 @@ input.required {
     width: 100%;
     overflow: hidden;
     max-height: 0;
-    /*transition: max-height 0.5s ease-in-out;*/
 }
 
 div.battery-statistics.open + div.battery-content {
      max-height: 100%;
-     /*transition: max-height 0.5s ease-in-out;*/
 }
 
 div.battery-statistics.open > svg.content-icon.chevron {
@@ -624,7 +611,6 @@ div.battery-statistics.open > svg.content-icon.chevron {
 .battery-info-content {
     justify-content: center;
     align-items: center;
-    /*margin-bottom: 10px;*/
 }
 
 .battery-container {
@@ -637,28 +623,12 @@ div.battery-statistics.open > svg.content-icon.chevron {
     position: relative;
     display: block;
     width: 333px;
-    /* height: 140px; */
-    /*border: 6px solid lightgrey;*/
     border-radius: 12px;
     margin-left: 10px;
-    /*background-color: lightgrey;*/
     padding: 9px;
-    /*min-width: 150px;*/
-    /*box-sizing: border-box;*/
-    /*position: relative;*/
-    /*display: block;*/
-    /*width: 333px;*/
-    /*height: 140px;*/
-    /*!*transform: scale();*!*/
-    /*border: 6px solid lightgrey;*/
-    /*border-radius: 12px;*/
-    /*margin-left: 6px;*/
-    /*background-color: lightgrey;*/
-    /*padding: 0;*/
 }
 
 .battery-pack::after {
-    /*content: "";*/
     display: block;
     box-sizing: border-box;
     position: absolute;
@@ -720,7 +690,6 @@ div.battery-statistics.open > svg.content-icon.chevron {
     font-size: 0.9em !important;
     font-weight: normal;
     text-align: center;
-    /*padding-top: 5px;*/
 }
 
 .temp-item .value-label {
@@ -733,7 +702,6 @@ div.battery-statistics.open > svg.content-icon.chevron {
     width: 60px;
     display: block;
     overflow: hidden;
-    /*border-radius: 3px;*/
 }
 
 .temperature-gauge__bar {
@@ -752,23 +720,12 @@ div.battery-statistics.open > svg.content-icon.chevron {
     height: 40px;
     display: flex;
     cursor: pointer;
-    /* margin: 30px 20px; */
     align-items: center;
     justify-content: center;
     flex-direction: column;
     border-radius: 2px;
-    /* border: 2px dashed; */
     font-weight: bold;
     background-color: var(--bar-color);
-    /*height: 30px;*/
-    /*display: flex;*/
-    /*cursor: pointer;*/
-    /*margin: 30px 20px;*/
-    /*align-items: center;*/
-    /*justify-content: center;*/
-    /*flex-direction: column;*/
-    /*border-radius: 5px;*/
-    /*border: 2px dashed;*/
 }
 
 .firmware .update-upload-progress {
@@ -887,7 +844,6 @@ div.battery-statistics.open > svg.content-icon.chevron {
     margin: 10px;
 }
 
-/*Form Testing*/
 input[type=text], input[type=password], select {
     width: 100%;
     padding: 12px 20px;
@@ -923,7 +879,6 @@ input[type=text], input[type=password], select {
     font-weight: bold;
 }
 
-/* add new navbar BOTTOM*/
 .navbar {
     background-color: var(--text-color);
     overflow: hidden;
@@ -933,7 +888,6 @@ input[type=text], input[type=password], select {
     max-width: 650px;
 }
 
-/* Style the links inside the navigation bar */
 .navbar a {
     float: left;
     display: block;
@@ -941,7 +895,6 @@ input[type=text], input[type=password], select {
     text-align: center;
     padding: 14px 16px;
     text-decoration: none;
-    /*font-size: 17px;*/
 }
 
 .navbar .menu-text {
@@ -957,18 +910,6 @@ input[type=text], input[type=password], select {
     position: absolute;
     width: 100%;
 }
-
-/*!* Change the color of links on hover *!*/
-/*.navbar a:hover {*/
-/*    background-color: #ddd;*/
-/*    color: black;*/
-/*}*/
-
-/*!* Add a green background color to the active link *!*/
-/*.navbar a.active {*/
-/*    background-color: #04AA6D;*/
-/*    color: white;*/
-/*}*/
 
 /* Hide the link that should open and close the navbar on small screens */
 .navbar .icon {
@@ -988,9 +929,6 @@ input[type=text], input[type=password], select {
     .navbar .active {
         display: block !important;
     }
-    /*.navbar .active {*/
-    /*    display: block;*/
-    /*}*/
 }
 
 /* The "responsive" class is added to the navbar with JavaScript when the user clicks on the icon. This class makes the navbar look good on small screens (display the links vertically instead of horizontally) */
@@ -1015,22 +953,18 @@ input[type=text], input[type=password], select {
 }
 
 @media screen and (max-width: 280px) {
-    /*.nav {padding-top: 15px;}*/
     .navbar .menu-text {
         font-size: 10px;
     }
 }
 
 @media screen and (max-width: 215px) {
-    /*.nav {padding-top: 15px;}*/
     .navbar .menu-text {
         font-size: 9px;
     }
 }
 
 @media screen and (max-width: 170px) {
-    /*.nav {padding-top: 15px;}*/
-    /*.navbar a {font-size: 10px;}*/
     .menu-text {
         display: none
     }
@@ -1162,3 +1096,18 @@ input[type=text], input[type=password], select {
 @-webkit-keyframes fadeOut { 0% { opacity: 1; visibility: visible;} 100% {opacity: 0; visibility: hidden;}}
 @-moz-keyframes fadeOut { 0% { opacity: 1; visibility: visible;} 100% {opacity: 0; visibility: hidden;}}
 @keyframes fadeOut { 0% { opacity: 1; visibility: visible;} 100% {opacity: 0; visibility: hidden;}}
+
+.battery-severity.error {
+    background-color: inherit !important;
+    color: #f44336;
+}
+.battery-severity.warning {
+    background-color: inherit !important;
+    color: rgb(202, 111, 7);
+}
+
+.divider {
+    border: 1px solid var(--text-color);
+    width: 100%;
+    opacity: 0.6;
+}

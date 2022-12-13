@@ -1,15 +1,15 @@
-// TODO: maybe create the temp html container via template, since the autoupdate will be called anyways...let
-//       (as done in the stats...)
 // TODO: trigger relaod on OWIE WiFi Changes after , lets say 5 secs?
-// TODO: make an pre loading overlay, since we moved loading owie js on page end...
 // TODO: code cleanup index.html 
 // TODO: refactor CSS...
-// TODO: add battery severity logic... (Warning or Error if something went out of bounds! -> but what IS out of bounds?....)
 // TODO: automatically extend gauge max and mins depending on retrieved values.
 
- currentChargingState = null;
+let currentChargingState = null;
 let statsDomWritten = false;
 let updateInterval = 1000; // in ms
+let currentSeverityOffset = 0;
+// offset for warning severity when battery cells are unbalanced
+// TODO: probably make the offset(s) configurable?
+let batteryCellOffsetWarning = 0.4;
 
 /**
  * Router Object.
@@ -465,31 +465,24 @@ let handleChargingIcons = (charging) => {
 // adds logic for the battery severity calculation 
 // and set severity to dom
 let handleBatterySeverityDisplay =(data) => {
-  // TODO: set definition for out of bounds
-  // offset for warning severity when battery cells are going out of bound 
-  let batteryCellOffsetWarning = 0.2;
-  
-  // offset for error severity when battery cells are going out of bound 
-  let batteryCellOffsetError = 0.4;
-  
-  // we take the first cell as reference (since it doesnt matter anyways...)
-  let refCellVal = parseFloat(data.battery_cells.value[0]);
+  let maxCellVoltage = Math.max(...data.battery_cells.value);
+  let minCellVoltage = Math.min(...data.battery_cells.value);
+  let cellOffset = maxCellVoltage-minCellVoltage;
 
-  // now we need to calculate the offset between the ref cell and all oter cells
-  // this will be a basic avarage offset calc!
-  // NOT WORKING!!! AVG must be changed!!
-  const cellAvg = data.battery_cells.value.reduce((a,b) => parseFloat(a) + parseFloat(b), 0) / data.battery_cells.value.length;
-  const cellOffset = Math.abs(refCellVal-cellAvg);
-
-  if (cellOffset > batteryCellOffsetWarning) {
-
-  } else {
-
+  // only set serverity if we have a change
+  if (currentSeverityOffset !== cellOffset) {
+      currentSeverityOffset = cellOffset;
+      let serverityElement = document.querySelector(".battery-severity")
+      if (cellOffset < batteryCellOffsetWarning) {
+          // OK
+          serverityElement.innerHTML = "OK";
+          serverityElement.classList.remove("warning");
+      } else {
+          // warning
+          serverityElement.innerHTML = "Imbalance";
+          serverityElement.classList.add('warning');
+      }
   }
-  console.log(cellOffset);
-  // TODO: handle output :)
-  
-
 }
 
 // fetch metadata from API and set it to the DOM
@@ -560,7 +553,6 @@ let handleMetadata = async () => {
   }
 }
 
-// Improvment: Maybe it would be better to change the API hammering into a more less invasive WebSocket??
 // fetch updates from API and set it to the DOM 
 // this is currently set to every second and can be configured by setting "updateInterval"
 let getAutoupdate = async () => {
