@@ -163,6 +163,8 @@ String templateProcessor(const String &var) {
     return lockingPreconditionsMet() ? "1" : "";
   } else if (var == "LOCKING_ENABLED") {
     return Settings->locking_enabled ? "1" : "";
+  } else if (var == "SPOOFING_DISABLED") {
+    return Settings->monitoring_only_enabled ? "1" : "";
   } else if (var == "PACKET_STATS_TABLE") {
     return renderPacketStatsTable();
   } else if (var == "CELL_VOLTAGE_TABLE") {
@@ -309,6 +311,9 @@ void setupWebServer(BmsRelay *bmsRelay) {
                         SETTINGS_HTML_SIZE, templateProcessor);
         return;
       case HTTP_POST:
+        const auto monitoringOnly = request->getParam("monChk", true);
+        Settings->monitoring_only_enabled = (monitoringOnly !=  nullptr); //It's a checkbox so if the param is missing, it means it's unchecked (meaning monitoring-only is disabled);
+
         const auto apSelfPassword = request->getParam("pw", true);
         const auto apSelfName = request->getParam("apselfname", true);
         const auto wifiPower = request->getParam("wifipower", true);

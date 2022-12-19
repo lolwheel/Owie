@@ -17,6 +17,12 @@
     </div>
     <form method="post" action="/settings" id="settingsForm">
       <fieldset>
+        <legend>Monitoring-ony mode:</legend>
+        <p>Enable if only BMS data monitoring is needed, i.e.: show cell voltages, battery temps, etc. BMS data received by OWIE will be forwarded to the controller unaltered.</p>
+        <input type="checkbox" name="monChk" id="monChk" data-checked="%SPOOFING_DISABLED%"/>
+        <label for="monChk">Enabled</label>
+      </fieldset>
+      <fieldset>
         <legend>WiFi options:</legend>
         <p>Owie WiFi network name override:<br><input placeholder="WiFi network name" value="%AP_SELF_NAME%"
             name="apselfname"></p>
@@ -59,39 +65,46 @@
           form.setAttribute("action", oldAction);
         };
 
+        const monCheckbox = document.getElementById("monChk");
+        if (monCheckbox.dataset.checked) {
+          monCheckbox.setAttribute("checked","");
+        } else {
+          monCheckbox.removeAttribute("checked");
+        }
+
         const cannotLockMsg = "First set WiFi password above and save settings to enable board locking.";
         const lockingEnabledMsg = "Locking is enabled! To lock the board, turn it on and off in less than 5 seconds.";
         const lockingDisabledMsg = "Locking is disabled."
-        const btn = document.getElementById("armBtn");
+        const armBtn = document.getElementById("armBtn");
         const lockingMsg = document.getElementById("lockingMsg");
-        if (!btn.dataset.canenable) {
+        if (!armBtn.dataset.canenable) {
           lockingMsg.innerText = cannotLockMsg;
           return;
         }
-        btn.removeAttribute('style');
+        armBtn.removeAttribute('style');
 
-        function updateButton() {
-          const isEnabled = !!btn.dataset.enabled;
-          btn.removeAttribute("disabled");
+        function updateArmButton() {
+          const isEnabled = !!armBtn.dataset.enabled;
+          armBtn.removeAttribute("disabled");
           lockingMsg.innerText = isEnabled ? lockingEnabledMsg : lockingDisabledMsg;
-          btn.innerText = isEnabled ? "Disable locking" : "Enable locking";
+          armBtn.innerText = isEnabled ? "Disable locking" : "Enable locking";
         }
-        updateButton();
+        updateArmButton();
 
-        btn.onclick = () => {
+        armBtn.onclick = () => {
           const xhr = new XMLHttpRequest();
           xhr.open("GET", "/lock?toggleArm");
           xhr.resposeType = "text";
 
           xhr.onload = () => {
             if (xhr.readyState !== xhr.DONE || xhr.status !== 200) {
-              btn.innerText = "Error: " + xhr.status;
+              armBtn.innerText = "Error: " + xhr.status;
             } else {
-              btn.dataset.enabled = xhr.responseText;
-              updateButton();
+              armBtn.dataset.enabled = xhr.responseText;
+              updateArmButton();
             }
           };
-          btn.setAttribute("disabled", "1");
+          armBtn.setAttribute("disabled", "1");
           xhr.send();
         }
       })();
