@@ -21,7 +21,7 @@
                     }
                     setTimeout(reloadData, 100);
                 });
-                xhr.open("GET", "/autoupdate");
+                xhr.open("GET", "/json");
                 xhr.send();
             }
             reloadData();
@@ -47,6 +47,24 @@
         });
     //# sourceURL=index.js
     </script>
+<script>
+    var intervalId = window.setInterval(function(){
+        var allTheData = document.querySelector('#TEMPERATURE_TABLE').textContent.trim().split(',')
+        var separateList = '<tr>'
+        allTheData.forEach(function(value) {
+           separateList += '<td>' + value + '</td>';
+        });
+        separateList += '</tr>';
+		var allTheData2 = document.querySelector('#CELL_VOLTAGE_TABLE').textContent.trim().split(',')
+        var separateList2 = '<tr>'
+        allTheData2.forEach(function(value) {
+           separateList2 += '<td>' + value + '</td>';
+        });
+        separateList2 += '</tr>';
+        document.querySelector('#TEMPERATURE_TABLE').innerHTML = separateList;
+        document.querySelector(' #CELL_VOLTAGE_TABLE').innerHTML = separateList2;
+    }, 100);
+     </script>
 </head>
 
 <body>

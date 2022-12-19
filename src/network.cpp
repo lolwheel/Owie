@@ -80,47 +80,67 @@ String getTempString() {
   const int8_t *thermTemps = relay->getTemperaturesCelsius();
   String temps;
   temps.reserve(256);
-  temps.concat("<tr>");
-  for (int i = 0; i < 5; i++) {
-    temps.concat("<td>");
+    temps.concat("[");
+  //temps.concat('"');
+  for (int i = 0; i < 4; i++) {
     temps.concat(thermTemps[i]);
-    temps.concat("</td>");
+   // temps.concat('"');
+    temps.concat(",");
+   // temps.concat('"');
   }
-  temps.concat("<tr>");
+  temps.concat(thermTemps[5]);
+   // temps.concat('"');
+    temps.concat("]");
+
+
   return temps;
 }
+
 
 String generateOwieStatusJson() {
   DynamicJsonDocument status(1024);
   String jsonOutput;
-  const uint16_t *cellMillivolts = relay->getCellMillivolts();
-  String out;
-  out.reserve(256);
-  for (int i = 0; i < 3; i++) {
-    out.concat("<tr>");
-    for (int j = 0; j < 5; j++) {
-      out.concat("<td>");
-      out.concat(cellMillivolts[i * 5 + j] / 1000.0);
-      out.concat("</td>");
-    }
-    out.concat("<tr>");
-  }
 
-  status["TOTAL_VOLTAGE"] =
-      String(relay->getTotalVoltageMillivolts() / 1000.0, 2) + "v";
+  const uint16_t *cellMillivolts = relay->getCellMillivolts();
+  String CELL_VOLTAGE_TABLEstring;
+  CELL_VOLTAGE_TABLEstring.reserve(256);
+
+  CELL_VOLTAGE_TABLEstring.concat("[");
+  for (int i = 0; i < 13; i++) {
+      CELL_VOLTAGE_TABLEstring.concat(cellMillivolts[i] / 1000.0);
+      CELL_VOLTAGE_TABLEstring.concat(",");
+    }
+    CELL_VOLTAGE_TABLEstring.concat(cellMillivolts[14] / 1000.0);
+    CELL_VOLTAGE_TABLEstring.concat("]");
+
+    /////////////////////////////////////////////////////////////////////
+  const int8_t *thermTemps = relay->getTemperaturesCelsius();
+  String temps;
+  temps.reserve(256);
+    temps.concat("[");
+  for (int i = 0; i < 4; i++) {
+    temps.concat(thermTemps[i]);
+    temps.concat(",");
+  }
+  temps.concat(thermTemps[5]);
+    temps.concat("]");
+
+
+
+  status["TOTAL_VOLTAGE"] = String(relay->getTotalVoltageMillivolts() / 1000.0, 2) + "v";
   status["CURRENT_AMPS"] = String(relay->getCurrentInAmps(), 1) + " Amps";
   status["BMS_SOC"] = String(relay->getBmsReportedSOC()) + "%";
   status["OVERRIDDEN_SOC"] = String(relay->getOverriddenSOC()) + "%";
   status["USED_CHARGE_MAH"] = String(relay->getUsedChargeMah()) + " mAh";
-  status["REGENERATED_CHARGE_MAH"] =
-      String(relay->getRegeneratedChargeMah()) + " mAh";
+  status["REGENERATED_CHARGE_MAH"] = String(relay->getRegeneratedChargeMah()) + " mAh";
   status["UPTIME"] = uptimeString();
-  status["CELL_VOLTAGE_TABLE"] = out;
-  status["TEMPERATURE_TABLE"] = getTempString();
+  status["CELL_VOLTAGE_TABLE"] = serialized(CELL_VOLTAGE_TABLEstring);
+  status["TEMPERATURE_TABLE"] = serialized(temps);
 
   serializeJson(status, jsonOutput);
   return jsonOutput;
-}
+} 
+
 
 bool lockingPreconditionsMet() {
   return strlen(Settings->ap_self_password) > 0;
@@ -180,7 +200,18 @@ String templateProcessor(const String &var) {
     }
     return out;
   } else if (var == "TEMPERATURE_TABLE") {
-    return getTempString();
+
+      const int8_t *thermTemps = relay->getTemperaturesCelsius();
+  String temps;
+  temps.reserve(256);
+  temps.concat("<tr>");
+  for (int i = 0; i < 5; i++) {
+    temps.concat("<td>");
+    temps.concat(thermTemps[i]);
+    temps.concat("</td>");
+  }
+  temps.concat("<tr>");
+    return temps;
   } else if (var == "AP_PASSWORD") {
     return Settings->ap_self_password;
   } else if (var == "AP_SELF_NAME") {
@@ -252,7 +283,8 @@ void setupWebServer(BmsRelay *bmsRelay) {
   webServer.on("/favicon.ico", HTTP_GET,
                [](AsyncWebServerRequest *request) { request->send(404); });
 
-  webServer.on("/autoupdate", HTTP_GET, [](AsyncWebServerRequest *request) {
+
+    webServer.on("/json", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(200, "application/json", generateOwieStatusJson());
   });
 
