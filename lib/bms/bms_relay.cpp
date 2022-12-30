@@ -21,14 +21,16 @@ unsigned long packetTypeRebroadcastTimeout(int type) {
 
 }  // namespace
 
-BmsRelay::BmsRelay(const Source& source, const Sink& sink, const Millis& millis)
-    : source_(source), sink_(sink), millis_(millis), packet_tracker_(millis) {
+BmsRelay::BmsRelay(const Source& source, const Sink& sink,
+                   const MillisProvider& millis)
+    : source_(source), sink_(sink), millis_provider_(millis) {
   sourceBuffer_.reserve(64);
 }
 
 void BmsRelay::loop() {
   while (true) {
     int byte = source_();
+    now_millis_ = millis_provider_();
     if (byte < 0) {
       maybeReplayPackets();
       return;
@@ -39,13 +41,12 @@ void BmsRelay::loop() {
 }
 
 void BmsRelay::maybeReplayPackets() {
-  const unsigned long now_millis = millis_();
   for (const IndividualPacketStat& stat :
        packet_tracker_.getIndividualPacketStats()) {
     if (stat.total_num < 1) {
       continue;
     }
-    if ((now_millis - stat.last_packet_millis) <
+    if ((now_millis_ - stat.last_packet_millis) <
         packetTypeRebroadcastTimeout(stat.id)) {
       continue;
     }
@@ -99,7 +100,7 @@ void BmsRelay::processNextByte() {
 }
 
 void BmsRelay::ingestPacket(Packet& p) {
-  packet_tracker_.processPacket(p);
+  packet_tracker_.processPacket(p, now_millis_);
   for (auto& callback : receivedPacketCallbacks_) {
     callback(this, &p);
   };

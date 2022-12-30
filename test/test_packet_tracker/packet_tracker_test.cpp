@@ -7,19 +7,15 @@
 
 #include "packet.h"
 
-unsigned long millis;
 std::vector<std::string> tasksExecuted;
 std::unique_ptr<PacketTracker> tracker;
 
-void setUp(void) {
-  millis = 0;
-  tracker.reset(new PacketTracker([&]() { return millis; }));
-}
+void setUp(void) { tracker.reset(new PacketTracker()); }
 
 void testGlobalTracking() {
   uint8_t data[] = {0xFF, 0x55, 0xAA, 0x6, 0x1, 0x2, 0x3, 0x4, 0x2, 0xE};
   Packet p(data, sizeof(data));
-  tracker->processPacket(p);
+  tracker->processPacket(p, 0);
   // Global stats check
   TEST_ASSERT_EQUAL(1, tracker->getGlobalStats().total_known_packets_received);
   TEST_ASSERT_EQUAL(0,
@@ -27,8 +23,7 @@ void testGlobalTracking() {
   TEST_ASSERT_EQUAL(10, tracker->getGlobalStats().total_known_bytes_received);
   TEST_ASSERT_EQUAL(0, tracker->getGlobalStats().total_unknown_bytes_received);
 
-  millis = 1000;
-  tracker->processPacket(p);
+  tracker->processPacket(p, 1000);
   TEST_ASSERT_EQUAL(2, tracker->getGlobalStats().total_known_packets_received);
   TEST_ASSERT_EQUAL(0,
                     tracker->getGlobalStats().total_packet_checksum_mismatches);
@@ -39,7 +34,7 @@ void testGlobalTracking() {
 void testindividualStatsCalculation() {
   uint8_t data[] = {0xFF, 0x55, 0xAA, 0x6, 0x1, 0x2, 0x3, 0x4, 0x2, 0xE};
   Packet p(data, sizeof(data));
-  tracker->processPacket(p);
+  tracker->processPacket(p, 0);
   TEST_ASSERT_EQUAL(1, tracker->getIndividualPacketStats()[6].total_num);
   TEST_ASSERT_EQUAL(6, tracker->getIndividualPacketStats()[6].id);
   TEST_ASSERT_EQUAL(
@@ -54,8 +49,7 @@ void testindividualStatsCalculation() {
       sizeof(data));
 
   // Advance the time by 1000 millis and send the same packet
-  millis = 1000;
-  tracker->processPacket(p);
+  tracker->processPacket(p, 1000);
 
   TEST_ASSERT_EQUAL(2, tracker->getIndividualPacketStats()[6].total_num);
   TEST_ASSERT_EQUAL(6, tracker->getIndividualPacketStats()[6].id);
@@ -63,8 +57,7 @@ void testindividualStatsCalculation() {
       1000, tracker->getIndividualPacketStats()[6].mean_period_millis());
 
   // Advance time by 1006 millis and send the packet again
-  millis = 2006;
-  tracker->processPacket(p);
+  tracker->processPacket(p, 2006);
 
   TEST_ASSERT_EQUAL(3, tracker->getIndividualPacketStats()[6].total_num);
   TEST_ASSERT_EQUAL(6, tracker->getIndividualPacketStats()[6].id);

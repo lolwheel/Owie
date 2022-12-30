@@ -20,7 +20,9 @@ namespace {
 void IRAM_ATTR txPinRiseInterrupt() { digitalWrite(TX_INVERSE_OUT_PIN, 0); }
 void IRAM_ATTR txPinFallInterrupt() { digitalWrite(TX_INVERSE_OUT_PIN, 1); }
 
+#ifdef NO_GLOBAL_INSTANCES
 HardwareSerial Serial(0);
+#endif
 }  // namespace
 
 BmsRelay *relay;

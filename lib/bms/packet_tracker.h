@@ -38,9 +38,9 @@ struct GlobalStats {
 
 class PacketTracker {
  public:
-  PacketTracker(const std::function<unsigned long()>& millis);
+  PacketTracker();
 
-  void processPacket(const Packet& packet);
+  void processPacket(const Packet& packet, const unsigned long millis);
   void unknownBytes(int num);
   const GlobalStats& getGlobalStats() const { return global_stats_; }
   const std::vector<IndividualPacketStat>& getIndividualPacketStats() const {
@@ -48,7 +48,6 @@ class PacketTracker {
   }
 
  private:
-  std::function<unsigned long()> millis_;
   GlobalStats global_stats_;
   std::vector<IndividualPacketStat> individual_packet_stats_;
 };

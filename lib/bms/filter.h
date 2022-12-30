@@ -9,24 +9,32 @@
 // Low pass butterworth filter order=2 alpha1=0.0025
 class LowPassFilter {
  public:
-  LowPassFilter() {}
+  LowPassFilter() = default;
 
  private:
+  bool initialized = false;
+
   float v[3] = {0};
 
- public:
   void setTo(float value) {
     const float val = value / 4;
     v[0] = val;
     v[1] = val;
     v[2] = val;
   }
-  float step(float x) {
+
+ public:
+  float get() { return (v[0] + v[2]) + 2 * v[1]; }
+  void step(float x) {
+    if (!initialized) {
+      initialized = true;
+      setTo(x);
+      return;
+    }
     v[0] = v[1];
     v[1] = v[2];
     v[2] = (6.100617875806624291e-5 * x) + (-0.97803050849179629100 * v[0]) +
            (1.97778648377676402603 * v[1]);
-    return (v[0] + v[2]) + 2 * v[1];
   }
 };
 
