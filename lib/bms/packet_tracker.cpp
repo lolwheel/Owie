@@ -2,6 +2,8 @@
 
 #include <cstring>
 
+#include "defer.h"
+
 PacketTracker::PacketTracker()
     : individual_packet_stats_(sizeof(PACKET_LENGTHS_BY_TYPE)) {}
 
@@ -23,13 +25,13 @@ void PacketTracker::processPacket(const Packet& packet,
   global_stats_.total_known_packets_received++;
 
   IndividualPacketStat* stat = &individual_packet_stats_[type];
+  defer { stat->last_packet_millis = now_millis; };
 
   stat->last_seen_valid_packet.resize(packet.len());
   memcpy(&stat->last_seen_valid_packet[0], packet.start(), packet.len());
 
   if (stat->total_num++ == 0) {
     stat->id = type;
-    stat->last_packet_millis = now_millis;
     return;
   }
   // Shouldn't happen but let's guard against.
@@ -37,7 +39,6 @@ void PacketTracker::processPacket(const Packet& packet,
     return;
   }
   stat->mean_and_dev_.add_value(float(now_millis - stat->last_packet_millis));
-  stat->last_packet_millis = now_millis;
 }
 
 void PacketTracker::unknownBytes(int num) {

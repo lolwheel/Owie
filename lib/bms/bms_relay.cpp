@@ -51,7 +51,7 @@ void BmsRelay::maybeReplayPackets() {
       continue;
     }
     std::vector<uint8_t> data_copy(stat.last_seen_valid_packet);
-    Packet p(&data_copy[0], data_copy.size());
+    Packet p(data_copy.data(), data_copy.size());
     ingestPacket(p);
   }
 }
