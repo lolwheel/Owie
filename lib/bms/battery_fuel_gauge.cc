@@ -40,7 +40,8 @@ int openCircuitSocFromCellVoltage(int cellVoltageMillivolts) {
 
 void BatteryFuelGauge::updateVoltage(int32_t voltageMillivolts,
                                      int32_t nowMillis) {
-  cell_voltage_filter_.step(voltageMillivolts);
+  voltage_millivolts_ = voltageMillivolts;
+  filtered_voltage_millivolts_.step(voltageMillivolts);
 }
 
 void BatteryFuelGauge::updateCurrent(int32_t currentMilliamps,
@@ -58,10 +59,57 @@ void BatteryFuelGauge::updateCurrent(int32_t currentMilliamps,
   } else {
     milliamp_seconds_recharged_ -= milliampSecondsDelta;
   }
+
+  // State update:
+  state_.currentMilliampSeconds += milliampSecondsDelta;
+  // If we just charged past the point that was known to us, the current Ah
+  // count is the new top. This means we move the bottom by the amount we
+  // overshot the current top.
+  if (state_.currentMilliampSeconds < 0) {
+    state_.bottomMilliampSeconds += state_.currentMilliampSeconds;
+    state_.currentMilliampSeconds = 0;
+    onHighestCharge();
+
+    // Otherwise, if we discharged further than we've ever seen, move the bottom
+    // further down.
+  } else if (state_.currentMilliampSeconds > state_.bottomMilliampSeconds) {
+    state_.bottomMilliampSeconds = state_.currentMilliampSeconds;
+    onHighestDischarge();
+  }
 }
 
-void BatteryFuelGauge::restoreState() {}
-void BatteryFuelGauge::saveState() {}
+void BatteryFuelGauge::onHighestCharge() {
+  const int voltageBasedSocEstimate =
+      openCircuitSocFromCellVoltage(filtered_voltage_millivolts_.get());
+  // Maintain an invariant of topSoc >= bottomSoc
+  if (voltageBasedSocEstimate < state_.bottomSoc) {
+    return;
+  }
+  if (voltageBasedSocEstimate <= state_.topSoc) {
+    return;
+  }
+  state_.topSoc = voltageBasedSocEstimate;
+}
+
+void BatteryFuelGauge::onHighestDischarge() {
+  const int voltageBasedSocEstimate =
+      openCircuitSocFromCellVoltage(filtered_voltage_millivolts_.get());
+  // Maintain an invariant of topSoc >= bottomSoc
+  if (voltageBasedSocEstimate > state_.topSoc) {
+    return;
+  }
+  if (voltageBasedSocEstimate >= state_.bottomSoc) {
+    return;
+  }
+  state_.bottomSoc = voltageBasedSocEstimate;
+}
+
+void BatteryFuelGauge::restoreState(const FuelGaugeState& from) {
+  state_ = from;
+}
+
+void BatteryFuelGauge::saveState(FuelGaugeState& to) { to = state_; }
+
 int32_t BatteryFuelGauge::getBatteryPercentage() {
-  return openCircuitSocFromCellVoltage((int)cell_voltage_filter_.get());
+  return openCircuitSocFromCellVoltage((int)filtered_voltage_millivolts_.get());
 }
