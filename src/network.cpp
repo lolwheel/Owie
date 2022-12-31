@@ -274,6 +274,17 @@ void setupWebServer(BmsRelay *bmsRelay) {
     response->addHeader("Cache-Control", "max-age=3600");
     request->send(response);
   });
+  webServer.on("/battery", HTTP_ANY, [](AsyncWebServerRequest *request) {
+    switch (request->method()) {
+      case HTTP_GET:
+        request->send_P(200, "text/html", BATTERY_HTML_PROGMEM_ARRAY,
+                        BATTERY_HTML_SIZE, templateProcessor);
+        return;
+      case HTTP_POST:
+        return;
+    }
+    request->send(404);
+  });
   webServer.on("/wifi", HTTP_ANY, [](AsyncWebServerRequest *request) {
     switch (request->method()) {
       case HTTP_GET:
