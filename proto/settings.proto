@@ -1,8 +1,10 @@
 syntax = "proto3";
 
 message BatteryStateMsg {
-  bool seen_full_charge = 1;
-  int32 mah_discharged_since_last_full_charge = 2;
+  int32 bottom_milliamp_seconds = 1;
+  int32 current_milliamp_seconds = 2;
+  int32 top_soc = 3;
+  int32 bottom_soc = 4;
 }
 
 message SettingsMsg {
@@ -16,6 +18,7 @@ message SettingsMsg {
   int32 wifi_power = 8;
   bool is_locked = 9; // if the board is actively locked/parked
   bool locking_enabled = 10; // if the board locking functionality is enabled ('armed')
+  BatteryStateMsg battery_state = 12;
 
   reserved 11;
 }

@@ -34,7 +34,23 @@ class BmsRelay {
            const MillisProvider& millisProvider);
 
   /**
-   * @brief Call from arduino loop.
+   * Restore saved battery state.
+   * This method must be called as early as possible in the startup sequence.
+   */
+  void restoreFuelGaugeState(const FuelGaugeState& from) {
+    battery_fuel_gauge_.restoreState(from);
+  }
+
+  /**
+   * Returns current fuel gauge state.
+   */
+  FuelGaugeState getFuelGaugeState(void) {
+    return battery_fuel_gauge_.getState();
+  }
+
+  /**
+   * @brief All of the data ingestion, processing and forwarding is done here.
+   * Must be called continuously from arduino loop.
    */
   void loop();
 

@@ -6,9 +6,16 @@
 #include "filter.h"
 
 struct FuelGaugeState {
+  // A positive number, mAs of the deepest discharge seen.
   int32_t bottomMilliampSeconds;
+  // A positive number, mAs currently discharged compared to the highest charge
+  // seen.
   int32_t currentMilliampSeconds;
+  // Voltage-based SOC estimate corresponding to the top of the tracked SOC
+  // range.
   int8_t topSoc;
+  // Voltage-based SOC estimate corresponding to the bottom of the tracked SOC
+  // range.
   int8_t bottomSoc;
 };
 
@@ -20,8 +27,8 @@ class BatteryFuelGauge {
  public:
   // restoreState must be called exatly once and before any other calls on this
   // object.
-  void restoreState(const FuelGaugeState& from);
-  void saveState(FuelGaugeState& to);
+  void restoreState(const FuelGaugeState& from) { state_ = from; };
+  FuelGaugeState getState() { return state_; }
 
   // Takes a single cell voltage in millivolts.
   void updateVoltage(int32_t voltageMillivolts, int32_t nowMillis);

@@ -42,6 +42,14 @@ void BatteryFuelGauge::updateVoltage(int32_t voltageMillivolts,
                                      int32_t nowMillis) {
   voltage_millivolts_ = voltageMillivolts;
   filtered_voltage_millivolts_.step(voltageMillivolts);
+  if (state_.currentMilliampSeconds == state_.bottomMilliampSeconds) {
+    state_.bottomSoc =
+        openCircuitSocFromCellVoltage(filtered_voltage_millivolts_.get());
+  }
+  if (state_.currentMilliampSeconds == 0) {
+    state_.topSoc =
+        openCircuitSocFromCellVoltage(filtered_voltage_millivolts_.get());
+  }
 }
 
 void BatteryFuelGauge::updateCurrent(int32_t currentMilliamps,
@@ -66,7 +74,7 @@ void BatteryFuelGauge::updateCurrent(int32_t currentMilliamps,
   // count is the new top. This means we move the bottom by the amount we
   // overshot the current top.
   if (state_.currentMilliampSeconds < 0) {
-    state_.bottomMilliampSeconds += state_.currentMilliampSeconds;
+    state_.bottomMilliampSeconds -= state_.currentMilliampSeconds;
     state_.currentMilliampSeconds = 0;
     onHighestCharge();
 
@@ -104,12 +112,11 @@ void BatteryFuelGauge::onHighestDischarge() {
   state_.bottomSoc = voltageBasedSocEstimate;
 }
 
-void BatteryFuelGauge::restoreState(const FuelGaugeState& from) {
-  state_ = from;
-}
-
-void BatteryFuelGauge::saveState(FuelGaugeState& to) { to = state_; }
-
 int32_t BatteryFuelGauge::getBatteryPercentage() {
-  return openCircuitSocFromCellVoltage((int)filtered_voltage_millivolts_.get());
+  if (state_.bottomMilliampSeconds == 0) {
+    return state_.topSoc;
+  }
+  return state_.topSoc - (state_.topSoc - state_.bottomSoc) *
+                             ((float)(state_.currentMilliampSeconds)) /
+                             ((float)(state_.bottomMilliampSeconds));
 }
