@@ -134,7 +134,7 @@ void testBatterySocParsing() {
 void testCurrentParsing() {
   addMockData({0xff, 0x55, 0xaa, 0x5, 0xff, 0xe8, 0x3, 0xea, 0xFF, 0x55, 0xAA});
   relay->loop();
-  TEST_ASSERT_FLOAT_WITHIN(0.01, -1.32, relay->getCurrentInAmps());
+  TEST_ASSERT_EQUAL(-1320, relay->getCurrentMilliamps());
 }
 
 void testCellVoltageParsing() {

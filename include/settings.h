@@ -19,4 +19,4 @@ void disableFlashPageRotation();
 
 void nukeSettings();
 
-#endif // SETTINGS_H
+#endif  // SETTINGS_H

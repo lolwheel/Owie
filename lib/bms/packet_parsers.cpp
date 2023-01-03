@@ -7,31 +7,9 @@
 
 namespace {
 
-template <class T>
-inline T clamp(T x, T lower, T upper) {
-  return std::min(upper, std::max(x, lower));
-}
-
 inline int16_t int16FromNetworkOrder(const void* const p) {
   uint8_t* const charPointer = (uint8_t* const)p;
   return ((uint16_t)(*charPointer)) << 8 | *(charPointer + 1);
-}
-
-int openCircuitSocFromCellVoltage(int cellVoltageMillivolts) {
-  static constexpr int LOOKUP_TABLE_RANGE_MIN_MV = 2700;
-  static constexpr int LOOKUP_TABLE_RANGE_MAX_MV = 4200;
-  static uint8_t LOOKUP_TABLE[31] = {0, 0, 0, 0, 1, 2, 3, 4, 5, 7, 8, 11, 14, 16, 18, 19, 25, 30, 33, 37, 43, 48, 53, 60, 67, 71, 76, 82, 92, 97, 100};
-  static constexpr int LOOKUP_TABLE_SIZE = (sizeof(LOOKUP_TABLE)/sizeof(*LOOKUP_TABLE));
-  static constexpr int RANGE = LOOKUP_TABLE_RANGE_MAX_MV - LOOKUP_TABLE_RANGE_MIN_MV;
-  // (RANGE - 1) upper limit effectively clamps the leftIndex below to (LOOKUP_TABLE_SIZE - 2)
-  cellVoltageMillivolts = clamp(cellVoltageMillivolts - LOOKUP_TABLE_RANGE_MIN_MV, 0, RANGE - 1);
-  float floatIndex = float(cellVoltageMillivolts) * (LOOKUP_TABLE_SIZE - 1) / RANGE;
-  const int leftIndex = int(floatIndex);
-  const float fractional = floatIndex - leftIndex;
-  const int rightIndex = leftIndex + 1;
-  const int leftValue = LOOKUP_TABLE[leftIndex];
-  const int rightValue = LOOKUP_TABLE[rightIndex];
-  return leftValue + round((rightValue - leftValue) * fractional);
 }
 
 }  // namespace
@@ -42,13 +20,11 @@ void BmsRelay::batteryPercentageParser(Packet& p) {
   }
   // 0x3 message is just one byte containing battery percentage.
   bms_soc_percent_ = *(int8_t*)p.data();
-  if (filtered_lowest_cell_voltage_millivolts_ == 0) {
-    // If we don't have voltage, swallow the packet
+  overridden_soc_percent_ = battery_fuel_gauge_.getBatteryPercentage();
+  if (overridden_soc_percent_ < 0) {
     p.setShouldForward(false);
     return;
   }
-  overridden_soc_percent_ =
-      openCircuitSocFromCellVoltage(filtered_lowest_cell_voltage_millivolts_);
   p.data()[0] = overridden_soc_percent_;
 }
 
@@ -60,25 +36,9 @@ void BmsRelay::currentParser(Packet& p) {
 
   // 0x5 message encodes current as signed int16.
   // The scaling factor (tested on a Pint) seems to be 0.055
-  // i.e. 1 in the data message below corresponds to 0.055 Amps.
-  current_ = int16FromNetworkOrder(p.data());
-
-  const unsigned long now = millis_();
-  if (last_current_message_millis_ == 0) {
-    last_current_ = current_;
-    last_current_message_millis_ = now;
-    return;
-  }
-  const int32_t millisElapsed = (int32_t)(now - last_current_message_millis_);
-  last_current_message_millis_ = now;
-  const int32_t current_times_milliseconds =
-      (last_current_ + current_) * millisElapsed / 2;
-  last_current_ = current_;
-  if (current_times_milliseconds > 0) {
-    current_times_milliseconds_used_ += current_times_milliseconds;
-  } else {
-    current_times_milliseconds_regenerated_ -= current_times_milliseconds;
-  }
+  // i.e. 1 in the data message below corresponds to 55 milliamps.
+  current_milliamps_ = int16FromNetworkOrder(p.data()) * CURRENT_SCALER;
+  battery_fuel_gauge_.updateCurrent(current_milliamps_, now_millis_);
 }
 
 void BmsRelay::bmsSerialParser(Packet& p) {
@@ -120,11 +80,7 @@ void BmsRelay::cellVoltageParser(Packet& p) {
     cell_millivolts_[i] = cellVoltage;
   }
   total_voltage_millivolts_ = total_voltage;
-  if (filtered_lowest_cell_voltage_millivolts_ == 0) {
-    lowest_cell_voltage_filter_.setTo(min_voltage);
-  }
-  filtered_lowest_cell_voltage_millivolts_ =
-      lowest_cell_voltage_filter_.step(min_voltage);
+  battery_fuel_gauge_.updateVoltage(min_voltage, now_millis_);
 }
 
 void BmsRelay::temperatureParser(Packet& p) {
@@ -162,4 +118,5 @@ void BmsRelay::bmsStatusParser(Packet& p) {
   // makes the board throw Error 23. Swallowing the packet does the trick.
   p.setShouldForward(isCharging() || isBatteryEmpty() ||
                      isBatteryTempOutOfRange() || isBatteryOvercharged());
+  battery_fuel_gauge_.updateChargingStatus(isCharging());
 }

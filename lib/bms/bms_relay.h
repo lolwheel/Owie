@@ -6,7 +6,7 @@
 #include <limits>
 #include <vector>
 
-#include "filter.h"
+#include "battery_fuel_gauge.h"
 #include "packet_tracker.h"
 
 class Packet;
@@ -28,12 +28,29 @@ class BmsRelay {
    */
   typedef std::function<void(BmsRelay*, Packet*)> PacketCallback;
 
-  typedef std::function<unsigned long()> Millis;
+  typedef std::function<unsigned long()> MillisProvider;
 
-  BmsRelay(const Source& source, const Sink& sink, const Millis& millis);
+  BmsRelay(const Source& source, const Sink& sink,
+           const MillisProvider& millisProvider);
 
   /**
-   * @brief Call from arduino loop.
+   * Restore saved battery state.
+   * This method must be called as early as possible in the startup sequence.
+   */
+  void restoreFuelGaugeState(const FuelGaugeState& from) {
+    battery_fuel_gauge_.restoreState(from);
+  }
+
+  /**
+   * Returns current fuel gauge state.
+   */
+  FuelGaugeState getFuelGaugeState(void) {
+    return battery_fuel_gauge_.getState();
+  }
+
+  /**
+   * @brief All of the data ingestion, processing and forwarding is done here.
+   * Must be called continuously from arduino loop.
    */
   void loop();
 
@@ -99,13 +116,13 @@ class BmsRelay {
   /**
    * @brief Current In Amps.
    */
-  float getCurrentInAmps() { return current_ * CURRENT_SCALER; }
+  int32_t getCurrentMilliamps() { return current_milliamps_; }
 
   int32_t getUsedChargeMah() {
-    return current_times_milliseconds_used_ * CURRENT_SCALER / 3600;
+    return battery_fuel_gauge_.getMilliampSecondsDischarged() / 3600;
   }
   int32_t getRegeneratedChargeMah() {
-    return current_times_milliseconds_regenerated_ * CURRENT_SCALER / 3600;
+    return battery_fuel_gauge_.getMilliampSecondsRecharged() / 3600;
   }
 
   bool isCharging() { return last_status_byte_ & 0x20; }
@@ -117,10 +134,11 @@ class BmsRelay {
   }
   bool isBatteryOvercharged() { return last_status_byte_ & 8; }
 
-  const PacketTracker& getPacketTracker() const { return packet_tracker_;}
+  const PacketTracker& getPacketTracker() const { return packet_tracker_; }
 
  private:
-  static constexpr float CURRENT_SCALER = 0.055;
+  // BMS current units to milliamps.
+  static constexpr int CURRENT_SCALER = 55;
   void processNextByte();
   void purgeUnknownData();
   void maybeReplayPackets();
@@ -135,26 +153,22 @@ class BmsRelay {
   std::vector<uint8_t> sourceBuffer_;
   uint32_t serial_override_ = 0;
   uint32_t captured_serial_ = 0;
-  int16_t current_ = 0;
+  int16_t current_milliamps_ = 0;
 
   int8_t bms_soc_percent_ = -1;
   int8_t overridden_soc_percent_ = -1;
   uint16_t cell_millivolts_[15] = {0};
   uint16_t total_voltage_millivolts_ = 0;
-  LowPassFilter lowest_cell_voltage_filter_;
-  uint16_t filtered_lowest_cell_voltage_millivolts_ = 0;
 
   int8_t temperatures_celsius_[5] = {0};
   int8_t avg_temperature_celsius_ = 0;
-  unsigned long last_current_message_millis_ = 0;
-  int16_t last_current_ = 0;
-  int32_t current_times_milliseconds_used_ = 0;
-  int32_t current_times_milliseconds_regenerated_ = 0;
   uint8_t last_status_byte_ = 0;
   const Source source_;
   const Sink sink_;
-  const Millis millis_;
+  const MillisProvider millis_provider_;
+  int32_t now_millis_;
   PacketTracker packet_tracker_;
+  BatteryFuelGauge battery_fuel_gauge_;
 
   void bmsStatusParser(Packet& p);
   void bmsSerialParser(Packet& p);

@@ -1,5 +1,5 @@
 // From https://github.com/patrickmineault/welford/blob/master/src/Welford.h
-//A basic implementation of Welford's algorithm for numerically stable
+// A basic implementation of Welford's algorithm for numerically stable
 // incremental mean and variance computation.
 // Usage example:
 // Welford<float> accum = Welford<float>{};
@@ -7,12 +7,12 @@
 //     accum.add_value(float(i));
 // }
 // accum.mean() // = 50
-// accum.var() // = 10000 / 12 
+// accum.var() // = 10000 / 12
 #include <math.h>
 
-template<class T>
+template <class T>
 class Welford {
-public:
+ public:
   void add_value(T x) {
     n++;
     T delta = x - m;
@@ -21,20 +21,16 @@ public:
     ss += delta * delta2;
   }
 
-  float mean() const {
-    return m;
-  }
+  float mean() const { return m; }
 
   float var() const {
     // Unbiased estimate.
     return ss / T(n - 1);
   }
 
-  float sd() const { 
-    return sqrt(ss / T(n - 1));
-  }
+  float sd() const { return sqrt(ss / T(n - 1)); }
 
-private:
+ private:
   // Mean.
   T m = 0;
   // Sum-of-squares.

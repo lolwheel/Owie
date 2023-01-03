@@ -21,7 +21,7 @@ AsyncWebSocket ws("/rawdata");
 const String defaultPass("****");
 BmsRelay *relay;
 
-const String owie_version = "1.4.3";
+const String owie_version = "2.0.0-dev";
 
 String renderPacketStatsTable() {
   String result(
@@ -108,7 +108,8 @@ String generateOwieStatusJson() {
 
   status["TOTAL_VOLTAGE"] =
       String(relay->getTotalVoltageMillivolts() / 1000.0, 2) + "v";
-  status["CURRENT_AMPS"] = String(relay->getCurrentInAmps(), 1) + " Amps";
+  status["CURRENT_AMPS"] =
+      String(relay->getCurrentMilliamps() / 1000.0, 1) + " Amps";
   status["BMS_SOC"] = String(relay->getBmsReportedSOC()) + "%";
   status["OVERRIDDEN_SOC"] = String(relay->getOverriddenSOC()) + "%";
   status["USED_CHARGE_MAH"] = String(relay->getUsedChargeMah()) + " mAh";
@@ -134,7 +135,7 @@ String templateProcessor(const String &var) {
     return String(relay->getTotalVoltageMillivolts() / 1000.0,
                   /* decimalPlaces = */ 2);
   } else if (var == "CURRENT_AMPS") {
-    return String(relay->getCurrentInAmps(),
+    return String(relay->getCurrentMilliamps() / 1000.0,
                   /* decimalPlaces = */ 1);
   } else if (var == "BMS_SOC") {
     return String(relay->getBmsReportedSOC());
@@ -272,6 +273,17 @@ void setupWebServer(BmsRelay *bmsRelay) {
         DEV_SETTINGS_HTML_SIZE, templateProcessor);
     response->addHeader("Cache-Control", "max-age=3600");
     request->send(response);
+  });
+  webServer.on("/battery", HTTP_ANY, [](AsyncWebServerRequest *request) {
+    switch (request->method()) {
+      case HTTP_GET:
+        request->send_P(200, "text/html", BATTERY_HTML_PROGMEM_ARRAY,
+                        BATTERY_HTML_SIZE, templateProcessor);
+        return;
+      case HTTP_POST:
+        return;
+    }
+    request->send(404);
   });
   webServer.on("/wifi", HTTP_ANY, [](AsyncWebServerRequest *request) {
     switch (request->method()) {

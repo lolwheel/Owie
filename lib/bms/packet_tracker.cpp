@@ -2,11 +2,13 @@
 
 #include <cstring>
 
-PacketTracker::PacketTracker(const std::function<unsigned long()>& millis)
-    : millis_(millis),
-      individual_packet_stats_(sizeof(PACKET_LENGTHS_BY_TYPE)) {}
+#include "defer.h"
 
-void PacketTracker::processPacket(const Packet& packet) {
+PacketTracker::PacketTracker()
+    : individual_packet_stats_(sizeof(PACKET_LENGTHS_BY_TYPE)) {}
+
+void PacketTracker::processPacket(const Packet& packet,
+                                  const unsigned long now_millis) {
   if (!packet.isValid()) {
     global_stats_.total_packet_checksum_mismatches++;
   }
@@ -22,23 +24,21 @@ void PacketTracker::processPacket(const Packet& packet) {
   global_stats_.total_known_bytes_received += packet.len();
   global_stats_.total_known_packets_received++;
 
-  const unsigned long now = millis_();
   IndividualPacketStat* stat = &individual_packet_stats_[type];
+  defer { stat->last_packet_millis = now_millis; };
 
   stat->last_seen_valid_packet.resize(packet.len());
   memcpy(&stat->last_seen_valid_packet[0], packet.start(), packet.len());
 
   if (stat->total_num++ == 0) {
     stat->id = type;
-    stat->last_packet_millis = now;
     return;
   }
   // Shouldn't happen but let's guard against.
-  if (now < stat->last_packet_millis) {
+  if (now_millis < stat->last_packet_millis) {
     return;
   }
-  stat->mean_and_dev_.add_value(float(now - stat->last_packet_millis));
-  stat->last_packet_millis = now;
+  stat->mean_and_dev_.add_value(float(now_millis - stat->last_packet_millis));
 }
 
 void PacketTracker::unknownBytes(int num) {
