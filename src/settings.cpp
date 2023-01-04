@@ -65,7 +65,7 @@ int32_t saveSettings() {
     DPRINTLN("Failed to encode settings.");
     return -1;
   }
-  *(int16_t*)e.getDataPtr() = stream.bytes_written;
+  *(int16_t*)e.getDataPtr() = (int16_t)stream.bytes_written;
   e.commit();
   DPRINTF("Serialized settings, size = %d bytes.", stream.bytes_written);
   return stream.bytes_written;

@@ -1,11 +1,11 @@
 #include <Arduino.h>
 
+#include "battery_fuel_gauge.h"
 #include "bms_relay.h"
 #include "network.h"
 #include "packet.h"
 #include "settings.h"
 #include "task_queue.h"
-#include "battery_fuel_gauge.h"
 
 // UART RX is connected to the *BMS* White line
 // UART TX is connected to the *MB* White line
@@ -68,20 +68,24 @@ void bms_setup() {
 
   if (Settings->has_battery_state) {
     FuelGaugeState gaugeState;
-    gaugeState.bottomMilliampSeconds = Settings->battery_state.bottom_milliamp_seconds;
-    gaugeState.currentMilliampSeconds = Settings->battery_state.current_milliamp_seconds;
+    gaugeState.bottomMilliampSeconds =
+        Settings->battery_state.bottom_milliamp_seconds;
+    gaugeState.currentMilliampSeconds =
+        Settings->battery_state.current_milliamp_seconds;
     gaugeState.bottomSoc = Settings->battery_state.bottom_soc;
     gaugeState.topSoc = Settings->battery_state.top_soc;
-    relay->restoreFuelGaugeState(gaugeState);
+    relay->getBatteryFuelGauge().restoreState(gaugeState);
   }
 
   relay->setPowerOffCallback([]() {
     Settings->graceful_shutdown_count++;
-    FuelGaugeState gaugeState = relay->getFuelGaugeState();
+    const FuelGaugeState gaugeState = relay->getBatteryFuelGauge().getState();
 
     Settings->has_battery_state = true;
-    Settings->battery_state.bottom_milliamp_seconds = gaugeState.bottomMilliampSeconds;
-    Settings->battery_state.current_milliamp_seconds = gaugeState.currentMilliampSeconds;
+    Settings->battery_state.bottom_milliamp_seconds =
+        gaugeState.bottomMilliampSeconds;
+    Settings->battery_state.current_milliamp_seconds =
+        gaugeState.currentMilliampSeconds;
     Settings->battery_state.bottom_soc = gaugeState.bottomSoc;
     Settings->battery_state.top_soc = gaugeState.topSoc;
     saveSettings();
