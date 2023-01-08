@@ -141,6 +141,18 @@ String templateProcessor(const String &var) {
     return String(relay->getBmsReportedSOC());
   } else if (var == "OVERRIDDEN_SOC") {
     return String(relay->getOverriddenSOC());
+  } else if (var == "VOLTAGE_BASED_SOC") {
+    return String(relay->getBatteryFuelGauge().getVoltageBasedSoc());
+  } else if (var == "BOTTOM_SOC") {
+    return String(relay->getBatteryFuelGauge().getState().bottomSoc);
+  } else if (var == "TOP_SOC") {
+    return String(relay->getBatteryFuelGauge().getState().topSoc);
+  } else if (var == "BOTTOM_MILLIAMP_HOURS") {
+    return String(
+        relay->getBatteryFuelGauge().getState().bottomMilliampSeconds / 3600);
+  } else if (var == "CURRENT_MILLIAMP_HOURS") {
+    return String(
+        relay->getBatteryFuelGauge().getState().currentMilliampSeconds / 3600);
   } else if (var == "USED_CHARGE_MAH") {
     return String(relay->getUsedChargeMah());
   } else if (var == "REGENERATED_CHARGE_MAH") {

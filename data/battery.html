@@ -14,8 +14,32 @@
         <div id="statusHeader" style="text-align:center;color:#eaeaea;margin-bottom:10px;">
             <h2>Owie Battery</h2>
         </div>
-        <form method="post" action="/battery" id="batteryForm">
-        </form>
+        <table>
+            <tr>
+                <th>SOC</th>
+                <td>%OVERRIDDEN_SOC%%%</td>
+            </tr>
+            <tr>
+                <th>Voltage based SOC</th>
+                <td>%VOLTAGE_BASED_SOC%%%</td>
+            </tr>
+            <tr>
+                <th>Lowest Ah-tracked SOC</th>
+                <td>%BOTTOM_SOC%%%</td>
+            </tr>
+            <tr>
+                <th>Highest Ah-tracked SOC</th>
+                <td>%TOP_SOC%%%</td>
+            </tr>
+            <tr>
+                <th>Ah-tracked range size</th>
+                <td>%BOTTOM_MILLIAMP_HOURS% mAh</td>
+            </tr>
+            <tr>
+                <th>Current discharge depth</th>
+                <td>%CURRENT_MILLIAMP_HOURS% mAh</td>
+            </tr>
+        </table>
     </div>
 </body>
 

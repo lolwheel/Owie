@@ -20,7 +20,7 @@ void BmsRelay::batteryPercentageParser(Packet& p) {
   }
   // 0x3 message is just one byte containing battery percentage.
   bms_soc_percent_ = *(int8_t*)p.data();
-  overridden_soc_percent_ = battery_fuel_gauge_.getBatteryPercentage();
+  overridden_soc_percent_ = battery_fuel_gauge_.getSoc();
   if (overridden_soc_percent_ < 0) {
     p.setShouldForward(false);
     return;
