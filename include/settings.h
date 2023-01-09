@@ -3,7 +3,7 @@
 
 #include "settings.pb.h"
 
-extern SettingsMsg *Settings;
+extern SettingsMsg * const Settings;
 
 void loadSettings();
 /**

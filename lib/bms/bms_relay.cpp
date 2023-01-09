@@ -12,7 +12,7 @@ unsigned long packetTypeRebroadcastTimeout(int type) {
   if (type == 0 || type == 5) {
     return 500;
   }
-  // Never rebroadcast the shutdown packet.
+  // Packet 11 only appears once on power up.
   if (type == 11) {
     return std::numeric_limits<unsigned long>::max();
   }
@@ -110,7 +110,6 @@ void BmsRelay::ingestPacket(Packet& p) {
   batteryPercentageParser(p);
   cellVoltageParser(p);
   temperatureParser(p);
-  powerOffParser(p);
   //  Recalculate CRC so that logging callbacks see the correct CRCs
   p.recalculateCrcIfValid();
   if (p.shouldForward()) {

@@ -293,6 +293,13 @@ void setupWebServer(BmsRelay *bmsRelay) {
                         BATTERY_HTML_SIZE, templateProcessor);
         return;
       case HTTP_POST:
+        if (request->getParam("reset_stats", true) != nullptr) {
+          relay->getBatteryFuelGauge().reset();
+        } else if (request->getParam("reset_settings", true) != nullptr) {
+          Settings->battery_state = BatteryStateMsg_init_default;
+          saveSettings();
+        }
+        request->redirect("/battery");
         return;
     }
     request->send(404);

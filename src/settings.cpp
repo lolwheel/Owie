@@ -30,7 +30,7 @@ EEPROM_Rotate& getEeprom() {
 }
 }  // namespace
 
-SettingsMsg* Settings = &__settings;
+SettingsMsg * const Settings = &__settings;
 
 void sanitizeWifiPowerSetting() {
   // check the wifi power Setting and write back a sane default if is out of

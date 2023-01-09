@@ -97,16 +97,6 @@ void BmsRelay::temperatureParser(Packet& p) {
   avg_temperature_celsius_ = temperature_sum / 5;
 }
 
-void BmsRelay::powerOffParser(Packet& p) {
-  if (p.getType() != 11) {
-    return;
-  }
-  // We're about to shut down.
-  if (powerOffCallback_) {
-    powerOffCallback_();
-  }
-}
-
 void BmsRelay::bmsStatusParser(Packet& p) {
   if (p.getType() != 0) {
     return;
