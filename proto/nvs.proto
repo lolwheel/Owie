@@ -1,0 +1,22 @@
+// proto2 for extension support.
+syntax = "proto2";
+
+message PageHeader {
+    optional int32 version = 1;
+    optional int32 seq_no = 2;
+    optional int32 erase_count = 3;
+}
+
+message ValueUpdate {
+    // Always present
+    optional int32 id = 1;
+    // If present, associates id to this name
+    optional string name = 2;
+    // If none of the following fields is present, this is a tombstone.
+    optional uint64 uint64_val = 3;
+    optional sint64 sint64_val = 4;
+    optional fixed64 fixed64_val = 5;
+    optional fixed32 fixed32_val = 6;
+    optional bytes bytes = 7;
+}
+
