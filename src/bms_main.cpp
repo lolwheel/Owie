@@ -77,19 +77,19 @@ void bms_setup() {
     relay->getBatteryFuelGauge().restoreState(gaugeState);
   }
 
-  relay->setPowerOffCallback([]() {
-    Settings->graceful_shutdown_count++;
-    const FuelGaugeState gaugeState = relay->getBatteryFuelGauge().getState();
+  // relay->setPowerOffCallback([]() {
+  //   Settings->graceful_shutdown_count++;
+  //   const FuelGaugeState &gaugeState = relay->getBatteryFuelGauge().getState();
 
-    Settings->has_battery_state = true;
-    Settings->battery_state.bottom_milliamp_seconds =
-        gaugeState.bottomMilliampSeconds;
-    Settings->battery_state.current_milliamp_seconds =
-        gaugeState.currentMilliampSeconds;
-    Settings->battery_state.bottom_soc = gaugeState.bottomSoc;
-    Settings->battery_state.top_soc = gaugeState.topSoc;
-    saveSettings();
-  });
+  //   Settings->has_battery_state = true;
+  //   Settings->battery_state.bottom_milliamp_seconds =
+  //       gaugeState.bottomMilliampSeconds;
+  //   Settings->battery_state.current_milliamp_seconds =
+  //       gaugeState.currentMilliampSeconds;
+  //   Settings->battery_state.bottom_soc = gaugeState.bottomSoc;
+  //   Settings->battery_state.top_soc = gaugeState.topSoc;
+  //   saveSettings();
+  // });
 
   relay->setBMSSerialOverride(0xFFABCDEF);
 

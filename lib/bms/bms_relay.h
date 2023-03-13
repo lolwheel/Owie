@@ -47,14 +47,6 @@ class BmsRelay {
     forwardedPacketCallbacks_.push_back(callback);
   }
 
-  void setPowerOffCallback(const std::function<void(void)>& c) {
-    powerOffCallback_ = c;
-  }
-
-  void setSocRewriterCallback(const std::function<int8_t(int8_t, bool*)>& c) {
-    socRewriterCallback_ = c;
-  }
-
   void setUnknownDataCallback(const Sink& c) { unknownDataCallback_ = c; }
 
   /**
@@ -134,8 +126,6 @@ class BmsRelay {
   std::vector<PacketCallback> receivedPacketCallbacks_;
   std::vector<PacketCallback> forwardedPacketCallbacks_;
   Sink unknownDataCallback_;
-  std::function<int8_t(int8_t, bool*)> socRewriterCallback_;
-  std::function<void(void)> powerOffCallback_;
 
   std::vector<uint8_t> sourceBuffer_;
   uint32_t serial_override_ = 0;
@@ -163,7 +153,6 @@ class BmsRelay {
   void batteryPercentageParser(Packet& p);
   void cellVoltageParser(Packet& p);
   void temperatureParser(Packet& p);
-  void powerOffParser(Packet& p);
 };
 
 #endif  // BMS_RELAY_H

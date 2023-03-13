@@ -43,6 +43,8 @@ class BatteryFuelGauge {
   }
   int32_t getMilliampSecondsRecharged() { return milliamp_seconds_recharged_; }
 
+  void reset() { state_ = FuelGaugeState(); }
+
  private:
   void onHighestCharge();
   void onHighestDischarge();

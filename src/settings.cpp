@@ -8,6 +8,7 @@
 #include "pb_encode.h"
 #include "spi_flash_geometry.h"
 #include "task_queue.h"
+#include "nvs.h"
 
 namespace {
 SettingsMsg __settings = SettingsMsg_init_default;
@@ -18,6 +19,7 @@ SettingsMsg DEFAULT_SETTINGS = SettingsMsg_init_default;
 const size_t MAX_SETTINGS_SIZE = SPI_FLASH_SEC_SIZE - 5;
 
 EEPROM_Rotate& getEeprom() {
+  new NonVolatileStorage(0,0);
   static EEPROM_Rotate e;
   static bool initialized = false;
   if (!initialized) {
@@ -30,7 +32,7 @@ EEPROM_Rotate& getEeprom() {
 }
 }  // namespace
 
-SettingsMsg* Settings = &__settings;
+SettingsMsg * const Settings = &__settings;
 
 void sanitizeWifiPowerSetting() {
   // check the wifi power Setting and write back a sane default if is out of
