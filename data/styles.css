@@ -429,7 +429,7 @@ input.required {
 }
 
 .boardlocking-enabled > .unlock-button > svg {
-    height: 71px;
+    height: 81px;
     margin-top: 5px;
 }
 
@@ -855,9 +855,13 @@ input[type=text], input[type=password], select {
 }
 
 .wifi-pw-visibility {
-    width: 20px;
+    width: 26px;
     position: absolute;
-    margin: 20px 0px 0px -29px;
+    margin: 16px 0 0 -30px;
+}
+
+.wifi-pw-visibility path {
+    fill: var(--text-color);
 }
 
 .settings button {

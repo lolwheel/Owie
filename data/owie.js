@@ -77,8 +77,8 @@ const Router = {
     //Check which route to activate
     checkRoute: function () {
       //Get hash
-      var hash = window.location.hash.substr(1).replace(/\//ig, '/');
-      //Default to first registered route. This should probably be your 404 page.
+      var hash = window.location.hash.substring(1).replace(/\//ig, '/');
+      //Default to first registered route.
       var route = this.routes[0];
       //Check each route
       for (var routeIndex = 0; routeIndex < this.routes.length; routeIndex++) {

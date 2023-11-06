@@ -189,7 +189,7 @@ DynamicJsonDocument generateOwieStatusJson() {
   for (int i = 0; i < 5; i++) {
     tempValues.add(thermTemps[i]);
   }
-  temperatures["unit"] = "&#8451;";
+  temperatures["unit"] = "&deg;C";
   
   return statusDoc;
 

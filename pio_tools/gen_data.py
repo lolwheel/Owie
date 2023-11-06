@@ -14,7 +14,7 @@ def ReadAndMaybeMinifyFiles(fullPath):
         with open(fullPath, "rb") as f:
             return f.read()
     originalSize = os.stat(fullPath).st_size
-    result = subprocess.run(['./node_modules/minify/bin/minify.js',
+    result = subprocess.run(['node', './node_modules/minify/bin/minify.js',
                            fullPath], stdout=subprocess.PIPE)
     minifiedContent = result.stdout
     print("Minified '%s' with from %d to %d bytes" % (fullPath, originalSize, len(minifiedContent)))
