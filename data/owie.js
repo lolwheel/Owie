@@ -1,15 +1,20 @@
 // TODO: trigger relaod on OWIE WiFi Changes after , lets say 5 secs?
 // TODO: code cleanup index.html 
 // TODO: refactor CSS...
-// TODO: automatically extend gauge max and mins depending on retrieved values.
 
 let currentChargingState = null;
 let statsDomWritten = false;
 let updateInterval = 1000; // in ms
 let currentSeverityOffset = 0;
-// offset for warning severity when battery cells are unbalanced
 // TODO: probably make the offset(s) configurable?
-let batteryCellOffsetWarning = 0.4;
+// offset for warning severity when battery cells are unbalanced
+const batteryCellOffsetWarning = 0.4;
+
+// temperature gauge visual severity class offsets
+const TEMPERATURE_SERVERITY_OFFSETS = {
+  "45": "warning",
+  "55": "error"
+}
 
 /**
  * Router Object.
@@ -569,12 +574,16 @@ let getAutoupdate = async () => {
     }
 
     document.getElementsByClassName("uptime")[0].getElementsByClassName("value-text")[0].innerText = jsonData.uptime.value;
-    let style = document.getElementsByTagName("body")[0].style
+    let style = document.getElementsByClassName("owie-app")[0].style;
     let props = {
       "--owie-percentage-int": jsonData.owie_percentage.value,
       "--bms-percentage-int": jsonData.bms_percentage.value,
       "--current": jsonData.current.value,
     }
+
+    // Update sessions max-current and min-current if owie delivers a higher/lower value as defined 
+    if (jsonData.current.value < getComputedStyle(document.getElementsByClassName("owie-app")[0]).getPropertyValue("--min-current")) props["--min-current"] = jsonData.current.value;
+    if (jsonData.current.value > getComputedStyle(document.getElementsByClassName("owie-app")[0]).getPropertyValue("--max-current")) props["--max-current"] = jsonData.current.value;
 
     for (const [key, value] of Object.entries(props)) {
       style.setProperty(key, value);
@@ -601,6 +610,13 @@ let getAutoupdate = async () => {
       let lbl = c.querySelector('.value-text');
       gaugeBar.style.width = percentage + "%";
       lbl.innerText = temp;
+      // Add visuals to temperatur gauges
+      let severity = TEMPERATURE_SERVERITY_OFFSETS[temps] || 'good';
+      if (!gaugeBar.classList.contains(severity)) {
+        // clear all severity levels and add the new on
+        gaugeBar.classList.remove("good", ...Object.values(TEMPERATURE_SERVERITY_OFFSETS));
+        gaugeBar.classList.add(severity);
+      }
 
       temps++;
     }

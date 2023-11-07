@@ -107,17 +107,14 @@ body.dark {
     background-color: black;
 }
 
-body.owie-app {
+.owie-app {
     --owie-percentage-int: 0;
     --bms-percentage-int: 0;
     --current: 0.0;
-}
-
-.owie-app {
-    --owie-percentage: calc(var(--owie-percentage-int) / 100 * 100%);
-    --bms-percentage: calc(var(--bms-percentage-int) / 100 * 100%);
     --max-current: 40;
     --min-current: -20;
+    --owie-percentage: calc(var(--owie-percentage-int) / 100 * 100%);
+    --bms-percentage: calc(var(--bms-percentage-int) / 100 * 100%);
     --text-color: #565656;
     --bar-color: #68d0f7;
     --background-color: whitesmoke;
@@ -709,6 +706,14 @@ div.battery-statistics.open > svg.content-icon.chevron {
     display: block;
     height: 6px;
     transition: 0.3s ease;
+}
+
+.temperature-gauge__bar.warning {
+    background-color: orange;
+}
+
+.temperature-gauge__bar.error {
+    background-color: red;
 }
 
 .boardlocking-enabled {
