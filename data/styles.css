@@ -230,7 +230,7 @@ body.dark {
 .progress > .progress-text .loading-icon {
     text-align: right;
     margin-right: 5px;
-    padding-top: 2px;
+    margin-top: -2px;
     margin-left: auto;
 }
 
@@ -570,7 +570,7 @@ input.required {
 }
 
 .loading-icon svg {
-    height: 30px;
+    height: 40px;
 }
 
 .loading-icon svg > path {

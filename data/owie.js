@@ -579,12 +579,13 @@ let getAutoupdate = async () => {
       "--owie-percentage-int": jsonData.owie_percentage.value,
       "--bms-percentage-int": jsonData.bms_percentage.value,
       "--current": jsonData.current.value,
-    }
-
-    // Update sessions max-current and min-current if owie delivers a higher/lower value as defined 
-    if (jsonData.current.value < getComputedStyle(document.getElementsByClassName("owie-app")[0]).getPropertyValue("--min-current")) props["--min-current"] = jsonData.current.value;
-    if (jsonData.current.value > getComputedStyle(document.getElementsByClassName("owie-app")[0]).getPropertyValue("--max-current")) props["--max-current"] = jsonData.current.value;
-
+    };
+    
+    // Update sessions max-current and min-current if owie delivers a higher/lower value as defined
+    ['--min-current', '--max-current'].forEach((prop)=>{
+      if (Math.abs(jsonData.current.value) > Math.abs(getComputedStyle(document.getElementsByClassName("owie-app")[0]).getPropertyValue(prop))) props[prop] = jsonData.current.value;
+    })
+    
     for (const [key, value] of Object.entries(props)) {
       style.setProperty(key, value);
     }
