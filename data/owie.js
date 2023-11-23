@@ -553,6 +553,9 @@ let handleMetadata = async () => {
      // handle battery cell table renderning
      renderBatteryCellTable();
 
+     // add captured BMS serial number (information only)
+     document.querySelector(".bms-serial-meta").innerHTML = `${meta.bms_serial_captured}`;
+
   } catch (e) {
     handleError(e);
   }

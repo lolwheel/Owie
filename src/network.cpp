@@ -125,6 +125,9 @@ DynamicJsonDocument generateMetadataJson() {
 
   // package stats in monitoring section
   root["package_stats"] = generatePackageStatsJson();
+
+  // add current read out BMS Serial Nr.  
+  root["bms_serial_captured"] = relay->getCapturedBMSSerial();
   
   return metadata;
 }
