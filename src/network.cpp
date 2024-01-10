@@ -21,7 +21,7 @@ AsyncWebSocket ws("/rawdata");
 const String defaultPass("****");
 BmsRelay *relay;
 
-const String owie_version = "1.5.0";
+const String owie_version = "2.0.0-dev";
 
 bool lockingPreconditionsMet() {
   return strlen(Settings->ap_self_password) > 0;
@@ -170,8 +170,8 @@ DynamicJsonDocument generateOwieStatusJson() {
 
   // current
   JsonObject current = root.createNestedObject("current");
-  current["value"] = String(relay->getCurrentInAmps(), 1);
-  current["unit"] = "mAh";
+  current["value"] = String(relay->getCurrentMilliamps() / 1000.0, 1);
+  current["unit"] = "A";
   
   // charging
   JsonObject charging = root.createNestedObject("charging");

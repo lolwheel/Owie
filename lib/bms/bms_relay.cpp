@@ -12,7 +12,7 @@ unsigned long packetTypeRebroadcastTimeout(int type) {
   if (type == 0 || type == 5) {
     return 500;
   }
-  // Never rebroadcast the shutdown packet.
+  // Packet 11 only appears once on power up.
   if (type == 11) {
     return std::numeric_limits<unsigned long>::max();
   }
@@ -21,14 +21,16 @@ unsigned long packetTypeRebroadcastTimeout(int type) {
 
 }  // namespace
 
-BmsRelay::BmsRelay(const Source& source, const Sink& sink, const Millis& millis)
-    : source_(source), sink_(sink), millis_(millis), packet_tracker_(millis) {
+BmsRelay::BmsRelay(const Source& source, const Sink& sink,
+                   const MillisProvider& millis)
+    : source_(source), sink_(sink), millis_provider_(millis) {
   sourceBuffer_.reserve(64);
 }
 
 void BmsRelay::loop() {
   while (true) {
     int byte = source_();
+    now_millis_ = millis_provider_();
     if (byte < 0) {
       maybeReplayPackets();
       return;
@@ -39,16 +41,17 @@ void BmsRelay::loop() {
 }
 
 void BmsRelay::maybeReplayPackets() {
-  const unsigned long now_millis = millis_();
-  for(const IndividualPacketStat& stat : packet_tracker_.getIndividualPacketStats()) {
+  for (const IndividualPacketStat& stat :
+       packet_tracker_.getIndividualPacketStats()) {
     if (stat.total_num < 1) {
       continue;
     }
-    if ((now_millis - stat.last_packet_millis) < packetTypeRebroadcastTimeout(stat.id)) {
+    if ((now_millis_ - stat.last_packet_millis) <
+        packetTypeRebroadcastTimeout(stat.id)) {
       continue;
     }
     std::vector<uint8_t> data_copy(stat.last_seen_valid_packet);
-    Packet p(&data_copy[0], data_copy.size());
+    Packet p(data_copy.data(), data_copy.size());
     ingestPacket(p);
   }
 }
@@ -97,7 +100,7 @@ void BmsRelay::processNextByte() {
 }
 
 void BmsRelay::ingestPacket(Packet& p) {
-  packet_tracker_.processPacket(p);
+  packet_tracker_.processPacket(p, now_millis_);
   for (auto& callback : receivedPacketCallbacks_) {
     callback(this, &p);
   };
@@ -107,7 +110,6 @@ void BmsRelay::ingestPacket(Packet& p) {
   batteryPercentageParser(p);
   cellVoltageParser(p);
   temperatureParser(p);
-  powerOffParser(p);
   //  Recalculate CRC so that logging callbacks see the correct CRCs
   p.recalculateCrcIfValid();
   if (p.shouldForward()) {

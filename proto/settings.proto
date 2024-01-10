@@ -1,16 +1,23 @@
 syntax = "proto3";
 
+message BatteryStateMsg {
+  int32 bottom_milliamp_seconds = 1;
+  int32 current_milliamp_seconds = 2;
+  int32 top_soc = 3;
+  int32 bottom_soc = 4;
+}
 
 message SettingsMsg {
   uint32 quick_power_cycle_count = 1;
   string ap_name = 2;
   string ap_password = 3;
   int32 graceful_shutdown_count = 4;
-  reserved 5; // used to be BMS serial override
   string ap_self_password = 6;
   string ap_self_name = 7;
   int32 wifi_power = 8;
   bool is_locked = 9; // if the board is actively locked/parked
   bool locking_enabled = 10; // if the board locking functionality is enabled ('armed')
-  reserved 11;
+  BatteryStateMsg battery_state = 12;
+
+  reserved 5,11;
 }

@@ -10,19 +10,14 @@
 
 class IndividualPacketStat {
  public:
-  IndividualPacketStat()
-      : id(-1),
-        total_num(0),
-        last_packet_millis(0) {}
+  IndividualPacketStat() : id(-1), total_num(0), last_packet_millis(0) {}
   // Packet message id, -1 if not initialized
   int id;
   int32_t total_num;
   std::vector<uint8_t> last_seen_valid_packet;
   unsigned long last_packet_millis;
-  int32_t mean_period_millis() const { return (int32_t) mean_and_dev_.mean(); }
-  int32_t deviation_millis() const {
-    return (int32_t) mean_and_dev_.sd();
-  };
+  int32_t mean_period_millis() const { return (int32_t)mean_and_dev_.mean(); }
+  int32_t deviation_millis() const { return (int32_t)mean_and_dev_.sd(); };
 
  private:
   Welford<float> mean_and_dev_;
@@ -43,9 +38,9 @@ struct GlobalStats {
 
 class PacketTracker {
  public:
-  PacketTracker(const std::function<unsigned long()>& millis);
+  PacketTracker();
 
-  void processPacket(const Packet& packet);
+  void processPacket(const Packet& packet, const unsigned long millis);
   void unknownBytes(int num);
   const GlobalStats& getGlobalStats() const { return global_stats_; }
   const std::vector<IndividualPacketStat>& getIndividualPacketStats() const {
@@ -53,7 +48,6 @@ class PacketTracker {
   }
 
  private:
-  std::function<unsigned long()> millis_;
   GlobalStats global_stats_;
   std::vector<IndividualPacketStat> individual_packet_stats_;
 };

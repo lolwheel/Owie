@@ -1,5 +1,6 @@
 #include <Arduino.h>
 
+#include "battery_fuel_gauge.h"
 #include "bms_relay.h"
 #include "network.h"
 #include "packet.h"
@@ -20,7 +21,9 @@ namespace {
 void IRAM_ATTR txPinRiseInterrupt() { digitalWrite(TX_INVERSE_OUT_PIN, 0); }
 void IRAM_ATTR txPinFallInterrupt() { digitalWrite(TX_INVERSE_OUT_PIN, 1); }
 
+#ifdef NO_GLOBAL_INSTANCES
 HardwareSerial Serial(0);
+#endif
 }  // namespace
 
 BmsRelay *relay;
@@ -63,10 +66,30 @@ void bms_setup() {
     streamBMSPacket(&unknownData[0], unknownData.size());
   });
 
-  relay->setPowerOffCallback([]() {
-    Settings->graceful_shutdown_count++;
-    saveSettings();
-  });
+  if (Settings->has_battery_state) {
+    FuelGaugeState gaugeState;
+    gaugeState.bottomMilliampSeconds =
+        Settings->battery_state.bottom_milliamp_seconds;
+    gaugeState.currentMilliampSeconds =
+        Settings->battery_state.current_milliamp_seconds;
+    gaugeState.bottomSoc = Settings->battery_state.bottom_soc;
+    gaugeState.topSoc = Settings->battery_state.top_soc;
+    relay->getBatteryFuelGauge().restoreState(gaugeState);
+  }
+
+  // relay->setPowerOffCallback([]() {
+  //   Settings->graceful_shutdown_count++;
+  //   const FuelGaugeState &gaugeState = relay->getBatteryFuelGauge().getState();
+
+  //   Settings->has_battery_state = true;
+  //   Settings->battery_state.bottom_milliamp_seconds =
+  //       gaugeState.bottomMilliampSeconds;
+  //   Settings->battery_state.current_milliamp_seconds =
+  //       gaugeState.currentMilliampSeconds;
+  //   Settings->battery_state.bottom_soc = gaugeState.bottomSoc;
+  //   Settings->battery_state.top_soc = gaugeState.topSoc;
+  //   saveSettings();
+  // });
 
   relay->setBMSSerialOverride(0xFFABCDEF);
 

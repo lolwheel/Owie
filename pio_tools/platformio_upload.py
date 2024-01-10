@@ -17,16 +17,13 @@ Import('env')
 
 try:
     from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
-    from tqdm import tqdm
 except ImportError:
     env.Execute("$PYTHONEXE -m pip install requests_toolbelt")
-    env.Execute("$PYTHONEXE -m pip install tqdm")
     from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
-    from tqdm import tqdm
 
 def on_upload(source, target, env):
     firmware_path = str(source[0])
-    upload_url = env.GetProjectOption('upload_url')
+    upload_url = env.GetProjectOption('custom_upload_url')
 
     with open(firmware_path, 'rb') as firmware:
         md5 = hashlib.md5(firmware.read()).hexdigest()
@@ -35,19 +32,12 @@ def on_upload(source, target, env):
             'MD5': md5, 
             'firmware': ('firmware', firmware, 'application/octet-stream')}
         )
-
-        bar = tqdm(desc='Upload Progress',
-              total=encoder.len,
-              dynamic_ncols=True,
-              unit='B',
-              unit_scale=True,
-              unit_divisor=1024
-              )
-
-        monitor = MultipartEncoderMonitor(encoder, lambda monitor: bar.update(monitor.bytes_read - bar.n))
-
-        response = requests.post(upload_url, data=monitor, headers={'Content-Type': monitor.content_type})
-        bar.close()
-        print(response,response.text)
+        try:
+            response = requests.post(upload_url, data=encoder, headers={'Content-Type': encoder.content_type})
+            response.raise_for_status()
+        except Exception as e:
+            raise SystemExit(e)
+        
+        print('OTA finished successfully')
             
 env.Replace(UPLOADCMD=on_upload)
