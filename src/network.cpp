@@ -21,7 +21,7 @@ AsyncWebSocket ws("/rawdata");
 const String defaultPass("****");
 BmsRelay *relay;
 
-const String owie_version = "2.0.0-dev";
+const String owie_version = "2.1.0";
 
 bool lockingPreconditionsMet() {
   return strlen(Settings->ap_self_password) > 0;
@@ -133,7 +133,7 @@ DynamicJsonDocument generateMetadataJson() {
 }
 
 DynamicJsonDocument generateOwieStatusJson() {
-  DynamicJsonDocument statusDoc(1024);
+  DynamicJsonDocument statusDoc(1512);
   JsonObject root = statusDoc.to<JsonObject>();
   const uint16_t *cellMillivolts = relay->getCellMillivolts();
   const int8_t *thermTemps = relay->getTemperaturesCelsius();
@@ -199,6 +199,36 @@ DynamicJsonDocument generateOwieStatusJson() {
   bms_serial["value"] = relay->getCapturedBMSSerial();
   bms_serial["unit"] = "";
   
+  // add new battery status values (used only at stats page.)
+  // normaly there would be a reset for the stats, but as the project is more or less abandoned from the maintainer...
+  // (no effort is put into this any more...)
+  // add current read out BMS Serial Nr.
+  JsonObject voltage_based_soc = root.createNestedObject("voltage_based_soc");
+  voltage_based_soc["value"] = String(relay->getBatteryFuelGauge().getVoltageBasedSoc());
+  voltage_based_soc["unit"] = "%";
+
+  JsonObject bottom_soc = root.createNestedObject("bottom_soc");
+  bottom_soc["value"] = String(relay->getBatteryFuelGauge().getState().bottomSoc);
+  bottom_soc["label"] = "Lowest Ah-tracked SOC";
+  bottom_soc["unit"] = "%";
+
+  JsonObject top_soc = root.createNestedObject("top_soc");
+  top_soc["value"] = String(relay->getBatteryFuelGauge().getState().topSoc);
+  top_soc["label"] = "Highest Ah-tracked SOC";
+  top_soc["unit"] = "%";
+
+  JsonObject bottom_milliamp_hours = root.createNestedObject("bottom_milliamp_hours");
+  bottom_milliamp_hours["value"] = String(
+        relay->getBatteryFuelGauge().getState().bottomMilliampSeconds / 3600);
+  bottom_milliamp_hours["label"] = "Ah-tracked range size";      
+  bottom_milliamp_hours["unit"] = "mAh";
+
+  JsonObject current_milliamp_hours = root.createNestedObject("current_milliamp_hours");
+  current_milliamp_hours["value"] = String(
+        relay->getBatteryFuelGauge().getState().currentMilliampSeconds / 3600);
+  current_milliamp_hours["label"] = "Current discharge depth";
+  current_milliamp_hours["unit"] = "mAh";
+
   return statusDoc;
 
 }
@@ -335,6 +365,26 @@ void setupWebServer(BmsRelay *bmsRelay) {
     }
     request->send(404);
   });
+
+  webServer.on("/battery", HTTP_POST, [](AsyncWebServerRequest *request) {
+    const auto resetType = request->getParam("type", true);
+  
+    if (strcmp(resetType->value().c_str(), "stats") == 0) {
+      relay->getBatteryFuelGauge().reset();
+      request->send(200, "text/html", "Battery stats resetted!");
+      return;
+    }
+    if (strcmp(resetType->value().c_str(), "settings") == 0) {
+      Settings->battery_state = BatteryStateMsg_init_default;
+      saveSettings();
+      request->send(200, "text/html", "Battery settings resetted!");
+      return;
+    }
+    request->send(400, "text/html",
+                        "You must provide a correct type to be resettet (stats||settings)!");
+      return;
+  });
+
   webServer.on("/lock", HTTP_GET, [](AsyncWebServerRequest *request) {
     if (request->hasParam("unlock")) {
       Settings->is_locked = false;

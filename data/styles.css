@@ -1070,6 +1070,14 @@ input[type=text], input[type=password], select {
     margin-bottom: 21px;
 }
 
+.firmware.content {
+    margin-bottom: 21px;
+}
+
+.battery-reset.button {
+    margin-bottom: 5px;
+}
+
 .box {
     flex: auto;
     display: flex;
@@ -1119,4 +1127,8 @@ input[type=text], input[type=password], select {
     border: 1px solid var(--text-color);
     width: 100%;
     opacity: 0.6;
+}
+/* every button class should have a pointer cursor */
+.button {
+    cursor: pointer;
 }

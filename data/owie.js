@@ -6,6 +6,7 @@ let currentChargingState = null;
 let statsDomWritten = false;
 let updateInterval = 1000; // in ms
 let currentSeverityOffset = 0;
+let processUpdate = false;
 // TODO: probably make the offset(s) configurable?
 // offset for warning severity when battery cells are unbalanced
 const batteryCellOffsetWarning = 0.4;
@@ -409,6 +410,19 @@ let disarmBoard = async (btn) => {
   }
 }
 
+// API Call to reset battery stats/settings
+let resetBatteryStats = async (type) => {
+  try {
+    let formData = new FormData();
+    formData.append("type", type);
+    await callOwieApi("POST", "battery", formData);
+    showAlerter("success","Successfully resetted battery "+type+" !");
+  } catch (e) {
+    handleError(e);
+  }
+}
+
+
 // handling the alerter toaster
 let showAlerter = (alertType, alertText, showClose=true) => {
   const alerter = document.getElementById("toaster");
@@ -565,6 +579,10 @@ let handleMetadata = async () => {
 // this is currently set to every second and can be configured by setting "updateInterval"
 let getAutoupdate = async () => {
   try {
+    if (processUpdate) {
+      console.info("Firmwareupdate is in progress, autoupdate is suspended until reload of the page!");
+      return;
+    }
     let data = await callOwieApi("GET", "autoupdate", null);
     let jsonData = JSON.parse(data);
   
@@ -654,7 +672,7 @@ let getAutoupdate = async () => {
         }
         item.value.forEach((value, idx) => {
           let baseEl = document.getElementsByClassName(`stats-${key}_${idx}`)[0];
-          baseEl.querySelector('.owie-label').innerHTML = key.toUpperCase() + "&nbsp;" + ((item.value.length > 1)?idx:"");
+          baseEl.querySelector('.owie-label').innerHTML = (item.label ||key.toUpperCase()) + "&nbsp;" + ((item.value.length > 1)?idx:"");
           baseEl.querySelector('.value-text').innerHTML = value;
           baseEl.querySelector('.value-label').innerHTML = "&nbsp;" + item.unit;
         });
@@ -679,6 +697,13 @@ let startup = async () => {
   const unlockButton = document.querySelector(".unlock-button");
   unlockButton.addEventListener('click', async (e) => {
     await disarmBoard(unlockButton);
+  })
+
+  // handle clicking one of the battery reset buttons
+  document.querySelectorAll(".battery-reset").forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      await resetBatteryStats(btn.dataset.type);
+    })
   })
 
   // firmware update section
@@ -712,6 +737,7 @@ let startup = async () => {
       // This may be a minify problem!! (removing parenteses by function call);
       let fileUploadData = new FormData();
       fileUploadData.append("firmware", file);
+      processUpdate = true;
       await callOwieApi("POST", "update", fileUploadData ,({loaded, total}) => {
        let fileLoaded = Math.floor((loaded / total) * 100);
        updateText.innerHTML = `File upload in progress... (${fileLoaded}%)`;
