@@ -194,6 +194,11 @@ DynamicJsonDocument generateOwieStatusJson() {
   }
   temperatures["unit"] = "&deg;C";
   
+  // add current read out BMS Serial Nr.
+  JsonObject bms_serial = root.createNestedObject("bms_serial_captured");
+  bms_serial["value"] = relay->getCapturedBMSSerial();
+  bms_serial["unit"] = "";
+  
   return statusDoc;
 
 }
